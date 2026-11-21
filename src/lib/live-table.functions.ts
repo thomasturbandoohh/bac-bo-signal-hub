@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { rowToLiveRound, type LiveRound } from "./live-table";
 import { PROVIDER_LIST } from "./providers";
@@ -57,6 +58,47 @@ export const getLiveTable = createServerFn({ method: "GET" })
       serverNow: Date.now(),
       feed,
     };
+  });
+
+/** Rounds read before the robot start, so the first signals have their pattern history (~60 rounds). */
+const SESSION_LOOKBACK_MS = 60 * 35_000;
+const SESSION_PAGE = 1000;
+const SESSION_MAX_PAGES = 5;
+const ROUND_COLUMNS =
+  "id, settled_at, received_at, outcome, player_dice, banker_dice, player_score, banker_score, multiplier";
+
+/**
+ * Every stored round since the robot was switched on (plus a short look-back), oldest first.
+ * Lets each device rebuild all signals and results of the robot's run, including while it was closed.
+ */
+export const getSessionRounds = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { since: number }) =>
+    z.object({ since: z.number().int().positive() }).parse(data),
+  )
+  .handler(async ({ context, data }): Promise<{ rounds: LiveRound[] }> => {
+    const { data: approved } = await context.supabase.rpc("is_approved", {
+      _user_id: context.userId,
+    });
+    if (!approved) throw new Error("Conta não aprovada.");
+
+    const from = new Date(data.since - SESSION_LOOKBACK_MS).toISOString();
+    const rows = [];
+    for (let page = 0; page < SESSION_MAX_PAGES; page++) {
+      const { data: chunk, error } = await context.supabase
+        .from("live_rounds")
+        .select(ROUND_COLUMNS)
+        .gte("settled_at", from)
+        .order("settled_at", { ascending: true })
+        .range(page * SESSION_PAGE, page * SESSION_PAGE + SESSION_PAGE - 1);
+      if (error) {
+        console.error("session rounds read failed", error);
+        throw new Error("Não foi possível ler as rodadas da sessão.");
+      }
+      rows.push(...chunk);
+      if (chunk.length < SESSION_PAGE) break;
+    }
+    return { rounds: rows.map(rowToLiveRound) };
   });
 
 /** Admin: salva provedor + chave, testa e reconecta a mesa na hora. */

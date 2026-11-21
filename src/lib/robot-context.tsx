@@ -11,12 +11,16 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { liveTableQuery, settingsQuery, type RobotSettings } from "@/lib/queries";
-import type { LiveRound } from "@/lib/live-table";
+import {
+  liveTableQuery,
+  sessionRoundsQuery,
+  settingsQuery,
+  type RobotSettings,
+} from "@/lib/queries";
+import { mergeRounds, type LiveRound } from "@/lib/live-table";
 import {
   AUTO_CONFIDENCE,
   liveWindow,
-  mergeSignals,
   robotView,
   signalsBetween,
   SIGNAL_HISTORY_LIMIT,
@@ -24,7 +28,6 @@ import {
   type ScheduleConfig,
   type SessionSignal,
 } from "@/lib/robot-schedule";
-import { clearHistory, loadHistory, saveHistory } from "@/lib/session-history";
 import { scoreSignals } from "@/lib/scoreboard";
 import { liveFeedEnabled, robotActive } from "@/lib/access-rules";
 
@@ -38,6 +41,8 @@ interface RobotState extends RobotView {
   apiToggling: boolean;
   isAdmin: boolean;
   rounds: LiveRound[];
+  /** Every round since the robot was switched on: signals and results of the whole run. */
+  historyRounds: LiveRound[];
   clockOffset: number;
   feed: { lastSuccessAt: number | null; lastError: string | null } | null;
   tableError: boolean;
@@ -65,17 +70,7 @@ function logAdminAction(action: string) {
   }
 }
 
-export function RobotProvider({
-  userId,
-  sessionStart,
-  isAdmin,
-  children,
-}: {
-  userId: string;
-  sessionStart: number;
-  isAdmin: boolean;
-  children: ReactNode;
-}) {
+export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; children: ReactNode }) {
   const queryClient = useQueryClient();
   const { data: settings } = useQuery(settingsQuery);
   const running = !!settings?.running && !!settings.started_at;
@@ -103,7 +98,18 @@ export function RobotProvider({
     enabled: liveEnabled,
     refetchInterval: active && !isPaused ? 2_000 : false,
   });
-  const allRounds = live.data?.rounds ?? NO_ROUNDS;
+  const startedAt = settings?.started_at ? Date.parse(settings.started_at) : 0;
+  const minConfidence = AUTO_CONFIDENCE;
+
+  // All rounds since the robot was switched on, so signals and results generated while this
+  // device was closed show up (and nothing resets) when the user comes back.
+  const session = useQuery({
+    ...sessionRoundsQuery(startedAt),
+    enabled: liveEnabled && active && startedAt > 0,
+  });
+  const polled = live.data?.rounds ?? NO_ROUNDS;
+  const sessionRounds = session.data?.rounds ?? NO_ROUNDS;
+  const allRounds = useMemo(() => mergeRounds(sessionRounds, polled), [sessionRounds, polled]);
   const clockOffset = live.data?.clockOffset ?? 0;
 
   const [now, setNow] = useState(() => Date.now());
@@ -118,29 +124,6 @@ export function RobotProvider({
     () => (windowStart === 0 ? allRounds : allRounds.slice(windowStart)),
     [allRounds, windowStart],
   );
-  const [sessionSignals, setSessionSignals] = useState<SessionSignal[]>([]);
-
-  // Load once per user; history persists across logins and reloads.
-  useEffect(() => {
-    setSessionSignals(loadHistory(userId, sessionStart));
-  }, [userId, sessionStart]);
-
-  // Reset greens / reds / sequence ONLY when the robot is turned off, goes to
-  // maintenance, or the API is paused. Reload / leave-and-return do NOT clear.
-  const wasAlive = useRef(false);
-  useEffect(() => {
-    if (!settings) return;
-    const alive = running && !maintenance && !apiPaused;
-    if (wasAlive.current && !alive) {
-      clearHistory(userId);
-      setSessionSignals([]);
-      logAdminAction("Histórico de sinais zerado (robô desligado / manutenção / API pausada)");
-    }
-    wasAlive.current = alive;
-  }, [settings, running, maintenance, apiPaused, userId]);
-
-  const startedAt = settings?.started_at ? Date.parse(settings.started_at) : 0;
-  const minConfidence = AUTO_CONFIDENCE;
 
   const cfg = useMemo<ScheduleConfig | null>(
     () => (active && !isPaused ? { startedAt, minConfidence } : null),
@@ -157,24 +140,23 @@ export function RobotProvider({
     return () => clearTimeout(t);
   }, [view.wakeAt, clockOffset]);
 
-  useEffect(() => {
-    if (!cfg || maintenance || apiPaused) return;
-    // Use robot start time only — signals keep accumulating when the user reloads or returns.
-    const found = signalsBetween(cfg, rounds, cfg.startedAt, now);
-    if (!found.length) return;
-    setSessionSignals((prev) => {
-      const next = mergeSignals(prev, found);
-      if (next.length === prev.length && next[0]?.key === prev[0]?.key) return prev;
-      const limited = next.slice(0, SIGNAL_HISTORY_LIMIT);
-      saveHistory(userId, sessionStart, limited);
-      return limited;
-    });
-  }, [cfg, rounds, now, sessionStart, userId, maintenance, apiPaused]);
+  // Signals of the whole run, rebuilt from the stored rounds (same on every device).
+  // Only while the robot is on: switching it off starts a fresh scoreboard next time.
+  const sessionSignals = useMemo<SessionSignal[]>(
+    () =>
+      cfg && !maintenance && !apiPaused
+        ? signalsBetween(cfg, allRounds, cfg.startedAt, now, SIGNAL_HISTORY_LIMIT)
+        : [],
+    [cfg, allRounds, now, maintenance, apiPaused],
+  );
 
+  const openedAt = useRef(Date.now());
   // Auto-pause after 3 consecutive losses — silent (no toast / animation)
   useEffect(() => {
     if (!active || isPaused) return;
-    const results = scoreSignals(sessionSignals, rounds);
+    // Only results seen live on this device: a losing streak from while it was closed
+    // must not switch the robot off retroactively when the user comes back.
+    const results = scoreSignals(sessionSignals, allRounds).filter((r) => r.at >= openedAt.current);
     const last3 = results.slice(-3);
     if (last3.length === 3 && last3.every((r) => !r.green)) {
       const until = Date.now() + PAUSE_MS;
@@ -189,7 +171,7 @@ export function RobotProvider({
         .eq("id", 1);
       logAdminAction("Auto-pausa após 3 reds");
     }
-  }, [sessionSignals, rounds, active, isPaused]);
+  }, [sessionSignals, allRounds, active, isPaused]);
 
   const mutation = useMutation({
     mutationFn: async (on: boolean) => {
@@ -278,6 +260,7 @@ export function RobotProvider({
       apiToggling: apiPause.isPending,
       isAdmin,
       rounds,
+      historyRounds: allRounds,
       clockOffset,
       feed,
       tableError,
@@ -298,6 +281,7 @@ export function RobotProvider({
       apiPause.isPending,
       isAdmin,
       rounds,
+      allRounds,
       feed,
       tableError,
       sessionSignals,

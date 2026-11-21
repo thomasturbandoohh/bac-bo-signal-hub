@@ -51,7 +51,6 @@ function RobotsPage() {
   // Water rises only while a signal is open for betting; while searching or waiting for the
   // table's result it stays low with no numbers.
   const winner = live && phase === "signal" ? (robot.signal?.side ?? null) : null;
-  const openSignal = winner ? robot.signal : null;
 
   return (
     <div className="space-y-3 sm:space-y-3.5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8 lg:gap-y-3.5 lg:space-y-0">
@@ -93,12 +92,7 @@ function RobotsPage() {
           </motion.button>
         )}
 
-        <LiquidBoard
-          dist={dist}
-          winner={winner}
-          tieChance={openSignal?.tie.probability ?? null}
-          tieReinforced={openSignal?.tie.reinforced ?? false}
-        />
+        <LiquidBoard dist={dist} winner={winner} />
 
         <LiveTableCard rounds={robot.rounds} />
       </div>
@@ -196,7 +190,6 @@ const WAIT_TEXT: Record<string, string> = {
   cold_table: "Esperando a mesa esquentar",
   choppy_table: "Mesa picotada · evitando surf",
   trending_table: "Mesa em tendência · evitando quebra",
-  low_confidence: "Confluência abaixo de 75% · sem entrada",
   result: "Aguardando o resultado da entrada",
 };
 
@@ -258,7 +251,7 @@ function Analyzing() {
           ? (WAIT_TEXT[reason ?? ""] ?? "Lendo os padrões da mesa")
           : gale
             ? "Mesmo lado da entrada · última tentativa"
-            : "Confluência confirmada · liberando a entrada"}
+            : "Padrão se formando · liberando a entrada"}
       </p>
       <div className="relative mt-3 h-2 w-full overflow-hidden rounded-full bg-foreground/10">
         {waiting ? (

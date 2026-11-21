@@ -29,8 +29,8 @@ export const STALE_MS = 120_000;
 const HISTORY = 60;
 /** Past real rounds the robot needs before it reads a pattern. */
 export const MIN_HISTORY = 5;
-/** Max signals kept for scoreboard / streaks (was 20; longer sequences no longer get truncated). */
-export const SIGNAL_HISTORY_LIMIT = 100;
+/** Max signals counted in the scoreboard since the robot was switched on. */
+export const SIGNAL_HISTORY_LIMIT = 500;
 
 export function liveWindow(rounds: LiveRound[], now: number): LiveRound[] {
   const last = rounds[rounds.length - 1];
@@ -64,7 +64,6 @@ export type WaitReason =
   | "cold_table"
   | "choppy_table"
   | "trending_table"
-  | "low_confidence"
   | "result"
   | "paused"
   | null;

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { lynxToRow, rowToLiveRound, type LynxRound } from "./live-table";
+import {
+  lynxToRow,
+  mergeRounds,
+  rowToLiveRound,
+  type LiveRound,
+  type LynxRound,
+} from "./live-table";
 
 const sample: LynxRound = {
   id: "v1794734273438",
@@ -37,5 +43,23 @@ describe("live table rounds", () => {
     expect(
       lynxToRow({ ...sample, data: { ...sample.data, player: { dice: [0, 7], score: 7 } } }),
     ).toBeNull();
+  });
+});
+
+describe("rounds of the whole robot run", () => {
+  const r = (id: string, at: number): LiveRound => ({
+    id,
+    settledAt: at,
+    outcome: "P",
+    p: [3, 3],
+    b: [1, 2],
+    pScore: 6,
+    bScore: 3,
+    multiplier: null,
+  });
+  it("keeps the rounds from while the app was closed and adds the newest ones once", () => {
+    const run = [r("a", 1), r("b", 2), r("c", 3)];
+    const polled = [r("c", 3), r("d", 4)];
+    expect(mergeRounds(run, polled).map((x) => x.id)).toEqual(["a", "b", "c", "d"]);
   });
 });

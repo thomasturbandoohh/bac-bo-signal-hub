@@ -13,8 +13,11 @@ import moneyWingsEmoji from "@/assets/emoji/money_with_wings.webp";
 import partyEmoji from "@/assets/emoji/party_popper.webp";
 
 export function useSessionResults() {
-  const { sessionSignals, rounds } = useRobot();
-  return useMemo(() => scoreSignals(sessionSignals, rounds), [sessionSignals, rounds]);
+  const { sessionSignals, historyRounds } = useRobot();
+  return useMemo(
+    () => scoreSignals(sessionSignals, historyRounds),
+    [sessionSignals, historyRounds],
+  );
 }
 
 export function Emoji3D({
@@ -144,9 +147,12 @@ function noteContent(n: Note) {
 }
 
 export function ResultBanner() {
-  const { sessionSignals, rounds } = useRobot();
+  const { sessionSignals, historyRounds } = useRobot();
   const results = useSessionResults();
-  const gales = useMemo(() => pendingGales(sessionSignals, rounds), [sessionSignals, rounds]);
+  const gales = useMemo(
+    () => pendingGales(sessionSignals, historyRounds),
+    [sessionSignals, historyRounds],
+  );
   const seen = useRef<Set<string> | null>(null);
   const [queue, setQueue] = useState<Note[]>([]);
 

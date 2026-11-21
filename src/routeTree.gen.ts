@@ -17,6 +17,7 @@ import { Route as AuthenticatedApprovedAdminRouteImport } from './routes/_authen
 import { Route as AuthenticatedApprovedHistoricoRouteImport } from './routes/_authenticated/_approved/historico'
 import { Route as AuthenticatedApprovedPerfilRouteImport } from './routes/_authenticated/_approved/perfil'
 import { Route as AuthenticatedApprovedRobosRouteImport } from './routes/_authenticated/_approved/robos'
+import { Route as ApiPublicJobsSyncLiveTableRouteImport } from './routes/api/public/jobs/sync-live-table'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -61,6 +62,12 @@ const AuthenticatedApprovedRobosRoute =
     path: '/robos',
     getParentRoute: () => AuthenticatedApprovedRouteRoute,
   } as any)
+const ApiPublicJobsSyncLiveTableRoute =
+  ApiPublicJobsSyncLiveTableRouteImport.update({
+    id: '/api/public/jobs/sync-live-table',
+    path: '/api/public/jobs/sync-live-table',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -69,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/historico': typeof AuthenticatedApprovedHistoricoRoute
   '/perfil': typeof AuthenticatedApprovedPerfilRoute
   '/robos': typeof AuthenticatedApprovedRobosRoute
+  '/api/public/jobs/sync-live-table': typeof ApiPublicJobsSyncLiveTableRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,6 +85,7 @@ export interface FileRoutesByTo {
   '/historico': typeof AuthenticatedApprovedHistoricoRoute
   '/perfil': typeof AuthenticatedApprovedPerfilRoute
   '/robos': typeof AuthenticatedApprovedRobosRoute
+  '/api/public/jobs/sync-live-table': typeof ApiPublicJobsSyncLiveTableRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,12 +97,27 @@ export interface FileRoutesById {
   '/_authenticated/_approved/historico': typeof AuthenticatedApprovedHistoricoRoute
   '/_authenticated/_approved/perfil': typeof AuthenticatedApprovedPerfilRoute
   '/_authenticated/_approved/robos': typeof AuthenticatedApprovedRobosRoute
+  '/api/public/jobs/sync-live-table': typeof ApiPublicJobsSyncLiveTableRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/admin' | '/historico' | '/perfil' | '/robos'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/admin'
+    | '/historico'
+    | '/perfil'
+    | '/robos'
+    | '/api/public/jobs/sync-live-table'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/admin' | '/historico' | '/perfil' | '/robos'
+  to:
+    | '/'
+    | '/auth'
+    | '/admin'
+    | '/historico'
+    | '/perfil'
+    | '/robos'
+    | '/api/public/jobs/sync-live-table'
   id:
     | '__root__'
     | '/'
@@ -104,12 +128,14 @@ export interface FileRouteTypes {
     | '/_authenticated/_approved/historico'
     | '/_authenticated/_approved/perfil'
     | '/_authenticated/_approved/robos'
+    | '/api/public/jobs/sync-live-table'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicJobsSyncLiveTableRoute: typeof ApiPublicJobsSyncLiveTableRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -170,6 +196,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApprovedRobosRouteImport
       parentRoute: typeof AuthenticatedApprovedRouteRoute
     }
+    '/api/public/jobs/sync-live-table': {
+      id: '/api/public/jobs/sync-live-table'
+      path: '/api/public/jobs/sync-live-table'
+      fullPath: '/api/public/jobs/sync-live-table'
+      preLoaderRoute: typeof ApiPublicJobsSyncLiveTableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -208,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicJobsSyncLiveTableRoute: ApiPublicJobsSyncLiveTableRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

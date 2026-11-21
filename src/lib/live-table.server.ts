@@ -3,7 +3,7 @@ import { getProvider, isProviderId, type ProviderId } from "./providers";
 /** No máximo um pedido ao provedor por este intervalo (compartilhado entre todos os usuários). */
 const SYNC_INTERVAL_MS = 2_000;
 /** Mais antigo que isto → recomeça pela página recente em vez de recuperar rodada a rodada. */
-const CATCH_UP_MS = 30 * 60_000;
+const CATCH_UP_MS = 90 * 60_000;
 const KEEP_DAYS = 3;
 const MAX_PAGES = 3;
 

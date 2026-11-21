@@ -2,7 +2,8 @@ import { summarizeRoundFrequencies } from "./round-statistics";
 
 /**
  * Bac Bo pattern engine — expanded classic strategy set.
- * Only entry + 1 gale. No G2. Never a forced entry: only strict confluence (see `analyze`).
+ * Entries are only Player or Banker, with 1 gale (no G2); the tie is only covered as protection.
+ * A signal is sent whenever a valid pattern is forming; never a forced entry (see `analyze`).
  * Every candidate pattern is checked against the table odds and its own recent record here
  * (see `analyze`), so the robot holds back on weak, conflicting or cold readings.
  */
@@ -299,8 +300,8 @@ export function tieReading(history: Round[]): TieReading {
 /* Signal                                                              */
 /* ------------------------------------------------------------------ */
 
-/** Minimum calculated confluence confidence (0-100) for an entry. Below it: no entry. */
-export const STRICT_CONFIDENCE = 75;
+/** Player and Banker readings closer than this are a conflict: no entry. */
+export const CONFLICT_MARGIN = 0.03;
 
 export interface Signal extends PatternMatch {
   /** Reinforce the tie protection on this entry. */
@@ -317,13 +318,7 @@ export interface Signal extends PatternMatch {
 }
 
 export type SkipReason =
-  | "no_pattern"
-  | "weak_pattern"
-  | "conflict"
-  | "cold_table"
-  | "choppy_table"
-  | "trending_table"
-  | "low_confidence";
+  "no_pattern" | "weak_pattern" | "conflict" | "cold_table" | "choppy_table" | "trending_table";
 
 export interface Analysis {
   signal: Signal | null;
@@ -418,9 +413,11 @@ export function analyze(history: Round[], minConfidence: number): Analysis {
   };
   const p = sideScore("player");
   const b = sideScore("banker");
-  // Strict confluence: any valid pattern pointing the other way means no entry.
-  if (p && b) return { signal: null, reason: "conflict" };
-  const pick = (p ?? b)!;
+  // Player and Banker readings about equally strong: no clear side, no entry.
+  if (p && b && Math.abs(p.score - b.score) < CONFLICT_MARGIN) {
+    return { signal: null, reason: "conflict" };
+  }
+  const pick = !b || (p && p.score > b.score) ? p! : b;
 
   const { record } = pick;
   const confidence = confluenceConfidence(
@@ -429,9 +426,6 @@ export function analyze(history: Round[], minConfidence: number): Analysis {
     record,
     cycleFit(pick.m.pattern, cycle),
   );
-  if (confidence < STRICT_CONFIDENCE || pick.score < BASE_GREEN) {
-    return { signal: null, reason: "low_confidence" };
-  }
 
   const tie = tieReading(history);
   const probability = Math.max(50, Math.min(85, pct(pick.score)));
@@ -444,7 +438,7 @@ export function analyze(history: Round[], minConfidence: number): Analysis {
   ];
   if (pick.agree.length) reasons.push(`Confirmado por: ${pick.agree.join(", ")}`);
   reasons.push(
-    `Empate ${tie.probability}% (margem média dos dados ${tie.avgMargin} pts)${tie.reinforced ? " · proteção reforçada" : ""}`,
+    `Cubra o empate como proteção (chance ${tie.probability}%, margem média dos dados ${tie.avgMargin} pts)`,
   );
 
   return {

@@ -59,15 +59,10 @@ function Pane({
 export function LiquidBoard({
   dist,
   winner,
-  tieChance = null,
-  tieReinforced = false,
 }: {
   dist: Dist | null;
   /** Side of the signal currently open for betting (null = searching / waiting). */
   winner?: "player" | "banker" | null;
-  /** Estimated tie chance of the open signal, from the dice margins. */
-  tieChance?: number | null;
-  tieReinforced?: boolean;
 }) {
   const showNumbers = !!winner && !!dist;
   const level = (side: "player" | "banker") => (winner === side ? HIGH : LOW);
@@ -93,25 +88,21 @@ export function LiquidBoard({
         />
       </div>
 
-      <div
-        className={cn(
-          "pane-tie absolute left-1/2 top-1/2 z-10 flex h-[5.6rem] w-[5.6rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full sm:h-[6.6rem] sm:w-[6.6rem]",
-          tieReinforced && winner && "ring-2 ring-tie-glow/80",
-        )}
-      >
-        <Water level={winner && tieReinforced ? 46 : LOW + 2} tone="tie" calm={!tieReinforced} />
-        {winner && tieChance !== null && (
-          <motion.span
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative z-10 font-display text-2xl font-extrabold leading-none tabular-nums text-foreground text-emboss sm:text-[1.7rem]"
-          >
-            {tieChance}%
-          </motion.span>
-        )}
-        <span className="relative z-10 mt-1 text-[9px] font-bold uppercase tracking-[0.18em] text-foreground/90 sm:text-[10px]">
+      {/* The tie is never an entry: it only shows that the bet must be covered as protection. */}
+      <div className="pane-tie absolute left-1/2 top-1/2 z-10 flex h-[5.6rem] w-[5.6rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full sm:h-[6.6rem] sm:w-[6.6rem]">
+        <Water level={LOW + 2} tone="tie" calm />
+        <span className="relative z-10 text-[9px] font-bold uppercase tracking-[0.18em] text-foreground/90 sm:text-[10px]">
           Empate
         </span>
+        {winner && (
+          <motion.span
+            initial={{ opacity: 0, y: 3 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative z-10 mt-0.5 text-[8px] font-extrabold uppercase tracking-[0.14em] text-foreground/75 sm:text-[9px]"
+          >
+            Proteção
+          </motion.span>
+        )}
       </div>
     </div>
   );

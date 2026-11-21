@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { getLiveTable } from "@/lib/live-table.functions";
+import { getLiveTable, getSessionRounds } from "@/lib/live-table.functions";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type RobotSettings = Database["public"]["Tables"]["robot_settings"]["Row"];
@@ -76,3 +76,17 @@ export const liveTableQuery = queryOptions({
   staleTime: 1_000,
   refetchIntervalInBackground: false,
 });
+
+/**
+ * All rounds of the robot's current run (since `startedAt`), refreshed every minute; the 2s live
+ * poll fills in the newest rounds in between. Callers gate it with `liveFeedEnabled` too.
+ */
+export const sessionRoundsQuery = (startedAt: number) =>
+  queryOptions({
+    queryKey: ["session-rounds", startedAt],
+    queryFn: () => getSessionRounds({ data: { since: startedAt } }),
+    staleTime: 55_000,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    retry: 1,
+  });

@@ -2,15 +2,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import {
-  Camera,
-  ChevronRight,
-  Loader2,
-  LogOut,
-  Mail,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react";
+import { Camera, ChevronRight, Loader2, LogOut, Mail, ShieldCheck, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/bacbo/Avatar";
 import { signOutEverywhere } from "@/lib/auth-helpers";

@@ -46,7 +46,6 @@ function ApprovedLayout() {
   const { pathname } = useLocation();
   const profile = data?.profile ?? initial;
   const isAdmin = data?.isAdmin ?? initialAdmin;
-  const sessionStart = user.last_sign_in_at ? Date.parse(user.last_sign_in_at) : 0;
 
   // Background refresh: send the user out as soon as the admin blocks or removes the account.
   useEffect(() => {
@@ -60,7 +59,7 @@ function ApprovedLayout() {
   }, [data, navigate]);
 
   return (
-    <RobotProvider userId={profile.id} sessionStart={sessionStart} isAdmin={isAdmin}>
+    <RobotProvider isAdmin={isAdmin}>
       <div aria-hidden="true" className="bg-ambient pointer-events-none fixed inset-0 z-0" />
       <div className="relative z-10 mx-auto min-h-screen max-w-md px-3.5 pb-28 pt-3 sm:px-4 sm:pt-4 md:max-w-2xl md:pb-32 lg:max-w-5xl lg:px-6">
         <motion.div

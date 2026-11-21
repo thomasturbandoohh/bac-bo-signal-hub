@@ -29,3 +29,8 @@
 - [x] Ciclo da mesa (tendência x picotada): não entrar em surf com mesa picotada
 - [x] Leitura das margens dos 4 dados → chance de empate e proteção reforçada
 - [x] Barra de análise com cor/feedback por etapa
+
+## Ajustes (pedido 21/11, 16:38)
+- [x] Empate só como proteção (sem cara de entrada no empate); sinais só Player/Banker
+- [x] Mandar sinal sempre que um padrão se forma (tirar o mínimo de 75%), sem entrada forçada
+- [x] Placar/sinais não resetam ao sair e voltar: contam tudo desde que o robô foi ligado, inclusive enquanto ninguém estava no app

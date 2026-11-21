@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { STRICT_CONFIDENCE, type Outcome } from "./bacbo-engine";
+import type { Outcome } from "./bacbo-engine";
 import type { LiveRound } from "./live-table";
 import {
   ANALYSIS_MS,
@@ -69,7 +69,9 @@ describe("robot driven by the real table", () => {
 
   it("tells why it holds back when the table is cold", () => {
     const at = T0 + 60_000;
-    const v = robotView(cfg, table("BPBBPPP", at, "cold"), at + 1_000);
+    // Switched on right before the last round, so no earlier entry turns it into a gale.
+    const fresh = { ...cfg, startedAt: at - 1_000 };
+    const v = robotView(fresh, table("BPBBPPP", at, "cold"), at + 1_000);
     expect(v.signal).toBeNull();
     expect(v.reason).toBe("cold_table");
   });
@@ -174,7 +176,7 @@ describe("1 gale and no forced entries", () => {
     expect(keys).not.toContain("BPPPPPPB:7");
   });
 
-  it("never forces an entry: every entry has confluence of 75% or more", () => {
+  it("never forces an entry: every entry comes from a pattern and is Player or Banker", () => {
     // Deterministic pseudo-random table of 300 rounds.
     let seed = 7;
     const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -187,7 +189,10 @@ describe("1 gale and no forced entries", () => {
     let run = 0;
     for (let i = 0; i < rounds.length; i++) {
       const d = decisionAfter(rounds, i, cfg);
-      if (d.kind === "entry") expect(d.signal.confidence).toBeGreaterThanOrEqual(STRICT_CONFIDENCE);
+      if (d.kind === "entry") {
+        expect(d.signal.pattern).toBeTruthy();
+        expect(["player", "banker"]).toContain(d.signal.side);
+      }
       run = d.kind === "skip" ? run + 1 : 0;
       longestSkipRun = Math.max(longestSkipRun, run);
     }

@@ -74,16 +74,8 @@ export function SignalOrb({
             <span className="rounded-full bg-success/15 px-2 py-0.5 text-success ring-1 ring-success/30">
               Confluência {signal.confidence}%
             </span>
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 ring-1",
-                signal.tie.reinforced
-                  ? "bg-tie/25 text-tie-glow ring-tie/50"
-                  : "bg-foreground/5 text-foreground/70 ring-foreground/10",
-              )}
-            >
-              {signal.tie.reinforced ? "Reforce o empate" : "Cubra o empate"} ·{" "}
-              {signal.tie.probability}%
+            <span className="rounded-full bg-tie/15 px-2 py-0.5 text-tie-glow ring-1 ring-tie/35">
+              Cubra o empate · proteção
             </span>
           </div>
         )}

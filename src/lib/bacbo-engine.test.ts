@@ -10,7 +10,6 @@ import {
   matchPatterns,
   resolveSignal,
   rollRound,
-  STRICT_CONFIDENCE,
   tableCycle,
   tieReading,
   type Outcome,
@@ -126,18 +125,16 @@ describe("signal math", () => {
   });
 });
 
-describe("strict confluence (no forced entries)", () => {
-  it("the minimum calculated confidence for an entry is 75%", () => {
-    expect(STRICT_CONFIDENCE).toBe(75);
-  });
-  it("a short surf alone (64) is not enough: no entry", () => {
-    expect(analyze(rounds("BPPP"), 60)).toEqual({ signal: null, reason: "low_confidence" });
-  });
-  it("a strong surf on a trending table enters with confluence of 75% or more", () => {
-    const s = analyze(rounds("BPPPPPP"), 60).signal!;
+describe("signals when a pattern forms (no 75% minimum, no forced entries)", () => {
+  it("a short surf that is just forming (64) is already an entry", () => {
+    const s = analyze(rounds("BPPP"), 60).signal!;
     expect(s.side).toBe("player");
-    expect(s.confidence).toBeGreaterThanOrEqual(75);
-    expect(s.cycle).toBe("trend");
+    expect(s.confidence).toBeLessThan(75);
+  });
+  it("entries are only Player or Banker; the tie is a protection note", () => {
+    const s = analyze(rounds("BPPPPPP"), 60).signal!;
+    expect(["player", "banker"]).toContain(s.side);
+    expect(s.reasons.some((r) => r.includes("Cubra o empate como proteção"))).toBe(true);
   });
 });
 
