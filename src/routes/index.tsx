@@ -1,23 +1,28 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 
-// The home route ships no og:image, so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Bac Bo Live — Robô de Sinais" },
+      {
+        name: "description",
+        content:
+          "Robô de sinais automáticos para Bac Bo Live com leitura de padrões e proteção de empate.",
+      },
+      { property: "og:title", content: "Bac Bo Live — Robô de Sinais" },
+      {
+        property: "og:description",
+        content: "Sinais com padrões Xadrez, Surf, Parzinho, 3-1-3 e Rampa.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getSession();
+    throw redirect({ to: data.session ? "/robos" : "/auth", replace: true });
+  },
+  component: () => null,
 });
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}

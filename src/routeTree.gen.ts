@@ -10,33 +10,106 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedApprovedRouteRouteImport } from './routes/_authenticated/_approved/route'
+import { Route as AuthenticatedApprovedAdminRouteImport } from './routes/_authenticated/_approved/admin'
+import { Route as AuthenticatedApprovedHistoricoRouteImport } from './routes/_authenticated/_approved/historico'
+import { Route as AuthenticatedApprovedPerfilRouteImport } from './routes/_authenticated/_approved/perfil'
+import { Route as AuthenticatedApprovedRobosRouteImport } from './routes/_authenticated/_approved/robos'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedApprovedRouteRoute =
+  AuthenticatedApprovedRouteRouteImport.update({
+    id: '/_approved',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedApprovedAdminRoute =
+  AuthenticatedApprovedAdminRouteImport.update({
+    id: '/admin',
+    path: '/admin',
+    getParentRoute: () => AuthenticatedApprovedRouteRoute,
+  } as any)
+const AuthenticatedApprovedHistoricoRoute =
+  AuthenticatedApprovedHistoricoRouteImport.update({
+    id: '/historico',
+    path: '/historico',
+    getParentRoute: () => AuthenticatedApprovedRouteRoute,
+  } as any)
+const AuthenticatedApprovedPerfilRoute =
+  AuthenticatedApprovedPerfilRouteImport.update({
+    id: '/perfil',
+    path: '/perfil',
+    getParentRoute: () => AuthenticatedApprovedRouteRoute,
+  } as any)
+const AuthenticatedApprovedRobosRoute =
+  AuthenticatedApprovedRobosRouteImport.update({
+    id: '/robos',
+    path: '/robos',
+    getParentRoute: () => AuthenticatedApprovedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/admin': typeof AuthenticatedApprovedAdminRoute
+  '/historico': typeof AuthenticatedApprovedHistoricoRoute
+  '/perfil': typeof AuthenticatedApprovedPerfilRoute
+  '/robos': typeof AuthenticatedApprovedRobosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/admin': typeof AuthenticatedApprovedAdminRoute
+  '/historico': typeof AuthenticatedApprovedHistoricoRoute
+  '/perfil': typeof AuthenticatedApprovedPerfilRoute
+  '/robos': typeof AuthenticatedApprovedRobosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/_approved': typeof AuthenticatedApprovedRouteRouteWithChildren
+  '/_authenticated/_approved/admin': typeof AuthenticatedApprovedAdminRoute
+  '/_authenticated/_approved/historico': typeof AuthenticatedApprovedHistoricoRoute
+  '/_authenticated/_approved/perfil': typeof AuthenticatedApprovedPerfilRoute
+  '/_authenticated/_approved/robos': typeof AuthenticatedApprovedRobosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/auth' | '/admin' | '/historico' | '/perfil' | '/robos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/auth' | '/admin' | '/historico' | '/perfil' | '/robos'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/_approved'
+    | '/_authenticated/_approved/admin'
+    | '/_authenticated/_approved/historico'
+    | '/_authenticated/_approved/perfil'
+    | '/_authenticated/_approved/robos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +121,93 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/_approved': {
+      id: '/_authenticated/_approved'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedApprovedRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/_approved/admin': {
+      id: '/_authenticated/_approved/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedApprovedAdminRouteImport
+      parentRoute: typeof AuthenticatedApprovedRouteRoute
+    }
+    '/_authenticated/_approved/historico': {
+      id: '/_authenticated/_approved/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof AuthenticatedApprovedHistoricoRouteImport
+      parentRoute: typeof AuthenticatedApprovedRouteRoute
+    }
+    '/_authenticated/_approved/perfil': {
+      id: '/_authenticated/_approved/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedApprovedPerfilRouteImport
+      parentRoute: typeof AuthenticatedApprovedRouteRoute
+    }
+    '/_authenticated/_approved/robos': {
+      id: '/_authenticated/_approved/robos'
+      path: '/robos'
+      fullPath: '/robos'
+      preLoaderRoute: typeof AuthenticatedApprovedRobosRouteImport
+      parentRoute: typeof AuthenticatedApprovedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedApprovedRouteRouteChildren {
+  AuthenticatedApprovedAdminRoute: typeof AuthenticatedApprovedAdminRoute
+  AuthenticatedApprovedHistoricoRoute: typeof AuthenticatedApprovedHistoricoRoute
+  AuthenticatedApprovedPerfilRoute: typeof AuthenticatedApprovedPerfilRoute
+  AuthenticatedApprovedRobosRoute: typeof AuthenticatedApprovedRobosRoute
+}
+
+const AuthenticatedApprovedRouteRouteChildren: AuthenticatedApprovedRouteRouteChildren =
+  {
+    AuthenticatedApprovedAdminRoute: AuthenticatedApprovedAdminRoute,
+    AuthenticatedApprovedHistoricoRoute: AuthenticatedApprovedHistoricoRoute,
+    AuthenticatedApprovedPerfilRoute: AuthenticatedApprovedPerfilRoute,
+    AuthenticatedApprovedRobosRoute: AuthenticatedApprovedRobosRoute,
+  }
+
+const AuthenticatedApprovedRouteRouteWithChildren =
+  AuthenticatedApprovedRouteRoute._addFileChildren(
+    AuthenticatedApprovedRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedApprovedRouteRoute: typeof AuthenticatedApprovedRouteRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedApprovedRouteRoute: AuthenticatedApprovedRouteRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
