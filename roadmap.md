@@ -7,9 +7,11 @@
 - [x] typecheck script, CI workflow, small pure auth/validation tests
 - [x] Verify lint/typecheck/test/build, signup check, one commit
 
-## Importação do GitHub (lord-m-project)
+## Importação do GitHub (lord-m-project-preview) — 21/11
 - [x] Código, banco de dados, armazenamento e login copiados para este projeto
-- [x] Definir o e-mail do admin (kmnxzzzll@gmail.com)
+- [x] Banco, armazenamento, login por e-mail e Google recriados neste Lovable Cloud
+- [ ] Liberar admin para kmnxzzzll@gmail.com (aguardando essa conta se cadastrar)
+- [ ] Chave da LynxMetrics salva no painel do admin (mesa ao vivo)
 - [ ] Dados e usuários antigos (aguardando exportação ou "pular")
 
 ## Visual + gale (pedido 21/11)

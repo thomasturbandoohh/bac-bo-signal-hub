@@ -1,13 +1,79 @@
 [
-  {"capability":"code","source":"github kmnxzzzll-hub/lord-m-project-preview","outcome":"migrate","status":"in_progress","next_action":"Copy routes, components, engine and assets"},
-  {"capability":"schema","source":"drizzle/migrations/0000_migration.sql","outcome":"migrate","status":"in_progress","next_action":"Apply to this project's Lovable Cloud"},
-  {"capability":"storage buckets","source":"avatars, app-config (private)","outcome":"migrate","status":"in_progress","next_action":"Create buckets"},
-  {"capability":"records","source":"source Lovable Cloud database","outcome":"migrate","status":"pending","next_action":"User exports profiles/user_roles/robot_settings/live_rounds as CSV or JSON, or skips"},
-  {"capability":"auth identities","source":"source users","outcome":"migrate","status":"pending","next_action":"User exports users (email + original id), or skips"},
-  {"capability":"admin role","source":"user_roles (manual grant)","outcome":"migrate","status":"pending","next_action":"Confirm admin e-mail; grant after that account signs up"},
-  {"capability":"email/password sign-in","source":"auth.tsx","outcome":"migrate","status":"in_progress","next_action":"enable_email_auth"},
-  {"capability":"google sign-in","source":"auth.tsx","outcome":"migrate","status":"in_progress","next_action":"configure_social_auth google"},
-  {"capability":"live table feed (LynxMetrics)","source":"live-table.server.ts","outcome":"preserve","status":"in_progress","next_action":"Admin saves the LynxMetrics API key in the admin panel"},
-  {"capability":"secrets","source":".env (Supabase URL/keys only)","outcome":"replaced","status":"verified","next_action":null},
-  {"capability":"tests","source":"vitest","outcome":"migrate","status":"in_progress","next_action":"Run suite"}
+ {
+  "capability": "code",
+  "source": "github kmnxzzzll-hub/lord-m-project-preview",
+  "outcome": "migrate",
+  "status": "verified",
+  "next_action": null
+ },
+ {
+  "capability": "schema",
+  "source": "drizzle/migrations/0000_migration.sql",
+  "outcome": "migrate",
+  "status": "verified",
+  "next_action": null
+ },
+ {
+  "capability": "storage buckets",
+  "source": "avatars, app-config (private)",
+  "outcome": "migrate",
+  "status": "implemented",
+  "next_action": "Avatar upload not exercised; existing avatar files not copied"
+ },
+ {
+  "capability": "records",
+  "source": "source Lovable Cloud database",
+  "outcome": "migrate",
+  "status": "pending",
+  "next_action": "User exports profiles/user_roles/robot_settings/live_rounds as CSV or JSON, or skips"
+ },
+ {
+  "capability": "auth identities",
+  "source": "source users",
+  "outcome": "migrate",
+  "status": "pending",
+  "next_action": "User exports users (email + original id), or skips"
+ },
+ {
+  "capability": "admin role",
+  "source": "user_roles (manual grant)",
+  "outcome": "migrate",
+  "status": "pending",
+  "next_action": "kmnxzzzll@gmail.com signs up, then grant admin role + approve"
+ },
+ {
+  "capability": "email/password sign-in",
+  "source": "auth.tsx",
+  "outcome": "migrate",
+  "status": "implemented",
+  "next_action": "Real sign-up e-mail not exercised"
+ },
+ {
+  "capability": "google sign-in",
+  "source": "auth.tsx",
+  "outcome": "migrate",
+  "status": "implemented",
+  "next_action": "Not exercised end to end"
+ },
+ {
+  "capability": "live table feed (LynxMetrics)",
+  "source": "live-table.server.ts",
+  "outcome": "preserve",
+  "status": "implemented",
+  "next_action": "Admin saves the LynxMetrics API key in the admin panel"
+ },
+ {
+  "capability": "secrets",
+  "source": ".env (Supabase URL/keys only)",
+  "outcome": "replaced",
+  "status": "verified",
+  "next_action": null
+ },
+ {
+  "capability": "tests",
+  "source": "vitest",
+  "outcome": "migrate",
+  "status": "verified",
+  "next_action": null
+ }
 ]
