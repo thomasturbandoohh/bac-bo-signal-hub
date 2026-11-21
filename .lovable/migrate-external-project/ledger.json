@@ -38,8 +38,8 @@
   "capability": "admin role",
   "source": "user_roles (manual grant)",
   "outcome": "migrate",
-  "status": "pending",
-  "next_action": "kmnxzzzll@gmail.com signs up, then grant admin role + approve"
+  "status": "implemented",
+  "next_action": "Owner confirms e-mail and signs in"
  },
  {
   "capability": "email/password sign-in",

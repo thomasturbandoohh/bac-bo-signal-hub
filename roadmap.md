@@ -10,7 +10,7 @@
 ## Importação do GitHub (lord-m-project-preview) — 21/11
 - [x] Código, banco de dados, armazenamento e login copiados para este projeto
 - [x] Banco, armazenamento, login por e-mail e Google recriados neste Lovable Cloud
-- [ ] Liberar admin para kmnxzzzll@gmail.com (aguardando essa conta se cadastrar)
+- [x] Liberar admin para kmnxzzzll@gmail.com
 - [ ] Chave da LynxMetrics salva no painel do admin (mesa ao vivo)
 - [ ] Dados e usuários antigos (aguardando exportação ou "pular")
 
