@@ -4,8 +4,10 @@ import { cn } from "@/lib/utils";
 
 type Dist = { player: number; banker: number; tie: number; sampleSize: number };
 
-const LOW = 12;
-const HIGH = 68;
+/** Water while the robot searches or waits for the table. */
+const LOW = 14;
+/** Water on the side the robot says to bet on. */
+const HIGH = 74;
 
 function Pane({
   tone,
@@ -34,9 +36,15 @@ function Pane({
       )}
     >
       <Water level={level} tone={tone} calm={!highlight} />
-      <span className="relative z-10 font-display text-[1.7rem] font-extrabold leading-none tracking-tight tabular-nums text-foreground text-emboss sm:text-4xl">
-        {value === null ? "--" : `${value}%`}
-      </span>
+      {value !== null && (
+        <motion.span
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative z-10 font-display text-[1.7rem] font-extrabold leading-none tracking-tight tabular-nums text-foreground text-emboss sm:text-4xl"
+        >
+          {value}%
+        </motion.span>
+      )}
       <span className="relative z-10 mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/85 sm:text-[11px]">
         {label}
       </span>
@@ -44,15 +52,24 @@ function Pane({
   );
 }
 
+/**
+ * Player / Tie / Banker board. While the robot searches or waits for the table the water stays
+ * low and no numbers show; when a signal is sent, the water rises on the side to bet on.
+ */
 export function LiquidBoard({
   dist,
   winner,
+  tieChance = null,
+  tieReinforced = false,
 }: {
   dist: Dist | null;
+  /** Side of the signal currently open for betting (null = searching / waiting). */
   winner?: "player" | "banker" | null;
+  /** Estimated tie chance of the open signal, from the dice margins. */
+  tieChance?: number | null;
+  tieReinforced?: boolean;
 }) {
-  // Real percentages from the recent rounds; they never shuffle while the robot analyzes.
-  const shown = dist;
+  const showNumbers = !!winner && !!dist;
   const level = (side: "player" | "banker") => (winner === side ? HIGH : LOW);
 
   return (
@@ -61,7 +78,7 @@ export function LiquidBoard({
         <Pane
           tone="player"
           label="Jogador"
-          value={shown?.player ?? null}
+          value={showNumbers && dist ? dist.player : null}
           level={level("player")}
           highlight={winner === "player"}
         />
@@ -70,7 +87,7 @@ export function LiquidBoard({
         <Pane
           tone="banker"
           label="Casa"
-          value={shown?.banker ?? null}
+          value={showNumbers && dist ? dist.banker : null}
           level={level("banker")}
           highlight={winner === "banker"}
         />
@@ -79,13 +96,19 @@ export function LiquidBoard({
       <div
         className={cn(
           "pane-tie absolute left-1/2 top-1/2 z-10 flex h-[5.6rem] w-[5.6rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full sm:h-[6.6rem] sm:w-[6.6rem]",
-          winner && "opacity-90",
+          tieReinforced && winner && "ring-2 ring-tie-glow/80",
         )}
       >
-        <Water level={LOW + 2} tone="tie" calm />
-        <span className="relative z-10 font-display text-2xl font-extrabold leading-none tabular-nums text-foreground text-emboss sm:text-[1.7rem]">
-          {shown ? `${shown.tie}%` : "--"}
-        </span>
+        <Water level={winner && tieReinforced ? 46 : LOW + 2} tone="tie" calm={!tieReinforced} />
+        {winner && tieChance !== null && (
+          <motion.span
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative z-10 font-display text-2xl font-extrabold leading-none tabular-nums text-foreground text-emboss sm:text-[1.7rem]"
+          >
+            {tieChance}%
+          </motion.span>
+        )}
         <span className="relative z-10 mt-1 text-[9px] font-bold uppercase tracking-[0.18em] text-foreground/90 sm:text-[10px]">
           Empate
         </span>

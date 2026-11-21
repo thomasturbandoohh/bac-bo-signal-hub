@@ -2,7 +2,7 @@ import { summarizeRoundFrequencies } from "./round-statistics";
 
 /**
  * Bac Bo pattern engine — expanded classic strategy set.
- * Only entry + 1 gale. No G2.
+ * Only entry + 1 gale. No G2. Never a forced entry: only strict confluence (see `analyze`).
  * Every candidate pattern is checked against the table odds and its own recent record here
  * (see `analyze`), so the robot holds back on weak, conflicting or cold readings.
  */
@@ -173,12 +173,6 @@ export const PATTERN_EXPLANATION: Record<string, string> = {
 
 export const TREND_WINDOW = 8;
 
-export function tieAlert(outcomes: Outcome[]): boolean {
-  const lastTie = outcomes.lastIndexOf("T");
-  const since = lastTie === -1 ? outcomes.length : outcomes.length - 1 - lastTie;
-  return since >= 12 || since <= 2;
-}
-
 /* ------------------------------------------------------------------ */
 /* Math of the table                                                   */
 /* ------------------------------------------------------------------ */
@@ -197,8 +191,6 @@ const PRIOR_WEIGHT = 6;
 /** A pattern that has been tried 4+ times here and hits less than this is ignored. */
 export const MIN_PATTERN_RATE = 0.45;
 const MIN_PATTERN_SAMPLES = 4;
-/** Player and Banker readings closer than this are a conflict: no entry. */
-export const CONFLICT_MARGIN = 0.03;
 /** The robot's own last readings that, if all red, mark the table as cold. */
 export const COLD_STREAK = 2;
 
@@ -207,8 +199,114 @@ export interface PatternRecord {
   hits: number;
 }
 
+/* ------------------------------------------------------------------ */
+/* Table cycle: trend (surf) vs. alternation (xadrez / picotada)        */
+/* ------------------------------------------------------------------ */
+
+export type TableCycle = "trend" | "chop" | "mixed";
+/** Recent non-tie rounds read to tell a trending table from a choppy one. */
+export const CYCLE_WINDOW = 12;
+/** Share of side switches at or above which the table is choppy (picotada). */
+export const CHOP_SWITCH_RATE = 0.65;
+/** Share of side switches at or below which the table is trending (surf). */
+export const TREND_SWITCH_RATE = 0.35;
+
+export interface CycleReading {
+  cycle: TableCycle;
+  /** Fraction of consecutive rounds that changed side (0 = one long run, 1 = perfect alternation). */
+  switchRate: number;
+  /** Average run length in the window. */
+  avgRun: number;
+}
+
+export function tableCycle(outcomes: Outcome[]): CycleReading {
+  const seq = outcomes.filter((o) => o !== "T").slice(-CYCLE_WINDOW);
+  if (seq.length < 4) return { cycle: "mixed", switchRate: 0.5, avgRun: 2 };
+  let switches = 0;
+  for (let i = 1; i < seq.length; i++) if (seq[i] !== seq[i - 1]) switches++;
+  const switchRate = switches / (seq.length - 1);
+  const avgRun = seq.length / (switches + 1);
+  const cycle: TableCycle =
+    switchRate >= CHOP_SWITCH_RATE ? "chop" : switchRate <= TREND_SWITCH_RATE ? "trend" : "mixed";
+  return { cycle, switchRate, avgRun };
+}
+
+/** Patterns that follow a trend (bad on a choppy table). */
+export const TREND_PATTERNS = new Set(["Surf de tendência", "Rampa"]);
+/** Patterns that bet on alternation (bad on a trending table). */
+export const CHOP_PATTERNS = new Set(["Xadrez 1-1-1", "Perninhas"]);
+
+/** -1 = pattern goes against the table cycle (blocked), 1 = fits it, 0 = neutral. */
+export function cycleFit(pattern: string, cycle: TableCycle): -1 | 0 | 1 {
+  if (TREND_PATTERNS.has(pattern)) return cycle === "chop" ? -1 : cycle === "trend" ? 1 : 0;
+  if (CHOP_PATTERNS.has(pattern)) return cycle === "trend" ? -1 : cycle === "chop" ? 1 : 0;
+  return 0;
+}
+
+export const CYCLE_LABEL: Record<TableCycle, string> = {
+  trend: "tendência (surf)",
+  chop: "alternância (picotada)",
+  mixed: "mista",
+};
+
+/* ------------------------------------------------------------------ */
+/* Tie reading from the point margin of the 4 dice                      */
+/* ------------------------------------------------------------------ */
+
+/** Exact chance that the two dice sums differ by 0 or 1 point: 426 of 1296 throws. */
+export const P_CLOSE = 426 / 1296;
+/** Rounds whose dice margins are read. */
+export const TIE_WINDOW = 12;
+/** Rounds whose ties are counted (blended with the exact odds). */
+const TIE_COUNT_WINDOW = 20;
+/** Tie chance from which the robot asks for reinforced tie protection. */
+export const TIE_REINFORCE = 0.14;
+
+export interface TieReading {
+  /** Estimated tie chance for the next round, 0-100. */
+  probability: number;
+  /** Average point difference between Player and Banker dice in the recent rounds. */
+  avgMargin: number;
+  /** Share of recent rounds decided by 0 or 1 point. */
+  closeRate: number;
+  /** The tie chance is clearly above the normal 11%: reinforce the tie protection. */
+  reinforced: boolean;
+}
+
+const diceSum = (d: [number, number]) => d[0] + d[1];
+
+export function tieReading(history: Round[]): TieReading {
+  const recent = history.slice(-TIE_WINDOW);
+  if (!recent.length) {
+    return { probability: Math.round(P_TIE * 100), avgMargin: 0, closeRate: 0, reinforced: false };
+  }
+  const margins = recent.map((r) => Math.abs(diceSum(r.p) - diceSum(r.b)));
+  const avgMargin = Math.round((margins.reduce((a, m) => a + m, 0) / margins.length) * 10) / 10;
+  const closeRate = margins.filter((m) => m <= 1).length / margins.length;
+  const counted = history.slice(-TIE_COUNT_WINDOW);
+  const ties = counted.filter((r) => r.outcome === "T").length;
+  const tieRate = (ties + TIE_COUNT_WINDOW * P_TIE) / (counted.length + TIE_COUNT_WINDOW);
+  const p = Math.max(0.06, Math.min(0.25, tieRate * (0.7 + 0.3 * (closeRate / P_CLOSE))));
+  return {
+    probability: Math.round(p * 100),
+    avgMargin,
+    closeRate,
+    reinforced: p >= TIE_REINFORCE,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Signal                                                              */
+/* ------------------------------------------------------------------ */
+
+/** Minimum calculated confluence confidence (0-100) for an entry. Below it: no entry. */
+export const STRICT_CONFIDENCE = 75;
+
 export interface Signal extends PatternMatch {
+  /** Reinforce the tie protection on this entry. */
   tieAlert: boolean;
+  tie: TieReading;
+  cycle: TableCycle;
   /** Estimated chance (0-100) that the entry is green, from the table odds and the pattern's record here. */
   probability: number;
   record: PatternRecord;
@@ -218,7 +316,14 @@ export interface Signal extends PatternMatch {
   reasons: string[];
 }
 
-export type SkipReason = "no_pattern" | "weak_pattern" | "conflict" | "cold_table";
+export type SkipReason =
+  | "no_pattern"
+  | "weak_pattern"
+  | "conflict"
+  | "cold_table"
+  | "choppy_table"
+  | "trending_table"
+  | "low_confidence";
 
 export interface Analysis {
   signal: Signal | null;
@@ -255,6 +360,25 @@ export function estimateGreen(rec: PatternRecord): number {
   return (rec.hits + PRIOR_WEIGHT * BASE_GREEN) / (rec.n + PRIOR_WEIGHT);
 }
 
+/**
+ * Confluence confidence (0-95): the pattern's own strength, plus agreeing patterns (+4 each, max +8),
+ * plus its hit rate at this table versus the odds (±10, once it has 4+ samples),
+ * plus 4 when the pattern fits the table cycle.
+ */
+export function confluenceConfidence(
+  base: number,
+  agreeing: number,
+  record: PatternRecord,
+  fit: -1 | 0 | 1,
+): number {
+  let c = base + Math.min(8, agreeing * 4);
+  if (record.n >= MIN_PATTERN_SAMPLES) {
+    c += Math.max(-10, Math.min(10, Math.round((record.hits / record.n - BASE_GREEN) * 40)));
+  }
+  if (fit === 1) c += 4;
+  return Math.max(0, Math.min(95, c));
+}
+
 const pct = (x: number) => Math.round(x * 100);
 
 export function analyze(history: Round[], minConfidence: number): Analysis {
@@ -262,13 +386,19 @@ export function analyze(history: Round[], minConfidence: number): Analysis {
   const matches = matchPatterns(outcomes).filter((m) => m.confidence >= minConfidence);
   if (!matches.length) return { signal: null, reason: "no_pattern" };
 
+  const { cycle } = tableCycle(outcomes);
+  const fitting = matches.filter((m) => cycleFit(m.pattern, cycle) !== -1);
+  if (!fitting.length) {
+    return { signal: null, reason: cycle === "chop" ? "choppy_table" : "trending_table" };
+  }
+
   const { records, picks } = backtest(outcomes, minConfidence);
   const recent = picks.slice(-COLD_STREAK);
   if (recent.length === COLD_STREAK && recent.every((g) => !g)) {
     return { signal: null, reason: "cold_table" };
   }
 
-  const scored = matches
+  const scored = fitting
     .map((m) => {
       const record = records.get(m.pattern) ?? { n: 0, hits: 0 };
       return { m, record, estimate: estimateGreen(record) };
@@ -288,26 +418,42 @@ export function analyze(history: Round[], minConfidence: number): Analysis {
   };
   const p = sideScore("player");
   const b = sideScore("banker");
-  if (p && b && Math.abs(p.score - b.score) < CONFLICT_MARGIN) {
-    return { signal: null, reason: "conflict" };
-  }
-  const pick = !b || (p && p.score > b.score) ? p! : b;
+  // Strict confluence: any valid pattern pointing the other way means no entry.
+  if (p && b) return { signal: null, reason: "conflict" };
+  const pick = (p ?? b)!;
 
-  const probability = Math.max(50, Math.min(85, pct(pick.score)));
   const { record } = pick;
+  const confidence = confluenceConfidence(
+    pick.m.confidence,
+    pick.agree.length,
+    record,
+    cycleFit(pick.m.pattern, cycle),
+  );
+  if (confidence < STRICT_CONFIDENCE || pick.score < BASE_GREEN) {
+    return { signal: null, reason: "low_confidence" };
+  }
+
+  const tie = tieReading(history);
+  const probability = Math.max(50, Math.min(85, pct(pick.score)));
   const reasons = [
     PATTERN_EXPLANATION[pick.m.pattern] ?? pick.m.pattern,
     record.n
       ? `Nesta mesa acertou ${record.hits} de ${record.n} (${pct(record.hits / record.n)}%) nas últimas ${BACKTEST_ROUNDS} rodadas`
       : `Padrão novo nesta mesa · base matemática de ${pct(BASE_GREEN)}% com empate coberto`,
+    `Confluência ${confidence}% · mesa em ${CYCLE_LABEL[cycle]}`,
   ];
   if (pick.agree.length) reasons.push(`Confirmado por: ${pick.agree.join(", ")}`);
-  if (p && b) reasons.push(`Lado oposto mais fraco (${pct((pick === p ? b : p).score)}%)`);
+  reasons.push(
+    `Empate ${tie.probability}% (margem média dos dados ${tie.avgMargin} pts)${tie.reinforced ? " · proteção reforçada" : ""}`,
+  );
 
   return {
     signal: {
       ...pick.m,
-      tieAlert: tieAlert(outcomes),
+      confidence,
+      tieAlert: tie.reinforced,
+      tie,
+      cycle,
       probability,
       record,
       agree: pick.agree,
@@ -384,32 +530,3 @@ export const RESULT_LABEL: Record<SignalResult, string> = {
   green_g1: "GREEN G1",
   red: "RED",
 };
-
-/**
- * Entry used when the robot has already analyzed the maximum rounds without a confirmed pattern:
- * the strongest pattern on the table, or else the side of the current run (follow the trend).
- */
-export function fallbackSignal(history: Round[]): Signal {
-  const outcomes = history.map((r) => r.outcome);
-  const best = matchPatterns(outcomes)[0];
-  const runs = toRuns(outcomes);
-  const last = runs[runs.length - 1];
-  const match: PatternMatch = best ?? {
-    side: last ? toSide(last.side) : "player",
-    pattern: "Tendência",
-    confidence: 60,
-  };
-  return {
-    ...match,
-    tieAlert: tieAlert(outcomes),
-    probability: pct(BASE_GREEN),
-    record: { n: 0, hits: 0 },
-    agree: [],
-    reasons: [
-      best
-        ? (PATTERN_EXPLANATION[best.pattern] ?? best.pattern)
-        : "Tendência: seguir o lado que venceu por último",
-      "Entrada após o limite de análise · com proteção de 1 gale",
-    ],
-  };
-}

@@ -5,7 +5,7 @@ import { Moon, Power, WifiOff, Wrench } from "lucide-react";
 import { Logo } from "@/components/bacbo/Logo";
 import { LiquidBoard } from "@/components/bacbo/LiquidBoard";
 import { LiveTableCard } from "@/components/bacbo/LiveTable";
-import { SignalOrb, WaterWave } from "@/components/bacbo/SignalOrb";
+import { SignalOrb } from "@/components/bacbo/SignalOrb";
 import { Emoji3D, Scoreboard } from "@/components/bacbo/Scoreboard";
 import robotEmoji from "@/assets/emoji/robot.webp";
 import { summarizeRoundFrequencies } from "@/lib/round-statistics";
@@ -48,8 +48,10 @@ function RobotsPage() {
     [robot.history],
   );
   const live = on && !robot.maintenance && robot.reason !== "no_connection";
-  const winner =
-    live && (phase === "signal" || robot.reason === "result") ? (robot.signal?.side ?? null) : null;
+  // Water rises only while a signal is open for betting; while searching or waiting for the
+  // table's result it stays low with no numbers.
+  const winner = live && phase === "signal" ? (robot.signal?.side ?? null) : null;
+  const openSignal = winner ? robot.signal : null;
 
   return (
     <div className="space-y-3 sm:space-y-3.5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8 lg:gap-y-3.5 lg:space-y-0">
@@ -91,7 +93,12 @@ function RobotsPage() {
           </motion.button>
         )}
 
-        <LiquidBoard dist={dist} winner={winner} />
+        <LiquidBoard
+          dist={dist}
+          winner={winner}
+          tieChance={openSignal?.tie.probability ?? null}
+          tieReinforced={openSignal?.tie.reinforced ?? false}
+        />
 
         <LiveTableCard rounds={robot.rounds} />
       </div>
@@ -166,14 +173,7 @@ function RobotsPage() {
   );
 }
 
-function Panel({
-  children,
-  showWater = true,
-}: {
-  children: ReactNode;
-  /** Water layer at the bottom; turn off when it collides with a progress bar. */
-  showWater?: boolean;
-}) {
+function Panel({ children }: { children: ReactNode }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -182,7 +182,6 @@ function Panel({
       transition={{ duration: 0.16 }}
       className="liquid-glass relative isolate flex flex-col items-center overflow-hidden rounded-[1.6rem] px-4 py-5 text-center sm:px-5 sm:py-6"
     >
-      {showWater && <WaterWave />}
       <div className="relative z-10 flex w-full flex-col items-center">{children}</div>
     </motion.div>
   );
@@ -195,14 +194,46 @@ const WAIT_TEXT: Record<string, string> = {
   weak_pattern: "Confirmando a força do padrão",
   conflict: "Comparando Player e Banker",
   cold_table: "Esperando a mesa esquentar",
+  choppy_table: "Mesa picotada · evitando surf",
+  trending_table: "Mesa em tendência · evitando quebra",
+  low_confidence: "Confluência abaixo de 75% · sem entrada",
   result: "Aguardando o resultado da entrada",
+};
+
+type Stage = "search" | "result" | "confirm" | "gale";
+
+const STAGE: Record<Stage, { label: string; dot: string; chip: string }> = {
+  search: { label: "Buscando padrão", dot: "bg-tie", chip: "bg-tie/15 text-tie-glow ring-tie/35" },
+  result: {
+    label: "Aguardando a mesa",
+    dot: "bg-player-glow",
+    chip: "bg-player/15 text-player-glow ring-player-glow/35",
+  },
+  confirm: {
+    label: "Padrão encontrado",
+    dot: "bg-success",
+    chip: "bg-success/15 text-success ring-success/35",
+  },
+  gale: {
+    label: "Preparando o gale",
+    dot: "bg-tie-glow",
+    chip: "bg-tie/20 text-tie-glow ring-tie/45",
+  },
 };
 
 function Analyzing() {
   const { phaseStart, phaseEnd, reason, waiting, gale } = useRobot();
+  const stage: Stage = waiting
+    ? reason === "result"
+      ? "result"
+      : "search"
+    : gale
+      ? "gale"
+      : "confirm";
+  const st = STAGE[stage];
 
   return (
-    <Panel showWater={false}>
+    <Panel>
       <div className="glass-icon h-12 w-12 sm:h-14 sm:w-14">
         <Emoji3D src={robotEmoji} size={34} className="animate-bob" />
       </div>
@@ -210,32 +241,56 @@ function Analyzing() {
         <span className="text-success">SISTEMA ONLINE</span>{" "}
         <span className="text-foreground">{reason === "result" ? "AGUARDANDO" : "ANALISANDO"}</span>
       </h2>
-      <p className="mt-1 text-[11px] font-bold text-muted-foreground">
+      <span
+        className={cn(
+          "mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.16em] ring-1 transition-colors duration-500",
+          st.chip,
+        )}
+      >
+        <span className="relative flex h-1.5 w-1.5">
+          <span className={cn("absolute inset-0 animate-ping rounded-full opacity-70", st.dot)} />
+          <span className={cn("relative h-1.5 w-1.5 rounded-full", st.dot)} />
+        </span>
+        {st.label}
+      </span>
+      <p className="mt-1.5 text-[11px] font-bold text-muted-foreground">
         {waiting
           ? (WAIT_TEXT[reason ?? ""] ?? "Lendo os padrões da mesa")
           : gale
-            ? "Preparando o gale"
-            : "Padrão encontrado · confirmando a entrada"}
+            ? "Mesmo lado da entrada · última tentativa"
+            : "Confluência confirmada · liberando a entrada"}
       </p>
-      {/* Clean track: no ring, no water underneath — only the fill is visible */}
-      <div className="relative mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+      <div className="relative mt-3 h-2 w-full overflow-hidden rounded-full bg-foreground/10">
         {waiting ? (
-          <motion.div
-            className="absolute inset-y-0 w-2/5 rounded-full bg-gradient-to-r from-transparent via-success to-transparent"
-            initial={{ left: "-40%" }}
-            animate={{ left: ["-40%", "100%"] }}
-            transition={{ duration: 3.6, repeat: Infinity, ease: [0.45, 0, 0.55, 1] }}
-          />
+          <Sweep stage={stage} />
         ) : (
-          <SmoothFill key={phaseStart} start={phaseStart} end={phaseEnd} />
+          <SmoothFill key={phaseStart} start={phaseStart} end={phaseEnd} gale={gale} />
         )}
       </div>
     </Panel>
   );
 }
 
-/** Fills from the current position to 100% in one continuous, linear motion until `end`. */
-function SmoothFill({ start, end }: { start: number; end: number }) {
+/** Searching / waiting: a soft light sweeping across the track in the stage colour. */
+function Sweep({ stage }: { stage: Stage }) {
+  return (
+    <motion.div
+      className={cn(
+        "absolute inset-y-0 w-2/5 rounded-full bg-gradient-to-r from-transparent to-transparent",
+        stage === "result" ? "via-player-glow" : "via-tie",
+      )}
+      initial={{ left: "-40%" }}
+      animate={{ left: ["-40%", "100%"] }}
+      transition={{ duration: 3.2, repeat: Infinity, ease: [0.45, 0, 0.55, 1] }}
+    />
+  );
+}
+
+/**
+ * Pattern found: fills to 100% in one continuous motion until the signal shows, turning from
+ * amber to green as it fills (amber all the way for a gale), with a glowing tip.
+ */
+function SmoothFill({ start, end, gale }: { start: number; end: number; gale: boolean }) {
   const [plan] = useState(() => {
     const now = Date.now();
     const total = Math.max(1, end - start);
@@ -244,12 +299,23 @@ function SmoothFill({ start, end }: { start: number; end: number }) {
       seconds: Math.max(0.3, (end - now) / 1000),
     };
   });
+  const transition = { duration: plan.seconds, ease: "linear" as const };
   return (
     <motion.div
-      className="h-full rounded-full bg-success"
+      className="relative h-full overflow-hidden rounded-full bg-tie shadow-[0_0_12px_var(--tie)]"
       initial={{ width: `${plan.from * 100}%` }}
       animate={{ width: "100%" }}
-      transition={{ duration: plan.seconds, ease: "linear" }}
-    />
+      transition={transition}
+    >
+      {!gale && (
+        <motion.div
+          className="absolute inset-0 bg-success shadow-[0_0_14px_var(--success)]"
+          initial={{ opacity: plan.from }}
+          animate={{ opacity: 1 }}
+          transition={transition}
+        />
+      )}
+      <div className="absolute inset-y-0 right-0 w-3 rounded-full bg-foreground/70 blur-[3px]" />
+    </motion.div>
   );
 }

@@ -2,11 +2,10 @@
  * Shared robot timeline driven by the real Bac Bo Live table.
  * Signals reveal after a short analysis window. Each entry has at most 1 gale: if the entry
  * round is lost, the robot repeats the same side once (the gale) before reading a new pattern.
- * When no pattern is confirmed, it analyzes at most MAX_ANALYSIS_ROUNDS rounds, then enters anyway.
+ * There are no forced entries: without a strict confluence reading the robot keeps analyzing.
  */
 import {
   analyze,
-  fallbackSignal,
   isGreen,
   type Analysis,
   type Round,
@@ -30,8 +29,6 @@ export const STALE_MS = 120_000;
 const HISTORY = 60;
 /** Past real rounds the robot needs before it reads a pattern. */
 export const MIN_HISTORY = 5;
-/** Rounds the robot may spend analyzing without a pattern; on the next one it enters anyway. */
-export const MAX_ANALYSIS_ROUNDS = 2;
 /** Max signals kept for scoreboard / streaks (was 20; longer sequences no longer get truncated). */
 export const SIGNAL_HISTORY_LIMIT = 100;
 
@@ -65,6 +62,9 @@ export type WaitReason =
   | "weak_pattern"
   | "conflict"
   | "cold_table"
+  | "choppy_table"
+  | "trending_table"
+  | "low_confidence"
   | "result"
   | "paused"
   | null;
@@ -105,24 +105,24 @@ export function analysisAfter(
 
 /** What the robot does after a round: a new entry, the gale of the last entry, or nothing. */
 export type Decision =
-  | { kind: "entry"; signal: Signal; forced: boolean }
+  | { kind: "entry"; signal: Signal }
   | { kind: "gale"; signal: Signal; late: boolean }
-  | { kind: "skip"; reason: WaitReason; counts: boolean };
+  | { kind: "skip"; reason: WaitReason };
 
 const decisionCache = new Map<string, Decision>();
 
 /**
  * Deterministic decision after round `index`, the same on every device:
  * 1. the previous round had an entry and this round lost it → gale on the same side (only 1);
- * 2. otherwise a confirmed pattern → entry;
- * 3. otherwise, after MAX_ANALYSIS_ROUNDS rounds analyzed with nothing → forced entry.
+ * 2. otherwise a strict-confluence reading → entry;
+ * 3. otherwise → keep analyzing (never a forced entry).
  */
 export function decisionAfter(rounds: LiveRound[], index: number, cfg: ScheduleConfig): Decision {
   const round = rounds[index];
   if (!round || round.settledAt < cfg.startedAt) {
-    return { kind: "skip", reason: "next_round", counts: false };
+    return { kind: "skip", reason: "next_round" };
   }
-  if (index + 1 < MIN_HISTORY) return { kind: "skip", reason: "collecting", counts: false };
+  if (index + 1 < MIN_HISTORY) return { kind: "skip", reason: "collecting" };
   const key = `${round.id}:${arrivedLate(round) ? 1 : 0}:${cfg.startedAt}:${cfg.minConfidence}`;
   const cached = decisionCache.get(key);
   if (cached) return cached;
@@ -132,25 +132,12 @@ export function decisionAfter(rounds: LiveRound[], index: number, cfg: ScheduleC
   if (prev?.kind === "entry" && !isGreen(prev.signal.side, round.outcome)) {
     decision = { kind: "gale", signal: prev.signal, late: arrivedLate(round) };
   } else if (arrivedLate(round)) {
-    decision = { kind: "skip", reason: "next_round", counts: true };
+    decision = { kind: "skip", reason: "next_round" };
   } else {
     const analysis = analysisAfter(rounds, index, cfg.minConfidence);
-    if (analysis?.signal) {
-      decision = { kind: "entry", signal: analysis.signal, forced: false };
-    } else {
-      let analyzed = 0;
-      for (let j = index - 1; j >= 0 && analyzed < MAX_ANALYSIS_ROUNDS; j--) {
-        const d = decisionAfter(rounds, j, cfg);
-        if (d.kind !== "skip" || !d.counts) break;
-        analyzed++;
-      }
-      if (analyzed >= MAX_ANALYSIS_ROUNDS) {
-        const history = rounds.slice(Math.max(0, index + 1 - HISTORY), index + 1);
-        decision = { kind: "entry", signal: fallbackSignal(history), forced: true };
-      } else {
-        decision = { kind: "skip", reason: analysis?.reason ?? "no_pattern", counts: true };
-      }
-    }
+    decision = analysis?.signal
+      ? { kind: "entry", signal: analysis.signal }
+      : { kind: "skip", reason: analysis?.reason ?? "no_pattern" };
   }
   if (decisionCache.size > 1000) decisionCache.clear();
   decisionCache.set(key, decision);

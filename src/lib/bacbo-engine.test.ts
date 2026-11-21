@@ -10,6 +10,9 @@ import {
   matchPatterns,
   resolveSignal,
   rollRound,
+  STRICT_CONFIDENCE,
+  tableCycle,
+  tieReading,
   type Outcome,
   type Round,
 } from "./bacbo-engine";
@@ -49,7 +52,6 @@ describe("bac bo patterns", () => {
 
   it("no signal below the minimum confidence", () => {
     expect(detectSignal(rounds("BPPP"), 70)).toBeNull();
-    expect(detectSignal(rounds("BPPP"), 60)).not.toBeNull();
   });
 });
 
@@ -72,7 +74,15 @@ describe("signal resolution (entry + 1 gale, tie covered)", () => {
 describe("stats", () => {
   it("accuracy, streak and gale counts", () => {
     const s = computeStats(["green_g0", "green_g1", "red", "green_g1"]);
-    expect(s).toMatchObject({ total: 4, greens: 3, accuracy: 75, streak: 2, g0: 1, g1: 2, reds: 1 });
+    expect(s).toMatchObject({
+      total: 4,
+      greens: 3,
+      accuracy: 75,
+      streak: 2,
+      g0: 1,
+      g1: 2,
+      reds: 1,
+    });
   });
   it("distribution reports observed frequencies without clipping ties", () => {
     const d = distribution(rounds("PPPPPPPPPPTTTTTTTTTT"));
@@ -113,5 +123,54 @@ describe("signal math", () => {
     expect(s.probability).toBeGreaterThanOrEqual(50);
     expect(s.probability).toBeLessThanOrEqual(85);
     expect(s.reasons[1]).toContain("6 de 6");
+  });
+});
+
+describe("strict confluence (no forced entries)", () => {
+  it("the minimum calculated confidence for an entry is 75%", () => {
+    expect(STRICT_CONFIDENCE).toBe(75);
+  });
+  it("a short surf alone (64) is not enough: no entry", () => {
+    expect(analyze(rounds("BPPP"), 60)).toEqual({ signal: null, reason: "low_confidence" });
+  });
+  it("a strong surf on a trending table enters with confluence of 75% or more", () => {
+    const s = analyze(rounds("BPPPPPP"), 60).signal!;
+    expect(s.side).toBe("player");
+    expect(s.confidence).toBeGreaterThanOrEqual(75);
+    expect(s.cycle).toBe("trend");
+  });
+});
+
+describe("table cycle", () => {
+  it("long runs read as a trend (surf), alternation as choppy (xadrez)", () => {
+    expect(tableCycle(seq("PPPPBBBBPPPP")).cycle).toBe("trend");
+    expect(tableCycle(seq("PBPBPBPBPBPB")).cycle).toBe("chop");
+  });
+  it("never enters a surf when the table is choppy", () => {
+    expect(analyze(rounds("PBPBPBPBPPP"), 60)).toEqual({ signal: null, reason: "choppy_table" });
+  });
+});
+
+describe("tie reading from the 4 dice", () => {
+  const withDice = (p: [number, number], b: [number, number], n = 12): Round[] =>
+    Array.from({ length: n }, () => ({ p, b, outcome: "P" as Outcome }));
+  it("close dice margins raise the tie chance and ask for reinforced protection", () => {
+    // 10 rounds decided by 1 point and 2 ties (a normal tie count): margins are very tight.
+    const close = [
+      ...withDice([3, 4], [3, 3], 10),
+      ...Array.from(
+        { length: 2 },
+        () => ({ p: [2, 2], b: [1, 3], outcome: "T" as Outcome }) as Round,
+      ),
+    ];
+    const t = tieReading(close);
+    expect(t.avgMargin).toBeLessThanOrEqual(1);
+    expect(t.probability).toBeGreaterThan(11);
+    expect(t.reinforced).toBe(true);
+  });
+  it("wide margins keep the normal tie protection", () => {
+    const t = tieReading(withDice([6, 6], [1, 2]));
+    expect(t.avgMargin).toBe(9);
+    expect(t.reinforced).toBe(false);
   });
 });

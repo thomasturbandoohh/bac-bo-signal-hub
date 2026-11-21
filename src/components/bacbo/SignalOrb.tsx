@@ -1,17 +1,11 @@
 import { motion } from "framer-motion";
 import type { Side, Signal } from "@/lib/bacbo-engine";
-import { Water } from "@/components/bacbo/Water";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 
-/** Calm, low water layer used on standby/analyzing panels. */
-export function WaterWave({ side }: { side?: Side; raised?: boolean }) {
-  return <Water level={10} tone={side ?? "neutral"} calm className="opacity-50" />;
-}
-
 export function SignalOrb({
   side,
-  signal: _signal,
+  signal,
   gale = false,
   phaseStart,
   phaseEnd,
@@ -74,6 +68,25 @@ export function SignalOrb({
         <p className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/75">
           Aposte agora · <span className="tabular-nums text-foreground">{secondsLeft}s</span>
         </p>
+
+        {signal && (
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em]">
+            <span className="rounded-full bg-success/15 px-2 py-0.5 text-success ring-1 ring-success/30">
+              Confluência {signal.confidence}%
+            </span>
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 ring-1",
+                signal.tie.reinforced
+                  ? "bg-tie/25 text-tie-glow ring-tie/50"
+                  : "bg-foreground/5 text-foreground/70 ring-foreground/10",
+              )}
+            >
+              {signal.tie.reinforced ? "Reforce o empate" : "Cubra o empate"} ·{" "}
+              {signal.tie.probability}%
+            </span>
+          </div>
+        )}
 
         <div className="mt-2.5 h-1.5 w-28 overflow-hidden rounded-full bg-background/40 sm:w-32">
           <div

@@ -20,4 +20,12 @@
 - [x] Mesa ao vivo mais realista
 - [x] Login: campos dentro de um card, textos em negrito
 - [x] 1 gale: notificação "Faça o Gale" e "Green no Gale"
-- [x] Máx. 2 rodadas analisando sem padrão; barra mais lenta e suave
+- [x] Barra de análise mais lenta e suave (entrada forçada removida em 21/11 16:13)
+
+## Robô mais rigoroso + ondas (pedido 21/11, 16:13)
+- [x] Remover a faixa no rodapé do card Standby/Analisando
+- [x] Ondas suaves sem linhas; baixas e sem números ao buscar, sobem no lado do sinal, baixam ao esperar resultado
+- [x] Sem entrada forçada; só entra com confluência calculada ≥ 75%
+- [x] Ciclo da mesa (tendência x picotada): não entrar em surf com mesa picotada
+- [x] Leitura das margens dos 4 dados → chance de empate e proteção reforçada
+- [x] Barra de análise com cor/feedback por etapa

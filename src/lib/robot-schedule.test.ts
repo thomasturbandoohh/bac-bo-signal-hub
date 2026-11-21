@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Outcome } from "./bacbo-engine";
+import { STRICT_CONFIDENCE, type Outcome } from "./bacbo-engine";
 import type { LiveRound } from "./live-table";
 import {
   ANALYSIS_MS,
@@ -7,7 +7,6 @@ import {
   BET_CLOSE_MS,
   decisionAfter,
   GALE_REVEAL_MS,
-  MAX_ANALYSIS_ROUNDS,
   liveWindow,
   mergeSignals,
   robotView,
@@ -34,8 +33,8 @@ function table(seq: string, lastAt: number, prefix = "r"): LiveRound[] {
 }
 
 const cfg: ScheduleConfig = { startedAt: T0, minConfidence: 60 };
-// Ends in a run of three Player wins → "Surf" pattern says Player next.
-const surf = (lastAt: number) => table("PBBPPP", lastAt);
+// Ends in a long run of Player wins on a trending table → strong "Surf" says Player next.
+const surf = (lastAt: number) => table("BPPPPPP", lastAt);
 
 describe("robot driven by the real table", () => {
   it("sends no signal while the admin has not switched the robot on", () => {
@@ -58,7 +57,7 @@ describe("robot driven by the real table", () => {
     const v = robotView(cfg, surf(at), at + ANALYSIS_MS);
     expect(v.phase).toBe("signal");
     expect(v.signal?.side).toBe("player");
-    expect(v.key).toBe("r5");
+    expect(v.key).toBe("r6");
   });
 
   it("a round that reaches us a little late still shows its signal on arrival", () => {
@@ -70,7 +69,7 @@ describe("robot driven by the real table", () => {
 
   it("tells why it holds back when the table is cold", () => {
     const at = T0 + 60_000;
-    const v = robotView(cfg, table("BPBBPPP", at), at + 1_000);
+    const v = robotView(cfg, table("BPBBPPP", at, "cold"), at + 1_000);
     expect(v.signal).toBeNull();
     expect(v.reason).toBe("cold_table");
   });
@@ -82,7 +81,7 @@ describe("robot driven by the real table", () => {
     const v = robotView(cfg, rounds, at + 18_500);
     expect(v.phase).toBe("analyzing");
     expect(v.signal).toBeNull();
-    expect(signalsBetween(cfg, rounds, T0, at + 30_000).map((s) => s.key)).not.toContain("r5");
+    expect(signalsBetween(cfg, rounds, T0, at + 30_000).map((s) => s.key)).not.toContain("r6");
   });
 
   it("when bets close the entry leaves the screen and waits for its result", () => {
@@ -150,38 +149,50 @@ describe("robot driven by the real table", () => {
   });
 });
 
-describe("1 gale and the analysis limit", () => {
+describe("1 gale and no forced entries", () => {
   // All rounds settle after the robot was switched on.
   const late = (seq: string) => table(seq, T0 + 20 * ROUND_MS, `${seq}:`);
   const lastAt = T0 + 20 * ROUND_MS;
 
   it("when the entry misses, the next signal is the gale on the same side", () => {
-    const v = robotView(cfg, late("PBBPPPB"), lastAt + GALE_REVEAL_MS);
+    const v = robotView(cfg, late("BPPPPPPB"), lastAt + GALE_REVEAL_MS);
     expect(v.phase).toBe("signal");
     expect(v.gale).toBe(true);
     expect(v.signal?.side).toBe("player");
   });
 
   it("there is only 1 gale: after a lost gale the robot reads a new pattern", () => {
-    const d = decisionAfter(late("PBBPPPBB"), 7, cfg);
-    expect(d.kind).toBe("entry");
+    const rounds = late("BPPPPPPBB");
+    expect(decisionAfter(rounds, 7, cfg).kind).toBe("gale");
+    expect(decisionAfter(rounds, 8, cfg).kind).not.toBe("gale");
   });
 
   it("the gale is not stored as a new entry in the session history", () => {
-    const rounds = late("PBBPPPB");
+    const rounds = late("BPPPPPPB");
     const keys = signalsBetween(cfg, rounds, T0, lastAt + ANALYSIS_MS).map((s) => s.key);
-    expect(keys).toContain("PBBPPPB:5");
-    expect(keys).not.toContain("PBBPPPB:6");
+    expect(keys).toContain("BPPPPPPB:6");
+    expect(keys).not.toContain("BPPPPPPB:7");
   });
 
-  it("analyzes at most 2 rounds without a pattern, then enters", () => {
-    expect(MAX_ANALYSIS_ROUNDS).toBe(2);
-    const rounds = late("PPPPPPPPBPPP");
-    expect(decisionAfter(rounds, 9, cfg).kind).toBe("skip");
-    expect(decisionAfter(rounds, 10, cfg).kind).toBe("skip");
-    const third = decisionAfter(rounds, 11, cfg);
-    expect(third.kind).toBe("entry");
-    expect(third.kind === "entry" && third.forced).toBe(true);
+  it("never forces an entry: every entry has confluence of 75% or more", () => {
+    // Deterministic pseudo-random table of 300 rounds.
+    let seed = 7;
+    const rng = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const seqStr = Array.from({ length: 300 }, () => {
+      const x = rng();
+      return x < 0.11 ? "T" : x < 0.555 ? "P" : "B";
+    }).join("");
+    const rounds = table(seqStr, T0 + 400 * ROUND_MS, "rand");
+    let longestSkipRun = 0;
+    let run = 0;
+    for (let i = 0; i < rounds.length; i++) {
+      const d = decisionAfter(rounds, i, cfg);
+      if (d.kind === "entry") expect(d.signal.confidence).toBeGreaterThanOrEqual(STRICT_CONFIDENCE);
+      run = d.kind === "skip" ? run + 1 : 0;
+      longestSkipRun = Math.max(longestSkipRun, run);
+    }
+    // Long stretches without a confirmed pattern stay skips instead of turning into an entry.
+    expect(longestSkipRun).toBeGreaterThan(3);
   });
 });
 
