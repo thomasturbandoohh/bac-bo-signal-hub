@@ -87,10 +87,22 @@ function AdminPage() {
 
   const deleteFn = useServerFn(deleteUserAccount);
   const [toDelete, setToDelete] = useState<Profile | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const remove = useMutation({
     mutationFn: (id: string) => deleteFn({ data: { userId: id } }),
-    onSuccess: () => toast.success("Cadastro excluído"),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: allProfilesQuery.queryKey }),
+    onSuccess: (result) => {
+      if (!result.ok) {
+        setDeleteError(result.error);
+        return;
+      }
+      setToDelete(null);
+      toast.success("Cadastro excluído");
+      void queryClient.invalidateQueries({ queryKey: allProfilesQuery.queryKey });
+    },
+    onError: () =>
+      setDeleteError(
+        "Não foi possível concluir a exclusão. Verifique sua sessão e conexão e tente novamente.",
+      ),
   });
 
   const pending = profiles.filter((p) => p.status === "pending");
@@ -221,7 +233,15 @@ function AdminPage() {
         </motion.div>
       </AnimatePresence>
 
-      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
+      <AlertDialog
+        open={!!toDelete}
+        onOpenChange={(open) => {
+          if (!open && !remove.isPending) {
+            setToDelete(null);
+            setDeleteError(null);
+          }
+        }}
+      >
         <AlertDialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir cadastro?</AlertDialogTitle>
@@ -229,16 +249,23 @@ function AdminPage() {
               A conta de {toDelete?.name || toDelete?.email} será apagada de vez.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {deleteError && (
+            <p role="alert" className="text-sm text-destructive">
+              {deleteError}
+            </p>
+          )}
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={remove.isPending}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
+              disabled={remove.isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                setDeleteError(null);
                 if (toDelete) remove.mutate(toDelete.id);
-                setToDelete(null);
               }}
             >
-              Excluir
+              {remove.isPending ? "Excluindo..." : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
