@@ -61,7 +61,7 @@ function ApprovedLayout() {
   return (
     <RobotProvider isAdmin={isAdmin}>
       <div aria-hidden="true" className="bg-ambient pointer-events-none fixed inset-0 z-0" />
-      <div className="relative z-10 mx-auto min-h-screen max-w-md px-3.5 pb-28 pt-3 sm:px-4 sm:pt-4 md:max-w-2xl md:pb-32 lg:max-w-5xl lg:px-6">
+      <div className="relative z-10 mx-auto min-h-screen max-w-md px-3.5 pb-48 pt-3 sm:px-4 sm:pt-4 md:max-w-2xl md:pb-52 lg:max-w-5xl lg:px-6">
         <motion.div
           key={pathname}
           initial={{ opacity: 0, y: 6 }}

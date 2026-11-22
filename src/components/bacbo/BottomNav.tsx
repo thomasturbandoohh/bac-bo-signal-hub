@@ -13,7 +13,10 @@ export function BottomNav() {
   const { pathname } = useLocation();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40">
+    <nav
+      aria-label="Navegação principal"
+      className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40"
+    >
       <div className="mx-auto max-w-md px-3.5 pb-safe sm:px-4">
         <div className="flex items-center justify-around rounded-[1.5rem] border border-white/10 bg-card/90 p-1.5 shadow-[0_12px_36px_-10px_rgba(0,0,0,0.55)] backdrop-blur-md sm:rounded-[1.7rem] sm:p-2">
           {items.map(({ to, label, icon: Icon }) => {
