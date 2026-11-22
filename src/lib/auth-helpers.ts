@@ -10,7 +10,13 @@ export function isNotice(v: unknown): v is AccountNotice {
 
 /** Returns the account status for the signed-in user, or null when no profile exists yet. */
 export async function getAccountStatus(userId: string) {
-  const { data } = await supabase.from("profiles").select("status").eq("id", userId).maybeSingle();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("status")
+    .eq("id", userId)
+    .maybeSingle();
+  // A failed read is not "unapproved": surface it so the user can retry instead of being signed out.
+  if (error) throw error;
   return data?.status ?? null;
 }
 

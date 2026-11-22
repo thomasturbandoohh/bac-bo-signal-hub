@@ -34,3 +34,4 @@
 - [x] Empate só como proteção (sem cara de entrada no empate); sinais só Player/Banker
 - [x] Mandar sinal sempre que um padrão se forma (tirar o mínimo de 75%), sem entrada forçada
 - [x] Placar/sinais não resetam ao sair e voltar: contam tudo desde que o robô foi ligado, inclusive enquanto ninguém estava no app
+- [x] Corrigir erros do código e deixar a plataforma fluida (sem mudar ícones/efeitos)

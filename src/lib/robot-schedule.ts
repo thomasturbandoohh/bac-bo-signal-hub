@@ -85,6 +85,19 @@ export interface RobotView {
 
 const analysisCache = new Map<string, Analysis | null>();
 
+/** Bounded cache: drops the oldest entries instead of wiping everything (no recompute storms). */
+function remember<V>(cache: Map<string, V>, key: string, value: V, max: number) {
+  cache.set(key, value);
+  if (cache.size > max) {
+    const drop = cache.size - max;
+    let i = 0;
+    for (const k of cache.keys()) {
+      if (i++ >= drop) break;
+      cache.delete(k);
+    }
+  }
+}
+
 /** The robot's pattern reading after round `index` (signal, or why it held back). Cached per round. */
 export function analysisAfter(
   rounds: LiveRound[],
@@ -93,12 +106,12 @@ export function analysisAfter(
 ): Analysis | null {
   const round = rounds[index];
   if (!round || index + 1 < MIN_HISTORY) return null;
-  const key = `${round.id}:${minConfidence}`;
+  const start = Math.max(0, index + 1 - HISTORY);
+  // The reading depends on the rounds before it, so the key includes where that history starts.
+  const key = `${rounds[start]!.id}>${round.id}:${minConfidence}`;
   if (analysisCache.has(key)) return analysisCache.get(key)!;
-  const history = rounds.slice(Math.max(0, index + 1 - HISTORY), index + 1);
-  const result = analyze(history, minConfidence);
-  if (analysisCache.size > 500) analysisCache.clear();
-  analysisCache.set(key, result);
+  const result = analyze(rounds.slice(start, index + 1), minConfidence);
+  remember(analysisCache, key, result, 6000);
   return result;
 }
 
@@ -117,16 +130,31 @@ const decisionCache = new Map<string, Decision>();
  * 3. otherwise → keep analyzing (never a forced entry).
  */
 export function decisionAfter(rounds: LiveRound[], index: number, cfg: ScheduleConfig): Decision {
+  // Iterative (no recursion): walk back to the last cached decision, then compute forward.
+  let from = index;
+  while (from > 0 && !decisionCache.has(decisionKey(rounds, from - 1, cfg))) from--;
+  let result: Decision = { kind: "skip", reason: "next_round" };
+  for (let i = from; i <= index; i++) result = decideOne(rounds, i, cfg);
+  return result;
+}
+
+function decisionKey(rounds: LiveRound[], index: number, cfg: ScheduleConfig) {
+  const round = rounds[index]!;
+  const start = rounds[Math.max(0, index + 1 - HISTORY)]!;
+  return `${start.id}>${round.id}:${arrivedLate(round) ? 1 : 0}:${cfg.startedAt}:${cfg.minConfidence}`;
+}
+
+function decideOne(rounds: LiveRound[], index: number, cfg: ScheduleConfig): Decision {
   const round = rounds[index];
   if (!round || round.settledAt < cfg.startedAt) {
     return { kind: "skip", reason: "next_round" };
   }
   if (index + 1 < MIN_HISTORY) return { kind: "skip", reason: "collecting" };
-  const key = `${round.id}:${arrivedLate(round) ? 1 : 0}:${cfg.startedAt}:${cfg.minConfidence}`;
+  const key = decisionKey(rounds, index, cfg);
   const cached = decisionCache.get(key);
   if (cached) return cached;
 
-  const prev = index > 0 ? decisionAfter(rounds, index - 1, cfg) : null;
+  const prev = index > 0 ? (decisionCache.get(decisionKey(rounds, index - 1, cfg)) ?? null) : null;
   let decision: Decision;
   if (prev?.kind === "entry" && !isGreen(prev.signal.side, round.outcome)) {
     decision = { kind: "gale", signal: prev.signal, late: arrivedLate(round) };
@@ -138,8 +166,7 @@ export function decisionAfter(rounds: LiveRound[], index: number, cfg: ScheduleC
       ? { kind: "entry", signal: analysis.signal }
       : { kind: "skip", reason: analysis?.reason ?? "no_pattern" };
   }
-  if (decisionCache.size > 1000) decisionCache.clear();
-  decisionCache.set(key, decision);
+  remember(decisionCache, key, decision, 12000);
   return decision;
 }
 

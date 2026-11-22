@@ -132,6 +132,8 @@ function AuthPage() {
         if (signIn.data.user) await enter(signIn.data.user.id, true);
         else setNotice("created");
       }
+    } catch {
+      setError("Não foi possível entrar agora. Verifique a conexão e tente de novo.");
     } finally {
       setLoading(false);
     }

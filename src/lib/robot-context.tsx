@@ -142,13 +142,21 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
 
   // Signals of the whole run, rebuilt from the stored rounds (same on every device).
   // Only while the robot is on: switching it off starts a fresh scoreboard next time.
-  const sessionSignals = useMemo<SessionSignal[]>(
+  const lastSignals = useRef<SessionSignal[]>([]);
+  const freshSignals = useMemo<SessionSignal[]>(
     () =>
       cfg && !maintenance && !apiPaused
         ? signalsBetween(cfg, allRounds, cfg.startedAt, now, SIGNAL_HISTORY_LIMIT)
         : [],
     [cfg, allRounds, now, maintenance, apiPaused],
   );
+  const prevSignals = lastSignals.current;
+  const sessionSignals =
+    prevSignals.length === freshSignals.length &&
+    prevSignals.every((s, i) => s.key === freshSignals[i]?.key)
+      ? prevSignals
+      : freshSignals;
+  lastSignals.current = sessionSignals;
 
   const openedAt = useRef(Date.now());
   // Auto-pause after 3 consecutive losses — silent (no toast / animation)
@@ -161,17 +169,22 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
     if (last3.length === 3 && last3.every((r) => !r.green)) {
       const until = Date.now() + PAUSE_MS;
       setPausedUntil(until);
-      void supabase
-        .from("robot_settings")
-        .update({
-          running: false,
-          started_at: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", 1);
-      logAdminAction("Auto-pausa após 3 reds");
+      // Only an admin may switch the robot off for everyone; the query must be awaited to run.
+      if (isAdmin) {
+        void (async () => {
+          const { data, error } = await supabase
+            .from("robot_settings")
+            .update({ running: false, started_at: null, updated_at: new Date().toISOString() })
+            .eq("id", 1)
+            .select("*")
+            .single();
+          if (!error && data) queryClient.setQueryData(settingsQuery.queryKey, data);
+        })();
+        logAdminAction("Auto-pausa após 3 reds");
+      }
+      openedAt.current = Date.now();
     }
-  }, [sessionSignals, allRounds, active, isPaused]);
+  }, [sessionSignals, allRounds, active, isPaused, isAdmin, queryClient]);
 
   const mutation = useMutation({
     mutationFn: async (on: boolean) => {
@@ -208,10 +221,11 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
     },
   });
 
+  const { mutate: toggleMutate, isPending: togglePending } = mutation;
   const toggle = useCallback(() => {
-    if (!isAdmin || mutation.isPending || isPaused) return;
-    mutation.mutate(!running);
-  }, [isAdmin, mutation, running, isPaused]);
+    if (!isAdmin || togglePending || isPaused) return;
+    toggleMutate(!running);
+  }, [isAdmin, togglePending, toggleMutate, running, isPaused]);
 
   const apiPause = useMutation({
     mutationFn: async (paused: boolean) => {
@@ -239,10 +253,11 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
     },
   });
 
+  const { mutate: apiPauseMutate, isPending: apiPausePending } = apiPause;
   const toggleApiPause = useCallback(() => {
-    if (!isAdmin || apiPause.isPending || !settings) return;
-    apiPause.mutate(!apiPaused);
-  }, [isAdmin, apiPause, apiPaused, settings]);
+    if (!isAdmin || apiPausePending || !settings) return;
+    apiPauseMutate(!apiPaused);
+  }, [isAdmin, apiPausePending, apiPauseMutate, apiPaused, settings]);
 
   const tableError = live.isError;
   const feed = live.data?.feed ?? null;

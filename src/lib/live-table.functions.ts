@@ -89,7 +89,7 @@ export const getSessionRounds = createServerFn({ method: "GET" })
         .from("live_rounds")
         .select(ROUND_COLUMNS)
         .gte("settled_at", from)
-        .order("settled_at", { ascending: true })
+        .order("settled_at", { ascending: false })
         .range(page * SESSION_PAGE, page * SESSION_PAGE + SESSION_PAGE - 1);
       if (error) {
         console.error("session rounds read failed", error);
@@ -98,7 +98,8 @@ export const getSessionRounds = createServerFn({ method: "GET" })
       rows.push(...chunk);
       if (chunk.length < SESSION_PAGE) break;
     }
-    return { rounds: rows.map(rowToLiveRound) };
+    // Newest first in the query so a very long run keeps its recent rounds; returned oldest first.
+    return { rounds: rows.map(rowToLiveRound).reverse() };
   });
 
 /** Admin: salva provedor + chave, testa e reconecta a mesa na hora. */
