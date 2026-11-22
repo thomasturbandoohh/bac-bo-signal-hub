@@ -73,7 +73,7 @@ const ROUND_COLUMNS =
  */
 export const getSessionRounds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { since: number }) =>
+  .validator((data: { since: number }) =>
     z.object({ since: z.number().int().positive() }).parse(data),
   )
   .handler(async ({ context, data }): Promise<{ rounds: LiveRound[] }> => {
@@ -105,7 +105,7 @@ export const getSessionRounds = createServerFn({ method: "GET" })
 /** Admin: salva provedor + chave, testa e reconecta a mesa na hora. */
 export const connectLiveTable = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { key: string; provider?: string }) => parseFeedKeyInput(input))
+  .validator((input: { key: string; provider?: string }) => parseFeedKeyInput(input))
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,

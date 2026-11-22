@@ -6,9 +6,7 @@ import { deleteAccountProblem } from "./access-rules";
 /** Permanently removes a user's account, profile, roles and avatar. Admin only. */
 export const deleteUserAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { userId: string }) =>
-    z.object({ userId: z.string().uuid() }).parse(input),
-  )
+  .validator((input: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     // Facts come from the database as the signed-in caller (RLS + security-definer has_role).
     const [{ data: callerIsAdmin }, { data: targetIsAdmin }] = await Promise.all([

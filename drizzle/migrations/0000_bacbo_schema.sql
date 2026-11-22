@@ -161,8 +161,8 @@ create table public.live_feed_status (
 grant select on public.live_feed_status to authenticated;
 grant all on public.live_feed_status to service_role;
 alter table public.live_feed_status enable row level security;
-create policy "Admins read feed status" on public.live_feed_status
-  for select to authenticated using (public.has_role(auth.uid(), 'admin'));
+create policy "Approved users read feed status" on public.live_feed_status
+  for select to authenticated using (public.is_approved(auth.uid()));
 insert into public.live_feed_status (id) values (1) on conflict (id) do nothing;
 
 create or replace function public.claim_live_feed_sync(_min_interval_ms integer)

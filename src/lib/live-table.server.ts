@@ -1,3 +1,6 @@
+let lastCleanupAt = 0;
+const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
+
 import { getProvider, isProviderId, type ProviderId } from "./providers";
 
 /** No máximo um pedido ao provedor por este intervalo (compartilhado entre todos os usuários). */
@@ -152,12 +155,17 @@ export async function syncLiveRounds(force = false): Promise<void> {
         if (error) throw new Error(`db:${error.message}`);
       }
 
-      if (!cursor || result.rawCount < 100 || !result.nextCursor) break;
+      // Se retornou menos de 100 rodadas ou não há próximo cursor, encerra a paginação
+      if (result.rawCount < 100 || !result.nextCursor) break;
       cursor = result.nextCursor;
     }
 
-    const cutoff = new Date(Date.now() - KEEP_DAYS * 86_400_000).toISOString();
-    await supabaseAdmin.from("live_rounds").delete().lt("settled_at", cutoff);
+    // Limpeza de rodadas antigas a cada 1 hora para evitar lock e table bloat a cada 2s
+    if (Date.now() - lastCleanupAt > CLEANUP_INTERVAL_MS) {
+      lastCleanupAt = Date.now();
+      const cutoff = new Date(Date.now() - KEEP_DAYS * 86_400_000).toISOString();
+      await supabaseAdmin.from("live_rounds").delete().lt("settled_at", cutoff);
+    }
     await setStatus({ last_success_at: new Date().toISOString(), last_error: null });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
