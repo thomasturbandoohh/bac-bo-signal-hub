@@ -186,7 +186,14 @@ function AuthPage() {
               }}
             />
           ) : (
-            <div key={mode} className="mx-auto w-full max-w-[380px] sm:max-w-none">
+            <motion.div
+              key={mode}
+              className="mx-auto w-full max-w-[380px] sm:max-w-none"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            >
               <h1 className="text-center font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
                 {mode === "login" ? "Bem-vindo de volta" : "Criar conta"}
               </h1>
@@ -196,7 +203,12 @@ function AuthPage() {
                   : "Seu acesso é liberado após aprovação do admin"}
               </p>
 
-              <div className="relative mt-4 overflow-hidden rounded-2xl border border-white/10 bg-card/85 p-4 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md transition-all sm:mt-6 sm:p-5 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent">
+              <motion.div
+                className="relative mt-4 overflow-hidden rounded-2xl border border-white/10 bg-card/85 p-4 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md transition-all sm:mt-6 sm:p-5 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent"
+                initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+              >
                 <form onSubmit={onSubmit} className="space-y-3">
                   {mode === "signup" && (
                     <Field label="Nome" icon={<UserRound className="h-4 w-4" strokeWidth={2.4} />}>
@@ -257,13 +269,14 @@ function AuthPage() {
                     </button>
                   )}
 
-                  <button
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
                     disabled={loading}
                     className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-banker to-banker-glow text-[15px] font-extrabold text-primary-foreground shadow-[0_18px_40px_-18px_var(--banker)] disabled:opacity-70 sm:h-12"
                   >
                     {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                     {mode === "login" ? "Entrar com E-mail" : "Criar conta"}
-                  </button>
+                  </motion.button>
                 </form>
 
                 <p className="mt-4 text-center text-sm font-semibold text-muted-foreground">
@@ -280,8 +293,8 @@ function AuthPage() {
                     {mode === "login" ? "Criar conta" : "Entrar"}
                   </button>
                 </p>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
         </AnimatePresence>
         <p className="mt-auto pt-5 text-center text-[11px] text-muted-foreground/70 sm:pt-8">
@@ -346,7 +359,13 @@ function NoticeCard({ notice, onBack }: { notice: AccountNotice; onBack: () => v
   const n = NOTICES[notice];
   const Icon = n.icon;
   return (
-    <div className="relative mt-3 overflow-hidden rounded-2xl border border-white/10 bg-card/85 p-5 text-center shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md sm:mt-4 sm:p-7 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="relative mt-3 overflow-hidden rounded-2xl border border-white/10 bg-card/85 p-5 text-center shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md sm:mt-4 sm:p-7 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent"
+    >
       <div
         className={cn(
           "mx-auto flex h-14 w-14 items-center justify-center rounded-full border sm:h-16 sm:w-16",
@@ -365,6 +384,6 @@ function NoticeCard({ notice, onBack }: { notice: AccountNotice; onBack: () => v
       >
         Voltar para o login
       </button>
-    </div>
+    </motion.div>
   );
 }

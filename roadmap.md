@@ -58,3 +58,5 @@
 - [x] Melhorar proporções no celular
 - [x] Cadastro: mensagem clara para o limite de e-mails do Supabase; outros erros mostram a mensagem exata
 - [ ] Chave SYNC_JOB_SECRET (formulário interrompido) + comando SQL do agendamento no Supabase
+
+- [x] Login: animação leve de volta (entrada suave do card, sem exagero)
