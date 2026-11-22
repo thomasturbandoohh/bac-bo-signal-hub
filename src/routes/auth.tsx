@@ -6,7 +6,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import loginCover from "@/assets/login-cover.jpg";
+import { LoginHero } from "@/components/bacbo/LoginHero";
 import {
   getAccountStatus,
   isNotice,
@@ -155,19 +155,7 @@ function AuthPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col sm:mx-auto sm:max-w-md md:max-w-lg lg:max-w-6xl lg:flex-row lg:items-center lg:gap-12 lg:px-10">
-      <div className="relative h-[37vh] min-h-[250px] w-full overflow-hidden sm:h-[34vh] sm:min-h-[240px] lg:h-[80vh] lg:w-1/2 lg:rounded-[2rem]">
-        <motion.img
-          src={loginCover}
-          alt="Bac Bo Live"
-          width={1254}
-          height={1254}
-          className="absolute inset-0 h-full w-full object-cover object-[center_35%]"
-          initial={{ scale: 1.12 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent via-60% to-background lg:hidden" />
-      </div>
+      <LoginHero />
 
       <div className="relative -mt-16 flex w-full flex-1 flex-col px-6 pb-6 sm:-mt-4 sm:px-6 sm:pb-10 lg:mt-0 lg:max-w-md lg:py-10">
         <AnimatePresence mode="wait">
@@ -185,21 +173,30 @@ function AuthPage() {
             <motion.div
               key={mode}
               className="mx-auto w-full max-w-[360px] sm:max-w-none"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
+              initial="hidden"
+              animate="show"
+              exit="exit"
+              variants={STAGGER}
             >
-              <h1 className="text-center font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
+              <motion.h1
+                variants={RISE}
+                className="text-center font-display text-2xl font-extrabold tracking-tight sm:text-3xl"
+              >
                 {mode === "login" ? "Bem-vindo de volta" : "Criar conta"}
-              </h1>
-              <p className="mt-1 text-center text-sm font-semibold text-muted-foreground">
+              </motion.h1>
+              <motion.p
+                variants={RISE}
+                className="mt-1 text-center text-sm font-semibold text-muted-foreground"
+              >
                 {mode === "login"
                   ? "Entre para acessar seus robôs"
                   : "Seu acesso é liberado após aprovação do admin"}
-              </p>
+              </motion.p>
 
-              <div className="liquid-glass mt-4 rounded-[1.75rem] p-4 sm:mt-6 sm:p-5">
+              <motion.div
+                variants={RISE}
+                className="liquid-glass mt-4 rounded-[1.75rem] p-4 sm:mt-6 sm:p-5"
+              >
                 <form onSubmit={onSubmit} className="space-y-3">
                   {mode === "signup" && (
                     <Field label="Nome" icon={<UserRound className="h-4 w-4" strokeWidth={2.4} />}>
@@ -302,7 +299,7 @@ function AuthPage() {
                     {mode === "login" ? "Criar conta" : "Entrar"}
                   </button>
                 </p>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -313,6 +310,22 @@ function AuthPage() {
     </div>
   );
 }
+
+/** Heading, subtitle and form card rise in one after the other. */
+const STAGGER = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.09, delayChildren: 0.15 } },
+  exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
+};
+const RISE = {
+  hidden: { opacity: 0, y: 18, filter: "blur(6px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { type: "spring" as const, stiffness: 220, damping: 24 },
+  },
+};
 
 function Field({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
   return (
