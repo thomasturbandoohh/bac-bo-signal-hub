@@ -35,12 +35,45 @@ function NotFoundComponent() {
   );
 }
 
+// The owner's own Supabase is linked in project settings; until then the generated client throws this.
+function isBackendNotConnected(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("Missing Supabase environment variable");
+}
+
+function BackendNotConnected() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="max-w-md text-center">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          Banco de dados ainda não ligado
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Ligue o seu projeto Supabase em Settings → General → External Supabase → Connect. Depois
+          disso, a plataforma abre normalmente.
+        </p>
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => location.reload()}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Recarregar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
-  console.error(error);
+  const notConnected = isBackendNotConnected(error);
   const router = useRouter();
   useEffect(() => {
+    if (notConnected) return;
+    console.error(error);
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
+  }, [error, notConnected]);
+
+  if (notConnected) return <BackendNotConnected />;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">

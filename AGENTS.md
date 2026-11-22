@@ -45,5 +45,7 @@ use the editor.
 - The 3D die is one shared three.js instance in `src/lib/die-engine.ts`, warmed in idle time by the approved layout and re-attached by `Cube3D`, so it never rebuilds WebGL per signal or per tab.
 - App images are bundled files in `src/assets` imported directly (not `.asset.json` pointers), because the owner deploys to Vercel/Netlify where the `/__l5e/` asset paths don't exist.
 - The live table feed calls the LynxMetrics API directly (`x-api-key`) with the key the admin saves in the panel (private `app-config` bucket), because there is no workspace connector for it; the robot only uses the unbroken recent run of rounds (`liveWindow`) and needs at least `MIN_HISTORY` of them before signaling.
-- The backend is this project's own Lovable Cloud database; the schema lives in `drizzle/migrations` (applied through Lovable), and server code uses the platform-provided `SUPABASE_SERVICE_ROLE_KEY`.
+- Backend: owner's external Supabase; public config in committed `.env`, server falls back to `VITE_*` (`SUPABASE_*` secrets reserved); service key = secret `DB_SERVICE_ROLE_KEY`.
 - Liquid glass, water and dice looks are `@utility` classes in `src/styles.css` (`liquid-glass`, `glass-icon`, `pane-*`, `die-*`) plus the shared `Water` component (seamless wave layers; the board shows water low and no numbers except while a signal is open), so cards stay consistent and themeable.
+- Results are scored once in `RobotProvider` (`useRobot().results`); `/historico` only formats them (`signal-history.ts`).
+- Background sync: owner's pg_cron calls the sync-live-table job with `SYNC_JOB_SECRET` (no Lovable scheduler here).

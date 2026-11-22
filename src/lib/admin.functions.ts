@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/auth-middleware";
 import { deleteAccountProblem } from "./access-rules";
 
 /** Permanently removes a user's account, profile, roles and avatar. Admin only. */

@@ -8,9 +8,9 @@ Lê rodadas reais da mesa Bac Bo Live e mostra sinais a utilizadores aprovados.
 - `src/routes/auth.tsx` — login/cadastro (e-mail e Google).
 - `src/routes/_authenticated/` — exige sessão; `_approved/` exige conta aprovada:
   `robos`, `perfil`, `admin` (só administradores; o servidor e o RLS também verificam).
-- A rota antiga `/historico` redireciona para `/robos`; não existe mais opção Histórico na navegação.
+- `/historico` lista os sinais da sessão atual do robô com o resultado (Green, Green G1, Red).
 - `src/lib/` — motor de sinais, agenda do robô, funções de servidor (`*.functions.ts`), código só de servidor (`*.server.ts`) e regras puras de acesso (`access-rules.ts`).
-- `drizzle/migrations/` — histórico do esquema da base (gerido pelo Lovable; não editar migrações antigas).
+- Banco de dados: projeto Supabase próprio do dono (tabelas e buckets criados pelo script SQL no painel do Supabase).
 
 ## Requisitos e comandos (Bun)
 ```bash

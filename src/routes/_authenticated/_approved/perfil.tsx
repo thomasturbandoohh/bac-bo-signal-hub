@@ -60,7 +60,7 @@ function ProfilePage() {
       <h1 className="font-display text-xl font-bold tracking-tight sm:text-2xl">Perfil</h1>
 
       <div className="liquid-glass relative overflow-hidden rounded-[1.75rem] p-5 text-center sm:p-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-player/20 via-transparent to-banker/20 backdrop-blur-xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-player/20 via-transparent to-banker/20" />
         <div className="relative mx-auto mt-2 h-24 w-24 sm:mt-4 sm:h-28 sm:w-28">
           <Avatar
             value={avatar}

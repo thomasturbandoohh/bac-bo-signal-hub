@@ -56,7 +56,7 @@ export function LoginHero() {
   return (
     <div
       ref={ref}
-      className="relative isolate h-[37vh] min-h-[250px] w-full overflow-hidden sm:h-[34vh] sm:min-h-[240px] lg:h-[80vh] lg:w-1/2 lg:rounded-[2rem]"
+      className="relative isolate h-[34vh] min-h-[220px] w-full overflow-hidden sm:h-[34vh] sm:min-h-[240px] lg:h-[80vh] lg:w-1/2 lg:rounded-[2rem]"
     >
       {/* Photo: settles in, then slow drift + pointer parallax. */}
       <motion.div className="absolute -inset-6" style={{ x: imgX, y: imgY }}>

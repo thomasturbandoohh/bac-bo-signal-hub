@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSupabaseAuth } from "@/lib/auth-middleware";
 import { rowToLiveRound, type LiveRound } from "./live-table";
 import { PROVIDER_LIST } from "./providers";
 import { parseFeedKeyInput } from "./access-rules";

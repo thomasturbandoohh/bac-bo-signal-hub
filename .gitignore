@@ -1,8 +1,5 @@
-
-# Environment files
-.env
+# Environment files (.env is committed: it holds only public Supabase settings; secrets go to Lovable secrets)
 .env*.local
-!.env.example
 # Logs
 logs
 *.log

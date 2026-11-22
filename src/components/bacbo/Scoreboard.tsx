@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRobot } from "@/lib/robot-context";
 import type { Side } from "@/lib/bacbo-engine";
-import { pendingGales, scoreSignals, summarize } from "@/lib/scoreboard";
+import { pendingGales, summarize } from "@/lib/scoreboard";
 import { cn } from "@/lib/utils";
 import checkEmoji from "@/assets/emoji/check_mark_button.webp";
 import crossEmoji from "@/assets/emoji/cross_mark.webp";
@@ -12,12 +12,9 @@ import moneyBagEmoji from "@/assets/emoji/money_bag.webp";
 import moneyWingsEmoji from "@/assets/emoji/money_with_wings.webp";
 import partyEmoji from "@/assets/emoji/party_popper.webp";
 
+/** Results of the robot's current run, scored once in the RobotProvider. */
 export function useSessionResults() {
-  const { sessionSignals, historyRounds } = useRobot();
-  return useMemo(
-    () => scoreSignals(sessionSignals, historyRounds),
-    [sessionSignals, historyRounds],
-  );
+  return useRobot().results;
 }
 
 export function Emoji3D({
@@ -70,7 +67,7 @@ export function Scoreboard() {
           >
             {i.value}
           </span>
-          <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground sm:text-[10px]">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
             {i.label}
           </span>
         </div>

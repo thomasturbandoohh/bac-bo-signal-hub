@@ -9,8 +9,12 @@ export const Route = createFileRoute("/api/public/jobs/sync-live-table")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const denied = await authenticateCronRequest(request);
-        if (denied) return denied;
+        // The owner's Supabase scheduler sends SYNC_JOB_SECRET; Lovable's scheduler its own secret.
+        const { isSyncJobRequest } = await import("@/lib/job-auth.server");
+        if (!isSyncJobRequest(request)) {
+          const denied = await authenticateCronRequest(request);
+          if (denied) return denied;
+        }
 
         const { getAdminClient } = await import("@/lib/admin-client.server");
         const { data: settings } = await getAdminClient()

@@ -38,3 +38,23 @@
 - [x] Login: foto nova de cassino com animações (framer-motion)
 - [x] Login: voltar para a foto anterior, mantendo as animações
 - [x] Robôs: cards organizados em duas colunas no computador (celular continua igual)
+
+## Implantação do repositório bac-bo-signal-hub com Supabase próprio (22/11)
+- [x] Código do GitHub copiado para este projeto
+- [x] Supabase próprio ligado pelo endereço e chave pública (arquivo .env)
+- [x] Chave secreta do servidor salva como DB_SERVICE_ROLE_KEY e testada (armazenamento, configurações, usuários)
+- [x] Tela de login abre conectada ao banco
+- [x] Dono criou a conta, confirmou o e-mail e virou admin
+- [x] Tela clara "Banco de dados ainda não ligado" no lugar da tela em branco enquanto o Supabase não está ligado
+- [x] Login explica "confirme seu e-mail" e tem botão para reenviar a confirmação (antes mostrava erro genérico)
+- [ ] Chave da LynxMetrics salva no painel do admin (mesa ao vivo) — o dono faz
+- [ ] Gravação da mesa com o app fechado (agendamento) — hoje grava só enquanto alguém está com o app aberto
+
+## Pedido 22/11 12:43
+- [ ] Robô continua gravando a mesa e mandando sinais com o app fechado (agendamento no Supabase do dono)
+- [x] Nova aba Histórico (ícone na barra): sinais do robô com resultado Green / Red / Green G1, bem organizado
+- [x] Plataforma mais otimizada (leve e rápida)
+- [x] Login: cards normais (sem efeito suave)
+- [x] Melhorar proporções no celular
+- [x] Cadastro: mensagem clara para o limite de e-mails do Supabase; outros erros mostram a mensagem exata
+- [ ] Chave SYNC_JOB_SECRET (formulário interrompido) + comando SQL do agendamento no Supabase

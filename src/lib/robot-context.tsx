@@ -28,7 +28,7 @@ import {
   type ScheduleConfig,
   type SessionSignal,
 } from "@/lib/robot-schedule";
-import { scoreSignals } from "@/lib/scoreboard";
+import { scoreSignals, type SignalResult } from "@/lib/scoreboard";
 import { liveFeedEnabled, robotActive } from "@/lib/access-rules";
 
 interface RobotState extends RobotView {
@@ -47,6 +47,8 @@ interface RobotState extends RobotView {
   feed: { lastSuccessAt: number | null; lastError: string | null } | null;
   tableError: boolean;
   sessionSignals: SessionSignal[];
+  /** Results (green / red / green on the gale) of `sessionSignals`, computed once for every screen. */
+  results: SignalResult[];
   toggling: boolean;
   toggle: () => void;
   toggleApiPause: () => void;
@@ -157,6 +159,7 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
       ? prevSignals
       : freshSignals;
   lastSignals.current = sessionSignals;
+  const results = useMemo(() => scoreSignals(sessionSignals, allRounds), [sessionSignals, allRounds]);
 
   const openedAt = useRef(Date.now());
   // Auto-pause after 3 consecutive losses — silent (no toast / animation)
@@ -164,8 +167,8 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
     if (!active || isPaused) return;
     // Only results seen live on this device: a losing streak from while it was closed
     // must not switch the robot off retroactively when the user comes back.
-    const results = scoreSignals(sessionSignals, allRounds).filter((r) => r.at >= openedAt.current);
-    const last3 = results.slice(-3);
+    const seenLive = results.filter((r) => r.at >= openedAt.current);
+    const last3 = seenLive.slice(-3);
     if (last3.length === 3 && last3.every((r) => !r.green)) {
       const until = Date.now() + PAUSE_MS;
       setPausedUntil(until);
@@ -184,7 +187,7 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
       }
       openedAt.current = Date.now();
     }
-  }, [sessionSignals, allRounds, active, isPaused, isAdmin, queryClient]);
+  }, [results, active, isPaused, isAdmin, queryClient]);
 
   const mutation = useMutation({
     mutationFn: async (on: boolean) => {
@@ -280,6 +283,7 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
       feed,
       tableError,
       sessionSignals,
+      results,
       toggling: mutation.isPending,
       toggle,
       toggleApiPause,
@@ -300,6 +304,7 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
       feed,
       tableError,
       sessionSignals,
+      results,
       mutation.isPending,
       toggle,
       toggleApiPause,
