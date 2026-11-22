@@ -68,7 +68,7 @@ export function LiquidBoard({
   const level = (side: "player" | "banker") => (winner === side ? HIGH : LOW);
 
   return (
-    <div className="relative h-28 sm:h-32 lg:h-36">
+    <div className="relative h-28 sm:h-32 lg:h-44">
       <div className="absolute inset-y-0 left-0 w-[45%]">
         <Pane
           tone="player"

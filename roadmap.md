@@ -36,3 +36,5 @@
 - [x] Placar/sinais não resetam ao sair e voltar: contam tudo desde que o robô foi ligado, inclusive enquanto ninguém estava no app
 - [x] Corrigir erros do código e deixar a plataforma fluida (sem mudar ícones/efeitos)
 - [x] Login: foto nova de cassino com animações (framer-motion)
+- [x] Login: voltar para a foto anterior, mantendo as animações
+- [x] Robôs: cards organizados em duas colunas no computador (celular continua igual)

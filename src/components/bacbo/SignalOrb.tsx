@@ -27,7 +27,7 @@ export function SignalOrb({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.2 }}
-      className="liquid-glass relative isolate flex flex-col items-center overflow-hidden rounded-[1.6rem] px-4 py-5 sm:px-5 sm:py-6"
+      className="liquid-glass relative isolate flex flex-col items-center overflow-hidden rounded-[1.6rem] px-4 py-5 sm:px-5 sm:py-6 lg:h-full lg:justify-center lg:px-6 lg:py-8"
     >
       {/* Transparent tint of the side to bet on, with a matching border */}
       <div

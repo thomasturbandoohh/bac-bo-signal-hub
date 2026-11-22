@@ -52,28 +52,29 @@ function RobotsPage() {
   // table's result it stays low with no numbers.
   const winner = live && phase === "signal" ? (robot.signal?.side ?? null) : null;
 
+  // Phones keep the single column below the header. On a computer the cards form two
+  // columns: stats + board + live table on the left, the signal card on the right.
   return (
-    <div className="space-y-3 sm:space-y-3.5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8 lg:gap-y-3.5 lg:space-y-0">
-      <div className="space-y-3 sm:space-y-3.5">
-        <header className="pt-0.5">
-          <Logo />
-          <div className="mt-1.5 flex items-center justify-center gap-2.5 text-xs text-muted-foreground">
-            <span className="liquid-glass inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-bold">
-              <span
-                className={cn(
-                  "h-1.5 w-1.5 rounded-full",
-                  on ? "bg-success" : "bg-muted-foreground",
-                )}
-              />
-              {on ? "Online" : "Standby"}
-            </span>
-            <span className="font-bold">
-              <Clock />
-            </span>
-          </div>
-        </header>
+    <div className="space-y-3 sm:space-y-3.5 lg:grid lg:grid-cols-12 lg:gap-x-6 lg:gap-y-3.5 lg:space-y-0">
+      <header className="pt-0.5 lg:col-span-12">
+        <Logo />
+        <div className="mt-1.5 flex items-center justify-center gap-2.5 text-xs text-muted-foreground">
+          <span className="liquid-glass inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-bold">
+            <span
+              className={cn("h-1.5 w-1.5 rounded-full", on ? "bg-success" : "bg-muted-foreground")}
+            />
+            {on ? "Online" : "Standby"}
+          </span>
+          <span className="font-bold">
+            <Clock />
+          </span>
+        </div>
+      </header>
 
-        <Scoreboard />
+      <div className="space-y-3 sm:space-y-3.5 lg:col-span-7 lg:flex lg:flex-col lg:gap-3.5 lg:space-y-0">
+        <div className="lg:order-1">
+          <Scoreboard />
+        </div>
 
         {isAdmin && (
           <motion.button
@@ -81,7 +82,7 @@ function RobotsPage() {
             whileTap={{ scale: 0.97 }}
             disabled={robot.toggling}
             className={cn(
-              "relative flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-full font-display text-sm font-extrabold tracking-wide transition-colors disabled:opacity-60 sm:h-12",
+              "relative flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-full font-display text-sm font-extrabold tracking-wide transition-colors disabled:opacity-60 sm:h-12 lg:order-4",
               robot.running
                 ? "liquid-glass text-foreground"
                 : "bg-gradient-to-b from-success to-success/80 text-background shadow-[var(--glass-shadow)]",
@@ -92,12 +93,16 @@ function RobotsPage() {
           </motion.button>
         )}
 
-        <LiquidBoard dist={dist} winner={winner} />
+        <div className="lg:order-2">
+          <LiquidBoard dist={dist} winner={winner} />
+        </div>
 
-        <LiveTableCard rounds={robot.rounds} />
+        <div className="lg:order-3">
+          <LiveTableCard rounds={robot.rounds} />
+        </div>
       </div>
 
-      <div>
+      <div className="lg:col-span-5 lg:flex lg:flex-col">
         <AnimatePresence mode="wait">
           {robot.maintenance ? (
             <Panel key="maint">
@@ -159,7 +164,7 @@ function RobotsPage() {
         </AnimatePresence>
       </div>
 
-      <p className="px-3 text-center lg:col-span-2 text-[10px] leading-relaxed text-muted-foreground/70">
+      <p className="px-3 text-center lg:col-span-12 text-[10px] leading-relaxed text-muted-foreground/70">
         As rodadas analisadas vêm da mesa Bac Bo Live ao vivo. Os sinais são leituras de padrões e
         não garantem ganhos. Jogue com responsabilidade · +18.
       </p>
@@ -174,7 +179,7 @@ function Panel({ children }: { children: ReactNode }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.16 }}
-      className="liquid-glass relative isolate flex flex-col items-center overflow-hidden rounded-[1.6rem] px-4 py-5 text-center sm:px-5 sm:py-6"
+      className="liquid-glass relative isolate flex flex-col items-center overflow-hidden rounded-[1.6rem] px-4 py-5 text-center sm:px-5 sm:py-6 lg:h-full lg:justify-center lg:px-6 lg:py-8"
     >
       <div className="relative z-10 flex w-full flex-col items-center">{children}</div>
     </motion.div>

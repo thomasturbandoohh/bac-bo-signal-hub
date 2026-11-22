@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { Logo } from "@/components/bacbo/Logo";
-import cover from "@/assets/login-cover-dice.webp";
+import cover from "@/assets/login-cover.jpg";
 
 /** Fixed sparkle layout (no randomness during render, so server and browser match). */
 const SPARKS = [
