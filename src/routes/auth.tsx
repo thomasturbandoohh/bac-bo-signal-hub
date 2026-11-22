@@ -5,7 +5,6 @@ import { CheckCircle2, Clock3, Loader2, Lock, Mail, ShieldX, UserRound } from "l
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { LoginHero } from "@/components/bacbo/LoginHero";
 import {
   getAccountStatus,
@@ -61,6 +60,15 @@ function AuthPage() {
       if (data.session) void signOutEverywhere(queryClient);
     });
   }, [search.status, queryClient]);
+
+  // Returning from Google: the session is already in place, so route the user by account status.
+  useEffect(() => {
+    if (search.status) return;
+    void supabase.auth.getSession().then(({ data }) => {
+      if (data.session) void enter(data.session.user.id, true);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function enter(userId: string, justCreated = false) {
     const status = await getAccountStatus(userId);
@@ -141,16 +149,17 @@ function AuthPage() {
 
   async function onGoogle() {
     setError(null);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth` },
     });
-    if (result.error) {
-      setError("Não foi possível entrar com o Google.");
-      return;
+    if (error) {
+      setError(
+        error.message.toLowerCase().includes("not enabled")
+          ? "O login com Google ainda não foi ativado neste projeto."
+          : "Não foi possível entrar com o Google.",
+      );
     }
-    if (result.redirected) return;
-    const { data } = await supabase.auth.getUser();
-    if (data.user) await enter(data.user.id, true);
   }
 
   return (
