@@ -60,3 +60,4 @@
 - [ ] Chave SYNC_JOB_SECRET (formulário interrompido) + comando SQL do agendamento no Supabase
 
 - [x] Login: animação leve de volta (entrada suave do card, sem exagero)
+- [x] Barra de abas: indicador da aba ativa sem vidro, discreto e com transição suave
