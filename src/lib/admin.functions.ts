@@ -9,22 +9,32 @@ export const deleteUserAccount = createServerFn({ method: "POST" })
   .validator((input: { userId: string }) => z.object({ userId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     // Facts come from the database as the signed-in caller (RLS + security-definer has_role).
-    const [{ data: callerIsAdmin }, { data: targetIsAdmin }] = await Promise.all([
+    const [
+      { data: callerIsAdmin, error: callerRoleError },
+      { data: targetIsAdmin, error: targetRoleError },
+    ] = await Promise.all([
       context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
       context.supabase.rpc("has_role", { _user_id: data.userId, _role: "admin" }),
     ]);
+    if (callerRoleError || targetRoleError || callerIsAdmin === null || targetIsAdmin === null) {
+      return {
+        ok: false as const,
+        error: "Não foi possível verificar as permissões. Tente novamente.",
+      };
+    }
     const problem = deleteAccountProblem({
       callerId: context.userId,
       callerIsAdmin: callerIsAdmin === true,
       targetId: data.userId,
       targetIsAdmin: targetIsAdmin === true,
     });
-    if (problem) throw new Error(problem);
+    if (problem) return { ok: false as const, error: problem };
 
     if (!(await import("./admin-client.server")).serviceKey()) {
-      throw new Error(
-        "Falta a chave de servidor (service_role) para excluir. Use Bloquear enquanto isso.",
-      );
+      return {
+        ok: false as const,
+        error: "Falta a chave de servidor (service_role) para excluir. Use Bloquear enquanto isso.",
+      };
     }
     const { getAdminClient } = await import("./admin-client.server");
     const supabaseAdmin = getAdminClient();
@@ -38,8 +48,18 @@ export const deleteUserAccount = createServerFn({ method: "POST" })
 
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) {
-      console.error("deleteUser failed", error);
-      throw new Error("Não foi possível excluir o cadastro.");
+      if (error.status === 401 || error.status === 403) {
+        return {
+          ok: false as const,
+          error:
+            "O Supabase recusou a chave de servidor. Verifique a configuração da chave de serviço.",
+        };
+      }
+      return {
+        ok: false as const,
+        error:
+          "Não foi possível excluir o cadastro no Supabase. Tente novamente ou verifique os registros do serviço.",
+      };
     }
-    return { ok: true };
+    return { ok: true as const };
   });
