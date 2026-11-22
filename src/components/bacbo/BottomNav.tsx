@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Bot, History, Menu, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,9 +12,31 @@ const items = [
 export function BottomNav() {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Node && !navRef.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
 
   return (
     <nav
+      ref={navRef}
       aria-label="Navegação principal"
       className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3.5 z-40 sm:left-4"
     >
