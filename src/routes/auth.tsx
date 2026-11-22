@@ -196,7 +196,7 @@ function AuthPage() {
                   : "Seu acesso é liberado após aprovação do admin"}
               </p>
 
-              <div className="mt-4 rounded-2xl border border-border bg-card p-4 shadow-lg sm:mt-6 sm:p-5">
+              <div className="relative mt-4 overflow-hidden rounded-2xl border border-white/10 bg-card/85 p-4 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md transition-all sm:mt-6 sm:p-5 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent">
                 <form onSubmit={onSubmit} className="space-y-3">
                   {mode === "signup" && (
                     <Field label="Nome" icon={<UserRound className="h-4 w-4" strokeWidth={2.4} />}>
@@ -298,7 +298,7 @@ function Field({ label, icon, children }: { label: string; icon: ReactNode; chil
       <span className="mb-1.5 block pl-1 text-xs font-extrabold uppercase tracking-[0.12em] text-foreground/85">
         {label}
       </span>
-      <span className="flex h-12 items-center gap-3 rounded-xl border border-input bg-background pl-3 pr-4 transition-colors focus-within:border-player-glow/60">
+      <span className="flex h-12 items-center gap-3 rounded-xl border border-white/10 bg-background/60 pl-3 pr-4 backdrop-blur-sm transition-all duration-200 focus-within:border-player-glow/60 focus-within:bg-background/90">
         <span className="shrink-0 text-muted-foreground">{icon}</span>
         {children}
       </span>
@@ -346,7 +346,7 @@ function NoticeCard({ notice, onBack }: { notice: AccountNotice; onBack: () => v
   const n = NOTICES[notice];
   const Icon = n.icon;
   return (
-    <div className="mt-3 rounded-2xl border border-border bg-card p-5 text-center shadow-lg sm:mt-4 sm:p-7">
+    <div className="relative mt-3 overflow-hidden rounded-2xl border border-white/10 bg-card/85 p-5 text-center shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md sm:mt-4 sm:p-7 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent">
       <div
         className={cn(
           "mx-auto flex h-14 w-14 items-center justify-center rounded-full border sm:h-16 sm:w-16",
