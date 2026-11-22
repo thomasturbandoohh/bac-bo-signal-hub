@@ -182,12 +182,6 @@
   padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
 }
 
-@utility google-btn {
-  background-color: #131314;
-  border: 1px solid #8e918f;
-  color: #e3e3e3;
-}
-
 /* Liquid glass: translucent fill, blur, light rim and a soft sheen */
 @utility liquid-glass {
   background: var(--glass-sheen), var(--glass-fill);
