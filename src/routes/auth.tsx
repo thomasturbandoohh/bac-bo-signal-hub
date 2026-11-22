@@ -173,7 +173,7 @@ function AuthPage() {
     <div className="flex min-h-screen w-full flex-col sm:mx-auto sm:max-w-md md:max-w-lg lg:max-w-6xl lg:flex-row lg:items-center lg:gap-12 lg:px-10">
       <LoginHero />
 
-      <div className="relative -mt-16 flex w-full flex-1 flex-col px-6 pb-6 sm:-mt-4 sm:px-6 sm:pb-10 lg:mt-0 lg:max-w-md lg:py-10">
+      <div className="relative -mt-[42vh] flex w-full flex-1 flex-col px-6 pb-6 sm:-mt-4 sm:px-6 sm:pb-10 lg:mt-0 lg:max-w-md lg:py-10">
         <AnimatePresence mode="wait">
           {notice ? (
             <NoticeCard

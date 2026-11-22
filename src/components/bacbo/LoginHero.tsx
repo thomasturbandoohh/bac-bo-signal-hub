@@ -56,7 +56,7 @@ export function LoginHero() {
   return (
     <div
       ref={ref}
-      className="relative isolate h-[34vh] min-h-[220px] w-full overflow-hidden sm:h-[34vh] sm:min-h-[240px] lg:h-[80vh] lg:w-1/2 lg:rounded-[2rem]"
+      className="relative isolate h-[70vh] min-h-[460px] w-full overflow-hidden sm:h-[34vh] sm:min-h-[240px] lg:h-[80vh] lg:w-1/2 lg:rounded-[2rem]"
     >
       {/* Photo: settles in, then slow drift + pointer parallax. */}
       <motion.div className="absolute -inset-6" style={{ x: imgX, y: imgY }}>
@@ -166,7 +166,16 @@ export function LoginHero() {
 
       {/* Soft vignette + fade into the form on phones. */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_40%,transparent_55%,var(--background)_100%)] opacity-70" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/40 via-transparent via-55% to-background lg:hidden" />
+      {/* Phones: the photo continues behind the form, blurred so it never competes with the fields. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] backdrop-blur-md sm:hidden"
+        style={{
+          maskImage: "linear-gradient(to bottom, transparent, black 35%)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent, black 35%)",
+        }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/40 via-background/10 via-45% to-background lg:hidden" />
     </div>
   );
 }
