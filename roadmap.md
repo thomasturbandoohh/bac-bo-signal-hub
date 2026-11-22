@@ -61,3 +61,4 @@
 
 - [x] Login: animação leve de volta (entrada suave do card, sem exagero)
 - [x] Barra de abas: indicador da aba ativa sem vidro, discreto e com transição suave
+- [x] Login no celular: foto mais comprida, passando por trás do formulário, com a parte de baixo desfocada
