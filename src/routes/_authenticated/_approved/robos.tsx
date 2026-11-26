@@ -79,17 +79,16 @@ function RobotsPage() {
         {isAdmin && (
           <motion.button
             onClick={robot.toggle}
-            aria-label={robot.running ? "Desligar robô e ativar modo manutenção" : "Ligar robô"}
             whileTap={{ scale: 0.97 }}
             disabled={robot.toggling}
             className={cn(
-              "relative flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-full font-display text-sm font-extrabold tracking-wide transition-colors disabled:opacity-60 sm:h-12 lg:order-4 touch-manipulation motion-reduce:transition-none motion-reduce:transform-none",
+              "relative flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-full font-display text-sm font-extrabold tracking-wide transition-colors disabled:opacity-60 sm:h-12 lg:order-4",
               robot.running
                 ? "liquid-glass text-foreground"
                 : "bg-gradient-to-b from-success to-success/80 text-background shadow-[var(--glass-shadow)]",
             )}
           >
-            <Power className="relative h-3.5 w-3.5" aria-hidden="true" />
+            <Power className="relative h-3.5 w-3.5" />
             <span className="relative">{robot.running ? "Desligar Robô" : "Ligar Robô"}</span>
           </motion.button>
         )}
@@ -105,10 +104,10 @@ function RobotsPage() {
 
       <div className="lg:col-span-5 lg:flex lg:flex-col">
         <AnimatePresence mode="wait">
-          {robot.maintenance || phase === "off" ? (
+          {robot.maintenance ? (
             <Panel key="maint">
               <div className="glass-icon h-11 w-11 text-tie">
-                <Wrench className="h-5 w-5" strokeWidth={2.2} aria-hidden="true" />
+                <Wrench className="h-5 w-5" strokeWidth={2.2} />
               </div>
               <span className="mt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Modo manutenção
@@ -117,9 +116,19 @@ function RobotsPage() {
                 ROBÔ PAUSADO
               </h2>
               <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
+                O administrador está calibrando o sistema. Volte em instantes.
+              </p>
+            </Panel>
+          ) : phase === "off" ? (
+            <Panel key="off">
+              <div className="glass-icon h-11 w-11 text-tie-glow">
+                <Moon className="h-5 w-5" fill="currentColor" strokeWidth={1.6} />
+              </div>
+              <h2 className="mt-2 font-display text-base font-extrabold sm:text-lg">STANDBY</h2>
+              <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
                 {isAdmin
-                  ? "O robô está desligado em modo manutenção. Clique em Ligar Robô para retomar."
-                  : "O administrador está calibrando o sistema. Volte em instantes."}
+                  ? "Toque em Ligar Robô para iniciar os sinais para todos."
+                  : "Aguarde o administrador iniciar o robô."}
               </p>
             </Panel>
           ) : robot.reason === "no_connection" ? (

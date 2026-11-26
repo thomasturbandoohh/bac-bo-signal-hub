@@ -196,7 +196,7 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
       const patch = {
         running: on,
         started_at: on ? stamp : null,
-        maintenance: !on,
+        ...(on ? { maintenance: false } : {}),
         updated_at: stamp,
       };
       const { data, error } = await supabase
@@ -211,7 +211,7 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
     onSuccess: (data: RobotSettings) => {
       queryClient.setQueryData(settingsQuery.queryKey, data);
       if (data.running) void queryClient.invalidateQueries({ queryKey: liveTableQuery.queryKey });
-      const msg = data.running ? "Robô ligado para todos os usuários" : "Robô desligado (Modo manutenção ativado) 🛑";
+      const msg = data.running ? "Robô ligado para todos os usuários" : "Robô pausado 🛑";
       toast.success(msg);
       logAdminAction(data.running ? "Ligou o robô" : "Pausou o robô");
     },
