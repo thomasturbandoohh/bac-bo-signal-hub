@@ -417,7 +417,7 @@ function FeedStatus() {
   const queryClient = useQueryClient();
   const robot = useRobot();
   const { liveEnabled, apiPaused, apiToggling, toggleApiPause } = robot;
-  const { data, isError, refetch, isFetching } = useQuery({ ...liveTableQuery, enabled: liveEnabled });
+  const { data, isError, refetch } = useQuery({ ...liveTableQuery, enabled: liveEnabled });
   const feed = data?.feed;
   const errorMsg = feedErrorMessage(feed?.lastError);
   const connected = !!feed?.lastSuccessAt && !feed?.lastError && !apiPaused;
@@ -499,7 +499,7 @@ function FeedStatus() {
         </div>
       </div>
 
-      {/* Controles rápidos da API: Desligar/Ligar API e Reconexão */}
+      {/* While connected, the panel only exposes the two useful live controls. */}
       <div className="flex flex-wrap items-center gap-2 pt-1">
         <button
           type="button"
@@ -521,73 +521,73 @@ function FeedStatus() {
           <span>{apiPaused ? "Ligar API" : "Desligar API"}</span>
         </button>
 
-        <button
-          type="button"
-          disabled={reconnecting || isFetching}
-          onClick={onReconnect}
-          aria-label="Reconectar API da mesa"
-          className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-xs font-bold text-white transition-all hover:bg-white/15 disabled:opacity-50 touch-manipulation motion-reduce:transition-none"
-        >
-          <RotateCw
-            className={cn("h-4 w-4", (reconnecting || isFetching) && "animate-spin")}
-            aria-hidden="true"
-          />
-          <span>Reconexão</span>
-        </button>
+        {connected && (
+          <button
+            type="button"
+            disabled={reconnecting}
+            onClick={onReconnect}
+            aria-label="Reconectar API da mesa"
+            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-xs font-bold text-white transition-all hover:bg-white/15 disabled:opacity-50 touch-manipulation motion-reduce:transition-none"
+          >
+            <RotateCw className={cn("h-4 w-4", reconnecting && "animate-spin")} aria-hidden="true" />
+            <span>Reconexão</span>
+          </button>
+        )}
       </div>
 
-      {/* Conectar / Atualizar Chave da API */}
-      <form onSubmit={onConnect} className="space-y-3 pt-3 border-t border-white/10">
-        <div>
-          <label
-            htmlFor="api-provider-select"
-            className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-          >
-            Provedor
-          </label>
-          <select
-            id="api-provider-select"
-            value={provider}
-            onChange={(e) => setProvider(e.target.value as ProviderId)}
-            className="liquid-glass h-11 w-full rounded-xl px-3 text-sm outline-none"
-          >
-            {PROVIDER_LIST.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-[11px] text-muted-foreground">{selected.help}</p>
-        </div>
-        <div>
-          <label
-            htmlFor="api-key-input"
-            className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
-          >
-            Chave da API
-          </label>
-          <input
-            id="api-key-input"
-            type="password"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="Cole a chave aqui para conectar ou atualizar"
-            className="liquid-glass h-11 w-full rounded-xl px-3 text-sm outline-none"
-            autoComplete="off"
-          />
-        </div>
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-50 hover:brightness-105 transition-all touch-manipulation motion-reduce:transition-none"
-          >
-            {saving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-            Ligar mesa com nova chave
-          </button>
-        </div>
-        {localError && <p className="text-xs text-destructive">{localError}</p>}
-      </form>
+      {!connected && (
+        <form onSubmit={onConnect} className="space-y-3 border-t border-white/10 pt-3">
+          <div>
+            <label
+              htmlFor="api-provider-select"
+              className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Provedor
+            </label>
+            <select
+              id="api-provider-select"
+              value={provider}
+              onChange={(e) => setProvider(e.target.value as ProviderId)}
+              className="liquid-glass h-11 w-full rounded-xl px-3 text-sm outline-none"
+            >
+              {PROVIDER_LIST.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-muted-foreground">{selected.help}</p>
+          </div>
+          <div>
+            <label
+              htmlFor="api-key-input"
+              className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Chave da API
+            </label>
+            <input
+              id="api-key-input"
+              type="password"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="Cole a chave aqui para conectar ou atualizar"
+              className="liquid-glass h-11 w-full rounded-xl px-3 text-sm outline-none"
+              autoComplete="off"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-50 hover:brightness-105 transition-all touch-manipulation motion-reduce:transition-none"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+              Ligar mesa com nova chave
+            </button>
+          </div>
+          {localError && <p className="text-xs text-destructive">{localError}</p>}
+        </form>
+      )}
     </div>
   );
 }

@@ -311,7 +311,7 @@ function Field({ label, icon, children }: { label: string; icon: ReactNode; chil
       <span className="mb-1.5 block pl-1 text-xs font-extrabold uppercase tracking-[0.12em] text-foreground/85">
         {label}
       </span>
-      <span className="flex h-12 items-center gap-3 rounded-xl border border-white/10 bg-background/60 pl-3 pr-4 backdrop-blur-sm transition-all duration-200 focus-within:border-player-glow/60 focus-within:bg-background/90">
+      <span className="flex h-12 items-center gap-3 rounded-xl border border-white/15 bg-card/70 pl-3 pr-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-sm transition-all duration-200 focus-within:border-player-glow/60 focus-within:bg-card/90">
         <span className="shrink-0 text-muted-foreground">{icon}</span>
         {children}
       </span>

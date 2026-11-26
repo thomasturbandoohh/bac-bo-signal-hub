@@ -30,9 +30,13 @@ export function SignalOrb({
       {/* Main Signal Card inspired directly by reference */}
       <motion.section
         aria-label={`Entrada confirmada no lado ${sideTitle}`}
-        initial={shouldReduceMotion ? false : { opacity: 0, y: 8, scale: 0.98 }}
+        initial={
+          shouldReduceMotion ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 8, scale: 0.98 }
+        }
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={shouldReduceMotion ? false : { opacity: 0, y: -4, scale: 0.98 }}
+        exit={
+          shouldReduceMotion ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: -4, scale: 0.98 }
+        }
         transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: "easeOut" }}
         className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-[#121622]/95 px-4 py-6 sm:px-6 sm:py-7 text-center shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7)] backdrop-blur-xl"
       >
