@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { Side, Signal } from "@/lib/bacbo-engine";
 import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
@@ -16,80 +16,123 @@ export function SignalOrb({
   phaseStart: number;
   phaseEnd: number;
 }) {
+  const shouldReduceMotion = useReducedMotion();
   const now = useNow(1000);
   const isPlayer = side === "player";
-  const left = Math.max(0, Math.min(1, (phaseEnd - now) / (phaseEnd - phaseStart)));
   const secondsLeft = Math.max(0, Math.ceil((phaseEnd - now) / 1000));
+  const left = Math.max(0, Math.min(1, (phaseEnd - now) / (phaseEnd - phaseStart)));
+
+  // "CASA" para Banker, "VISITANTE" para Player
+  const sideTitle = isPlayer ? "VISITANTE" : "CASA";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -4 }}
-      transition={{ duration: 0.2 }}
-      className="liquid-glass relative isolate flex flex-col items-center overflow-hidden rounded-[1.6rem] px-4 py-5 sm:px-5 sm:py-6 lg:h-full lg:justify-center lg:px-6 lg:py-8"
-    >
-      {/* Transparent tint of the side to bet on, with a matching border */}
-      <div
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none absolute inset-0 rounded-[inherit] ring-2 ring-inset",
-          isPlayer ? "bg-player/15 ring-player-glow/70" : "bg-banker/15 ring-banker-glow/70",
-        )}
-      />
-
-      <div className="relative z-10 flex flex-col items-center">
+    <div className="flex flex-col gap-3">
+      {/* Main Signal Card inspired directly by reference */}
+      <motion.section
+        aria-label={`Entrada confirmada no lado ${sideTitle}`}
+        initial={
+          shouldReduceMotion ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 8, scale: 0.98 }
+        }
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={
+          shouldReduceMotion ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: -4, scale: 0.98 }
+        }
+        transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: "easeOut" }}
+        className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-[#121622]/95 px-4 py-6 sm:px-6 sm:py-7 text-center shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+      >
+        {/* Gale badge if active */}
         {gale && (
-          <span className="mb-2 rounded-full bg-tie/20 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.18em] text-tie-glow ring-1 ring-tie/40">
-            Gale 1 · última tentativa
+          <span
+            role="status"
+            className="mb-2.5 rounded-full border border-amber-500/50 bg-amber-500/20 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.2em] text-amber-300 shadow-sm"
+          >
+            Gale 1 · Última tentativa
           </span>
         )}
-        <div className="glass-icon h-14 w-14 rounded-full sm:h-16 sm:w-16">
+
+        {/* Concentric Target Orb */}
+        <div
+          aria-hidden="true"
+          className="relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full border-2 border-[#202738] bg-[#0b0e17] shadow-[inset_0_2px_6px_rgba(0,0,0,0.8),0_0_20px_rgba(0,0,0,0.5)]"
+        >
           <div
             className={cn(
-              "h-9 w-9 rounded-full animate-bob sm:h-10 sm:w-10",
-              isPlayer ? "ball-player" : "ball-banker",
+              "h-7 w-7 sm:h-8 sm:w-8 rounded-full transition-all duration-300 motion-reduce:transition-none",
+              isPlayer
+                ? "bg-gradient-to-br from-[#60a5fa] via-[#3b82f6] to-[#1d4ed8] shadow-[0_0_18px_rgba(59,130,246,0.85)]"
+                : "bg-gradient-to-br from-[#f87171] via-[#ef4444] to-[#b91c1c] shadow-[0_0_18px_rgba(239,68,68,0.85)]",
             )}
           />
         </div>
 
-        <span className="mt-2.5 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/70">
-          {gale ? "Faça o gale em" : "Entrada confirmada"}
+        {/* Subtitle */}
+        <span className="mt-3 text-[11px] sm:text-xs font-black uppercase tracking-[0.22em] text-white/80">
+          {gale ? "ENTRADA GALE 1" : "ENTRADA CONFIRMADA"}
         </span>
+
+        {/* Target Big Label: CASA / VISITANTE */}
         <h2
           className={cn(
-            "mt-0.5 font-display text-2xl font-extrabold tracking-[0.12em] text-emboss sm:text-3xl",
-            isPlayer ? "text-player-glow" : "text-banker-glow",
+            "mt-1 font-display text-3xl sm:text-5xl font-black tracking-wider drop-shadow-md",
+            isPlayer ? "text-[#38bdf8]" : "text-[#f87171]",
           )}
         >
-          {isPlayer ? "PLAYER" : "BANKER"}
+          {sideTitle}
         </h2>
 
-        <p className="mt-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/75">
-          Aposte agora · <span className="tabular-nums text-foreground">{secondsLeft}s</span>
-        </p>
+        {/* Three Indicator Dashes */}
+        <div aria-hidden="true" className="mt-2.5 sm:mt-3 flex items-center justify-center gap-2">
+          <span className="h-1 w-5 sm:w-6 rounded-full bg-white/30" />
+          <span className="h-1 w-5 sm:w-6 rounded-full bg-white/30" />
+          <span className="h-1 w-5 sm:w-6 rounded-full bg-white/30" />
+        </div>
 
-        {signal && (
-          <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em]">
-            <span className="rounded-full bg-success/15 px-2 py-0.5 text-success ring-1 ring-success/30">
+        {/* Timing and Protection Details */}
+        <div className="mt-3 sm:mt-3.5 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-bold">
+          <span className="rounded-full bg-white/[0.08] border border-white/15 px-2.5 py-0.5 text-white">
+            Aposte em até <strong className="text-white tabular-nums">{secondsLeft}s</strong>
+          </span>
+          <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 text-amber-300">
+            Proteção no Empate 🟡
+          </span>
+          {signal && (
+            <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 text-emerald-300">
               Confluência {signal.confidence}%
             </span>
-            <span className="rounded-full bg-tie/15 px-2 py-0.5 text-tie-glow ring-1 ring-tie/35">
-              Cubra o empate · proteção
-            </span>
-          </div>
-        )}
+          )}
+        </div>
 
-        <div className="mt-2.5 h-1.5 w-28 overflow-hidden rounded-full bg-background/40 sm:w-32">
+        {/* Progress bar */}
+        <div
+          role="progressbar"
+          aria-valuenow={Math.round(left * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Tempo restante de entrada"
+          className="mt-3.5 h-1.5 w-28 sm:w-36 overflow-hidden rounded-full bg-white/15"
+        >
           <div
             className={cn(
-              "h-full rounded-full transition-[width] duration-1000 ease-linear",
-              isPlayer ? "bg-player-glow" : "bg-banker-glow",
+              "h-full rounded-full transition-[width] duration-1000 ease-linear motion-reduce:transition-none",
+              isPlayer ? "bg-[#38bdf8]" : "bg-[#ef4444]",
             )}
             style={{ width: `${left * 100}%` }}
           />
         </div>
-      </div>
-    </motion.div>
+      </motion.section>
+
+      {/* CASINO 1 Gold Button below the card */}
+      <a
+        href="#casino"
+        aria-label="Abrir mesa no Casino 1 em nova aba"
+        onClick={(e) => {
+          e.preventDefault();
+          window.open("https://bacbo.live", "_blank", "noopener,noreferrer");
+        }}
+        className="group relative flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#ffd44d] via-[#f7c22d] to-[#e8b31a] py-3.5 px-6 font-display text-xs sm:text-sm font-black uppercase tracking-[0.16em] text-[#1c1400] shadow-[0_8px_24px_-4px_rgba(247,194,45,0.45)] transition-all duration-200 hover:brightness-105 active:scale-[0.99] touch-manipulation cursor-pointer motion-reduce:transition-none"
+      >
+        <span>CASINO 1</span>
+      </a>
+    </div>
   );
 }

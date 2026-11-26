@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Radio,
+  RotateCw,
   ArrowLeft,
   Ban,
   Check,
@@ -372,115 +373,58 @@ function IconBtn({
 }
 
 function RobotControls() {
-  const queryClient = useQueryClient();
   const robot = useRobot();
-  const { data: settings } = useQuery(settingsQuery);
-  const [maintenance, setMaintenance] = useState(false);
-
-  useEffect(() => {
-    if (!settings) return;
-    setMaintenance(settings.maintenance);
-  }, [settings]);
-
-  const save = useMutation({
-    mutationFn: async (patch: { maintenance: boolean }) => {
-      const now = new Date().toISOString();
-      const { error } = await supabase
-        .from("robot_settings")
-        .update({ ...patch, updated_at: now })
-        .eq("id", 1);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Robô atualizado");
-      queryClient.invalidateQueries({ queryKey: settingsQuery.queryKey });
-    },
-    onError: () => toast.error("Não foi possível salvar."),
-  });
 
   return (
     <div className="space-y-3">
+      {/* Robô Principal: ao desligar, ativa automaticamente o modo manutenção */}
       <div className="liquid-glass flex items-center gap-3 rounded-2xl p-4 sm:p-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-success/30 bg-success/10 text-success">
-          <Power className="h-5 w-5" />
+        <div
+          className={cn(
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
+            robot.running
+              ? "border-success/30 bg-success/10 text-success"
+              : "border-tie/40 bg-tie/10 text-tie",
+          )}
+        >
+          <Power className="h-5 w-5" aria-hidden="true" />
         </div>
-        <div className="flex-1">
-          <p className="font-semibold">Robô ligado</p>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm sm:text-base text-foreground">
+            {robot.running ? "Robô Ligado (Operando)" : "Robô Desligado (Modo Manutenção)"}
+          </p>
           <p className="text-xs text-muted-foreground">
-            Pausar o robô para os sinais e o histórico.
+            {robot.running
+              ? "Sinais, leituras e histórico ativos para todos os usuários."
+              : "Ao desligar o robô, o sistema entra diretamente em manutenção e pausa as operações para todos."}
           </p>
         </div>
         <Switch
           checked={robot.running}
           disabled={robot.toggling}
+          aria-label={robot.running ? "Desligar robô e ativar modo manutenção" : "Ligar robô"}
           onCheckedChange={() => robot.toggle()}
         />
       </div>
 
-      <div className="liquid-glass flex items-center gap-3 rounded-2xl p-4 sm:p-5">
-        <div
-          className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-xl border",
-            robot.apiPaused
-              ? "border-destructive/30 bg-destructive/10 text-destructive"
-              : "border-success/30 bg-success/10 text-success",
-          )}
-        >
-          <Radio className="h-5 w-5" />
-        </div>
-        <div className="flex-1">
-          <p className="font-semibold">
-            {robot.apiPaused ? "API da mesa pausada" : "API da mesa ligada"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {robot.apiPaused
-              ? "Pausada para todos os usuários. Desligue o switch para voltar a receber resultados."
-              : "Ligue o switch para pausar a mesa para todos os usuários."}
-          </p>
-        </div>
-        {robot.apiToggling && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-        <Switch
-          checked={robot.apiPaused}
-          disabled={robot.apiToggling}
-          aria-label="Pausar a API da mesa para todos"
-          onCheckedChange={() => robot.toggleApiPause()}
-        />
-      </div>
-
+      {/* Gestão e Conexão da API com ações de Desligar e Reconexão */}
       <FeedStatus />
-
-      <div className="liquid-glass flex items-center gap-3 rounded-2xl p-4 sm:p-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-tie/30 bg-tie/10 text-tie">
-          <Wrench className="h-5 w-5" />
-        </div>
-        <div className="flex-1">
-          <p className="font-semibold">Modo manutenção</p>
-          <p className="text-xs text-muted-foreground">
-            Para tudo (robô, histórico e sinais) para todos.
-          </p>
-        </div>
-        <Switch
-          checked={maintenance}
-          onCheckedChange={(v) => {
-            setMaintenance(v);
-            save.mutate({ maintenance: v });
-          }}
-        />
-      </div>
     </div>
   );
 }
 
 function FeedStatus() {
   const queryClient = useQueryClient();
-  const { liveEnabled } = useRobot();
-  const { data, isError } = useQuery({ ...liveTableQuery, enabled: liveEnabled });
+  const robot = useRobot();
+  const { liveEnabled, apiPaused, apiToggling, toggleApiPause } = robot;
+  const { data, isError, refetch } = useQuery({ ...liveTableQuery, enabled: liveEnabled });
   const feed = data?.feed;
   const errorMsg = feedErrorMessage(feed?.lastError);
-  const connected = !!feed?.lastSuccessAt && !feed?.lastError;
+  const connected = !!feed?.lastSuccessAt && !feed?.lastError && !apiPaused;
   const [provider, setProvider] = useState<ProviderId>("lynxmetrics");
   const [key, setKey] = useState("");
   const [saving, setSaving] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const connect = useServerFn(connectLiveTable);
@@ -515,73 +459,136 @@ function FeedStatus() {
     }
   }
 
+  async function onReconnect() {
+    setReconnecting(true);
+    try {
+      await queryClient.invalidateQueries({ queryKey: liveTableQuery.queryKey });
+      await refetch();
+      toast.success("Reconexão com a mesa solicitada!");
+    } catch {
+      toast.error("Erro ao tentar reconectar à mesa.");
+    } finally {
+      setReconnecting(false);
+    }
+  }
+
   return (
-    <div className="liquid-glass space-y-3 rounded-2xl p-4 sm:p-5">
+    <div className="liquid-glass space-y-4 rounded-2xl p-4 sm:p-5">
       <div className="flex items-center gap-3">
         <div
           className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-xl border",
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
             connected
               ? "border-success/30 bg-success/10 text-success"
+              : apiPaused
+              ? "border-tie/30 bg-tie/10 text-tie"
               : "border-destructive/30 bg-destructive/10 text-destructive",
           )}
         >
-          <KeyRound className="h-5 w-5" />
+          <Radio className="h-5 w-5" aria-hidden="true" />
         </div>
-        <div className="min-w-0">
-          <p className="font-semibold">Fonte dos dados da mesa</p>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-sm sm:text-base text-foreground">API da Mesa</p>
           <p className="text-xs text-muted-foreground">
-            {connected
-              ? "Mesa ligada e a receber dados."
-              : errorMsg ||
-                (isError ? "Erro ao ler o estado da mesa." : "Escolha o provedor e cole a chave.")}
+            {apiPaused
+              ? "API da mesa desligada/pausada manualmente."
+              : connected
+              ? "Mesa conectada e recebendo dados ao vivo."
+              : errorMsg || (isError ? "Erro ao ler o estado da mesa." : "Cole a chave do provedor para conectar.")}
           </p>
         </div>
       </div>
 
-      <form onSubmit={onConnect} className="space-y-2.5">
-        <div>
-          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Provedor
-          </label>
-          <select
-            value={provider}
-            onChange={(e) => setProvider(e.target.value as ProviderId)}
-            className="liquid-glass h-11 w-full rounded-xl px-3 text-sm outline-none"
-          >
-            {PROVIDER_LIST.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-[11px] text-muted-foreground">{selected.help}</p>
-        </div>
-        <div>
-          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Chave da API
-          </label>
-          <input
-            type="password"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="Cole a chave aqui"
-            className="liquid-glass h-11 w-full rounded-xl px-3 text-sm outline-none"
-            autoComplete="off"
-          />
-        </div>
-        <div className="flex gap-2">
+      {/* While connected, the panel only exposes the two useful live controls. */}
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        <button
+          type="button"
+          disabled={apiToggling}
+          onClick={() => toggleApiPause()}
+          aria-label={apiPaused ? "Ligar API da mesa" : "Desligar API da mesa"}
+          className={cn(
+            "flex h-10 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold transition-all disabled:opacity-50 touch-manipulation motion-reduce:transition-none",
+            apiPaused
+              ? "bg-success/20 text-success border border-success/30 hover:bg-success/30"
+              : "bg-destructive/20 text-destructive border border-destructive/30 hover:bg-destructive/30",
+          )}
+        >
+          {apiToggling ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Power className="h-4 w-4" aria-hidden="true" />
+          )}
+          <span>{apiPaused ? "Ligar API" : "Desligar API"}</span>
+        </button>
+
+        {connected && (
           <button
-            type="submit"
-            disabled={saving}
-            className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            type="button"
+            disabled={reconnecting}
+            onClick={onReconnect}
+            aria-label="Reconectar API da mesa"
+            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-xs font-bold text-white transition-all hover:bg-white/15 disabled:opacity-50 touch-manipulation motion-reduce:transition-none"
           >
-            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-            Ligar mesa
+            <RotateCw className={cn("h-4 w-4", reconnecting && "animate-spin")} aria-hidden="true" />
+            <span>Reconexão</span>
           </button>
-        </div>
-        {localError && <p className="text-xs text-destructive">{localError}</p>}
-      </form>
+        )}
+      </div>
+
+      {!connected && (
+        <form onSubmit={onConnect} className="space-y-3 border-t border-white/10 pt-3">
+          <div>
+            <label
+              htmlFor="api-provider-select"
+              className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Provedor
+            </label>
+            <select
+              id="api-provider-select"
+              value={provider}
+              onChange={(e) => setProvider(e.target.value as ProviderId)}
+              className="liquid-glass h-11 w-full rounded-xl px-3 text-sm outline-none"
+            >
+              {PROVIDER_LIST.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-muted-foreground">{selected.help}</p>
+          </div>
+          <div>
+            <label
+              htmlFor="api-key-input"
+              className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Chave da API
+            </label>
+            <input
+              id="api-key-input"
+              type="password"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="Cole a chave aqui para conectar ou atualizar"
+              className="liquid-glass h-11 w-full rounded-xl px-3 text-sm outline-none"
+              autoComplete="off"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground disabled:opacity-50 hover:brightness-105 transition-all touch-manipulation motion-reduce:transition-none"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+              Ligar mesa com nova chave
+            </button>
+          </div>
+          {localError && <p className="text-xs text-destructive">{localError}</p>}
+        </form>
+      )}
     </div>
   );
 }
+
