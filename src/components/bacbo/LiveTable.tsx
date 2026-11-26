@@ -87,7 +87,7 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
   return (
     <section
       aria-label="Mesa ao vivo Bac Bo"
-      className="rounded-[1.6rem] border border-white/15 bg-[#12151c]/95 p-3 sm:p-4 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+      className="rounded-xl border border-white/15 bg-[#12151c]/95 p-3 sm:p-4 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)] backdrop-blur-xl"
     >
       {/* Top Header: MESA AO VIVO and Ao Vivo status badge */}
       <div className="flex items-center justify-between gap-2">
@@ -136,7 +136,7 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
         {/* PLAYER Side */}
         <div
           className={cn(
-            "flex flex-1 flex-col justify-between rounded-2xl border p-2 sm:p-3 transition-all duration-200 motion-reduce:transition-none min-w-0",
+            "flex flex-1 flex-col justify-between rounded-lg border p-2 sm:p-3 transition-all duration-200 motion-reduce:transition-none min-w-0",
             outcome === "P"
               ? "border-[#38bdf8] bg-[#0e223d]/95 shadow-[0_0_20px_-4px_rgba(56,189,248,0.4)]"
               : "border-[#1e3458]/80 bg-[#0c1626]/90",
@@ -168,7 +168,7 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
         {/* BANKER Side */}
         <div
           className={cn(
-            "flex flex-1 flex-col justify-between rounded-2xl border p-2 sm:p-3 transition-all duration-200 motion-reduce:transition-none min-w-0",
+            "flex flex-1 flex-col justify-between rounded-lg border p-2 sm:p-3 transition-all duration-200 motion-reduce:transition-none min-w-0",
             outcome === "B"
               ? "border-[#f87171] bg-[#351319]/95 shadow-[0_0_20px_-4px_rgba(248,113,113,0.4)]"
               : "border-[#521c22]/80 bg-[#240f13]/90",

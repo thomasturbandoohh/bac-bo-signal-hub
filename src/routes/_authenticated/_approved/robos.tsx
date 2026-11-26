@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { Moon, Power, WifiOff, Wrench } from "lucide-react";
+import { WifiOff, Wrench } from "lucide-react";
 import { Logo } from "@/components/bacbo/Logo";
 import { LiquidBoard } from "@/components/bacbo/LiquidBoard";
 import { LiveTableCard } from "@/components/bacbo/LiveTable";
@@ -76,24 +76,6 @@ function RobotsPage() {
           <Scoreboard />
         </div>
 
-        {isAdmin && (
-          <motion.button
-            onClick={robot.toggle}
-            aria-label={robot.running ? "Desligar robô e ativar modo manutenção" : "Ligar robô"}
-            whileTap={{ scale: 0.97 }}
-            disabled={robot.toggling}
-            className={cn(
-              "relative flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-full font-display text-sm font-extrabold tracking-wide transition-colors disabled:opacity-60 sm:h-12 lg:order-4 touch-manipulation motion-reduce:transition-none motion-reduce:transform-none",
-              robot.running
-                ? "liquid-glass text-foreground"
-                : "bg-gradient-to-b from-success to-success/80 text-background shadow-[var(--glass-shadow)]",
-            )}
-          >
-            <Power className="relative h-3.5 w-3.5" aria-hidden="true" />
-            <span className="relative">{robot.running ? "Desligar Robô" : "Ligar Robô"}</span>
-          </motion.button>
-        )}
-
         <div className="lg:order-2">
           <LiquidBoard dist={dist} winner={winner} />
         </div>
@@ -118,7 +100,7 @@ function RobotsPage() {
               </h2>
               <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
                 {isAdmin
-                  ? "O robô está desligado em modo manutenção. Clique em Ligar Robô para retomar."
+                  ? "O robô está desligado em modo manutenção. Use o painel administrativo para retomar."
                   : "O administrador está calibrando o sistema. Volte em instantes."}
               </p>
             </Panel>
@@ -170,7 +152,7 @@ function Panel({ children }: { children: ReactNode }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.16 }}
-      className="liquid-glass relative isolate flex flex-col items-center overflow-hidden rounded-[1.6rem] px-4 py-5 text-center sm:px-5 sm:py-6 lg:h-full lg:justify-center lg:px-6 lg:py-8"
+      className="liquid-glass relative isolate flex flex-col items-center overflow-hidden rounded-xl px-4 py-5 text-center sm:px-5 sm:py-6 lg:h-full lg:justify-center lg:px-6 lg:py-8"
     >
       <div className="relative z-10 flex w-full flex-col items-center">{children}</div>
     </motion.div>

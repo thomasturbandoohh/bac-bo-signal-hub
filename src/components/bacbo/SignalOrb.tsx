@@ -34,7 +34,7 @@ export function SignalOrb({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={shouldReduceMotion ? false : { opacity: 0, y: -4, scale: 0.98 }}
         transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: "easeOut" }}
-        className="relative flex flex-col items-center justify-center overflow-hidden rounded-[1.75rem] border border-white/15 bg-[#121622]/95 px-4 py-6 sm:px-6 sm:py-7 text-center shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+        className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-[#121622]/95 px-4 py-6 sm:px-6 sm:py-7 text-center shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7)] backdrop-blur-xl"
       >
         {/* Gale badge if active */}
         {gale && (
@@ -125,7 +125,7 @@ export function SignalOrb({
           e.preventDefault();
           window.open("https://bacbo.live", "_blank", "noopener,noreferrer");
         }}
-        className="group relative flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ffd44d] via-[#f7c22d] to-[#e8b31a] py-3.5 px-6 font-display text-xs sm:text-sm font-black uppercase tracking-[0.16em] text-[#1c1400] shadow-[0_8px_24px_-4px_rgba(247,194,45,0.45)] transition-all duration-200 hover:brightness-105 active:scale-[0.99] touch-manipulation cursor-pointer motion-reduce:transition-none"
+        className="group relative flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#ffd44d] via-[#f7c22d] to-[#e8b31a] py-3.5 px-6 font-display text-xs sm:text-sm font-black uppercase tracking-[0.16em] text-[#1c1400] shadow-[0_8px_24px_-4px_rgba(247,194,45,0.45)] transition-all duration-200 hover:brightness-105 active:scale-[0.99] touch-manipulation cursor-pointer motion-reduce:transition-none"
       >
         <span>CASINO 1</span>
       </a>
