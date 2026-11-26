@@ -12,7 +12,11 @@ export interface HistoryEntry {
 
 /** Every signal the robot sent in this run, newest first, with its result (or still pending). */
 export function historyEntries(signals: SessionSignal[], results: SignalResult[]): HistoryEntry[] {
-  const byKey = new Map(results.map((r) => [r.key, r]));
+  const byKey = new Map<string, SignalResult>();
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i]!;
+    byKey.set(r.key, r);
+  }
   return signals
     .map((s): HistoryEntry => {
       const r = byKey.get(s.key);

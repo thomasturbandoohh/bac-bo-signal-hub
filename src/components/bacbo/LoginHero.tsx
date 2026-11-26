@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import { Logo } from "@/components/bacbo/Logo";
-import cover from "@/assets/login-cover.jpg";
+import cover from "@/assets/login-cover.webp";
 
 /** Fixed sparkle layout (no randomness during render, so server and browser match). */
 const SPARKS = [
@@ -65,6 +65,8 @@ export function LoginHero() {
           alt="Dados azuis e vermelhos do Bac Bo sobre a mesa"
           width={1254}
           height={1254}
+          loading="eager"
+          decoding="async"
           className="h-full w-full object-cover object-[center_40%]"
           initial={{ scale: 1.28, opacity: 0, filter: "blur(10px)" }}
           animate={

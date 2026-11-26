@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRobot } from "@/lib/robot-context";
 import type { Side } from "@/lib/bacbo-engine";
@@ -17,7 +17,7 @@ export function useSessionResults() {
   return useRobot().results;
 }
 
-export function Emoji3D({
+export const Emoji3D = memo(function Emoji3D({
   src,
   size = 28,
   className,
@@ -33,26 +33,31 @@ export function Emoji3D({
       aria-hidden="true"
       width={size}
       height={size}
+      loading="lazy"
+      decoding="async"
       draggable={false}
       className={cn("select-none drop-shadow-lg", className)}
     />
   );
-}
+});
 
-export function Scoreboard() {
+export const Scoreboard = memo(function Scoreboard() {
   const results = useSessionResults();
-  const s = summarize(results);
-  const items = [
-    { label: "Greens", value: s.greens, tone: "text-success", emoji: checkEmoji },
-    { label: "Reds", value: s.reds, tone: "text-destructive", emoji: crossEmoji },
-    {
-      label: "Acerto",
-      value: s.total ? `${s.rate}%` : "—",
-      tone: "text-foreground",
-      emoji: moneyBagEmoji,
-    },
-    { label: "Sequência", value: s.best, tone: "text-tie-glow", emoji: fireEmoji },
-  ];
+  const s = useMemo(() => summarize(results), [results]);
+  const items = useMemo(
+    () => [
+      { label: "Greens", value: s.greens, tone: "text-success", emoji: checkEmoji },
+      { label: "Reds", value: s.reds, tone: "text-destructive", emoji: crossEmoji },
+      {
+        label: "Acerto",
+        value: s.total ? `${s.rate}%` : "—",
+        tone: "text-foreground",
+        emoji: moneyBagEmoji,
+      },
+      { label: "Sequência", value: s.best, tone: "text-tie-glow", emoji: fireEmoji },
+    ],
+    [s],
+  );
 
   return (
     <div className="liquid-glass grid grid-cols-4 rounded-[1.4rem] px-1.5 py-2.5 sm:py-3">
@@ -74,7 +79,7 @@ export function Scoreboard() {
       ))}
     </div>
   );
-}
+});
 
 type NoteKind = "green" | "green_tie" | "green_gale" | "gale" | "red" | "streak";
 export interface Note {

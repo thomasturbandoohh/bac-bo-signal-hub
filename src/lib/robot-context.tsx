@@ -133,7 +133,29 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
   );
 
   useEffect(() => setNow(Date.now() + clockOffset), [cfg, allRounds, clockOffset]);
-  const view = useMemo(() => robotView(cfg, rounds, now), [cfg, rounds, now]);
+  const rawView = useMemo(() => robotView(cfg, rounds, now), [cfg, rounds, now]);
+  const prevViewRef = useRef<RobotView>(rawView);
+  const view = useMemo(() => {
+    const prev = prevViewRef.current;
+    if (
+      prev &&
+      prev.phase === rawView.phase &&
+      prev.key === rawView.key &&
+      prev.phaseStart === rawView.phaseStart &&
+      prev.phaseEnd === rawView.phaseEnd &&
+      prev.wakeAt === rawView.wakeAt &&
+      prev.waiting === rawView.waiting &&
+      prev.reason === rawView.reason &&
+      prev.gale === rawView.gale &&
+      prev.signal === rawView.signal &&
+      prev.lastRound === rawView.lastRound &&
+      prev.history === rawView.history
+    ) {
+      return prev;
+    }
+    prevViewRef.current = rawView;
+    return rawView;
+  }, [rawView]);
 
   useEffect(() => {
     if (!Number.isFinite(view.wakeAt)) return;

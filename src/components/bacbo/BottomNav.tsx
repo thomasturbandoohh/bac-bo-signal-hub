@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Bot, History, Menu, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,7 @@ const items = [
   { to: "/perfil", label: "Perfil", icon: UserRound },
 ] as const;
 
-export function BottomNav() {
+export const BottomNav = memo(function BottomNav() {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
@@ -77,4 +77,4 @@ export function BottomNav() {
       </button>
     </nav>
   );
-}
+});

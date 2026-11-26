@@ -33,19 +33,20 @@ export function summarizeRoundFrequencies(
 
   if (sampleSize === 0) return { ...EMPTY_FREQUENCIES };
 
+  let pCount = 0;
+  let bCount = 0;
+  let tCount = 0;
+  for (let i = 0; i < sampleSize; i++) {
+    const o = recent[i]!.outcome;
+    if (o === "P") pCount++;
+    else if (o === "B") bCount++;
+    else if (o === "T") tCount++;
+  }
+
   const counts: OutcomeCount[] = [
-    {
-      key: "player",
-      count: recent.filter((round) => round.outcome === "P").length,
-    },
-    {
-      key: "banker",
-      count: recent.filter((round) => round.outcome === "B").length,
-    },
-    {
-      key: "tie",
-      count: recent.filter((round) => round.outcome === "T").length,
-    },
+    { key: "player", count: pCount },
+    { key: "banker", count: bCount },
+    { key: "tie", count: tCount },
   ];
 
   const values = counts.map(({ key, count }) => ({
@@ -61,10 +62,9 @@ export function summarizeRoundFrequencies(
     const remainderDifference = (b.value % 1) - (a.value % 1);
     if (remainderDifference !== 0) return remainderDifference;
 
-    return (
-      counts.findIndex((item) => item.key === a.key) -
-      counts.findIndex((item) => item.key === b.key)
-    );
+    const orderA = a.key === "player" ? 0 : a.key === "banker" ? 1 : 2;
+    const orderB = b.key === "player" ? 0 : b.key === "banker" ? 1 : 2;
+    return orderA - orderB;
   });
 
   for (let index = 0; remaining > 0; index++, remaining--) {

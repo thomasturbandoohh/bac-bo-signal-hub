@@ -31,10 +31,16 @@ export const Route = createFileRoute("/_authenticated/_approved/robos")({
   component: RobotsPage,
 });
 
+const clockFmt = new Intl.DateTimeFormat("pt-BR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+});
+
 function Clock() {
   const now = useNow(1000);
   return (
-    <span className="font-display tabular-nums">{new Date(now).toLocaleTimeString("pt-BR")}</span>
+    <span className="font-display tabular-nums">{clockFmt.format(now)}</span>
   );
 }
 

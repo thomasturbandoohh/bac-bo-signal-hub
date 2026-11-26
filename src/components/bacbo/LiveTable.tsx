@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Radio } from "lucide-react";
 import { Ball, outcomeKind, outcomeLabel } from "@/components/bacbo/Ball";
@@ -14,7 +15,7 @@ const PIPS: Record<number, number[]> = {
 };
 
 /** A translucent casino die (blue for Player, red for Banker) with white pips. */
-export function DieFace({
+export const DieFace = memo(function DieFace({
   value,
   tone,
   size = 26,
@@ -44,9 +45,9 @@ export function DieFace({
       ))}
     </span>
   );
-}
+});
 
-function Side({ round, side }: { round: LiveRound | null; side: "player" | "banker" }) {
+const Side = memo(function Side({ round, side }: { round: LiveRound | null; side: "player" | "banker" }) {
   const isPlayer = side === "player";
   const dice = round ? (isPlayer ? round.p : round.b) : [0, 0];
   const score = round ? (isPlayer ? round.pScore : round.bScore) : null;
@@ -85,9 +86,9 @@ function Side({ round, side }: { round: LiveRound | null; side: "player" | "bank
       </div>
     </div>
   );
-}
+});
 
-export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
+export const LiveTableCard = memo(function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
   const last = rounds[rounds.length - 1] ?? null;
 
   return (
@@ -147,4 +148,4 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
       )}
     </div>
   );
-}
+});
