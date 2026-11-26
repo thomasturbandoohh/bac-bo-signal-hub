@@ -481,8 +481,8 @@ function FeedStatus() {
             connected
               ? "border-success/30 bg-success/10 text-success"
               : apiPaused
-              ? "border-tie/30 bg-tie/10 text-tie"
-              : "border-destructive/30 bg-destructive/10 text-destructive",
+                ? "border-tie/30 bg-tie/10 text-tie"
+                : "border-destructive/30 bg-destructive/10 text-destructive",
           )}
         >
           <Radio className="h-5 w-5" aria-hidden="true" />
@@ -493,8 +493,11 @@ function FeedStatus() {
             {apiPaused
               ? "API da mesa desligada/pausada manualmente."
               : connected
-              ? "Mesa conectada e recebendo dados ao vivo."
-              : errorMsg || (isError ? "Erro ao ler o estado da mesa." : "Cole a chave do provedor para conectar.")}
+                ? "Mesa conectada e recebendo dados ao vivo."
+                : errorMsg ||
+                  (isError
+                    ? "Erro ao ler o estado da mesa."
+                    : "Cole a chave do provedor para conectar.")}
           </p>
         </div>
       </div>
@@ -529,7 +532,10 @@ function FeedStatus() {
             aria-label="Reconectar API da mesa"
             className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-xs font-bold text-white transition-all hover:bg-white/15 disabled:opacity-50 touch-manipulation motion-reduce:transition-none"
           >
-            <RotateCw className={cn("h-4 w-4", reconnecting && "animate-spin")} aria-hidden="true" />
+            <RotateCw
+              className={cn("h-4 w-4", reconnecting && "animate-spin")}
+              aria-hidden="true"
+            />
             <span>Reconexão</span>
           </button>
         )}
@@ -591,4 +597,3 @@ function FeedStatus() {
     </div>
   );
 }
-

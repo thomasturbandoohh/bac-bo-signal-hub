@@ -49,7 +49,20 @@ function Clock() {
 
 function RobotsPage() {
   const robot = useRobot();
-  const { phase, isAdmin, running, maintenance, reason, key: robotKey, signal, gale, phaseStart, phaseEnd, rounds, history } = robot;
+  const {
+    phase,
+    isAdmin,
+    running,
+    maintenance,
+    reason,
+    key: robotKey,
+    signal,
+    gale,
+    phaseStart,
+    phaseEnd,
+    rounds,
+    history,
+  } = robot;
   const on = phase !== "off";
 
   const dist = useMemo(

@@ -181,7 +181,10 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
       ? prevSignals
       : freshSignals;
   lastSignals.current = sessionSignals;
-  const results = useMemo(() => scoreSignals(sessionSignals, allRounds), [sessionSignals, allRounds]);
+  const results = useMemo(
+    () => scoreSignals(sessionSignals, allRounds),
+    [sessionSignals, allRounds],
+  );
 
   const openedAt = useRef(Date.now());
   // Auto-pause after 3 consecutive losses — silent (no toast / animation)
