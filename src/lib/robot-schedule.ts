@@ -27,6 +27,18 @@ export const LATE_MS = 17_000;
 /** No new round for this long: the table is treated as quiet and the robot waits. */
 export const STALE_MS = 120_000;
 const HISTORY = 60;
+
+const historyCache = new WeakMap<LiveRound[], Round[]>();
+function getHistory(rounds: LiveRound[]): Round[] {
+  let cached = historyCache.get(rounds);
+  if (!cached) {
+    const start = Math.max(0, rounds.length - HISTORY);
+    cached = (start === 0 ? rounds : rounds.slice(start)) as Round[];
+    historyCache.set(rounds, cached);
+  }
+  return cached;
+}
+
 /** Past real rounds the robot needs before it reads a pattern. */
 export const MIN_HISTORY = 5;
 /** Max signals counted in the scoreboard since the robot was switched on. */
@@ -225,7 +237,7 @@ export function robotView(cfg: ScheduleConfig | null, rounds: LiveRound[], now: 
       : null;
   const revealAt = revealTime(lastRound, gale);
   const closeAt = settled + BET_CLOSE_MS;
-  const history = rounds.slice(Math.max(0, i + 1 - HISTORY));
+  const history = getHistory(rounds);
   const common = { history, lastRound, key: gale ? `${lastRound.id}:g1` : lastRound.id, gale };
 
   if (shown && now >= revealAt) {

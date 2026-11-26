@@ -133,7 +133,29 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
   );
 
   useEffect(() => setNow(Date.now() + clockOffset), [cfg, allRounds, clockOffset]);
-  const view = useMemo(() => robotView(cfg, rounds, now), [cfg, rounds, now]);
+  const rawView = useMemo(() => robotView(cfg, rounds, now), [cfg, rounds, now]);
+  const prevViewRef = useRef<RobotView>(rawView);
+  const view = useMemo(() => {
+    const prev = prevViewRef.current;
+    if (
+      prev &&
+      prev.phase === rawView.phase &&
+      prev.key === rawView.key &&
+      prev.phaseStart === rawView.phaseStart &&
+      prev.phaseEnd === rawView.phaseEnd &&
+      prev.wakeAt === rawView.wakeAt &&
+      prev.waiting === rawView.waiting &&
+      prev.reason === rawView.reason &&
+      prev.gale === rawView.gale &&
+      prev.signal === rawView.signal &&
+      prev.lastRound === rawView.lastRound &&
+      prev.history === rawView.history
+    ) {
+      return prev;
+    }
+    prevViewRef.current = rawView;
+    return rawView;
+  }, [rawView]);
 
   useEffect(() => {
     if (!Number.isFinite(view.wakeAt)) return;
@@ -196,7 +218,7 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
       const patch = {
         running: on,
         started_at: on ? stamp : null,
-        maintenance: !on,
+        ...(on ? { maintenance: false } : {}),
         updated_at: stamp,
       };
       const { data, error } = await supabase
@@ -211,7 +233,7 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
     onSuccess: (data: RobotSettings) => {
       queryClient.setQueryData(settingsQuery.queryKey, data);
       if (data.running) void queryClient.invalidateQueries({ queryKey: liveTableQuery.queryKey });
-      const msg = data.running ? "Robô ligado para todos os usuários" : "Robô desligado (Modo manutenção ativado) 🛑";
+      const msg = data.running ? "Robô ligado para todos os usuários" : "Robô pausado 🛑";
       toast.success(msg);
       logAdminAction(data.running ? "Ligou o robô" : "Pausou o robô");
     },

@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Water } from "@/components/bacbo/Water";
 import { cn } from "@/lib/utils";
@@ -9,7 +10,7 @@ const LOW = 14;
 /** Water on the side the robot says to bet on. */
 const HIGH = 74;
 
-function Pane({
+const Pane = memo(function Pane({
   tone,
   label,
   value,
@@ -50,13 +51,13 @@ function Pane({
       </span>
     </motion.div>
   );
-}
+});
 
 /**
  * Player / Tie / Banker board. While the robot searches or waits for the table the water stays
  * low and no numbers show; when a signal is sent, the water rises on the side to bet on.
  */
-export function LiquidBoard({
+export const LiquidBoard = memo(function LiquidBoard({
   dist,
   winner,
 }: {
@@ -106,4 +107,4 @@ export function LiquidBoard({
       </div>
     </div>
   );
-}
+});

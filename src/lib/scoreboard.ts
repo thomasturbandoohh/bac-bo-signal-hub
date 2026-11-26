@@ -18,7 +18,10 @@ export interface SignalResult {
  * next real round; if that loses, by the round after it (the gale). Pending entries are skipped.
  */
 export function scoreSignals(signals: SessionSignal[], rounds: LiveRound[]): SignalResult[] {
-  const index = new Map(rounds.map((r, i) => [r.id, i]));
+  const index = new Map<string, number>();
+  for (let i = 0; i < rounds.length; i++) {
+    index.set(rounds[i]!.id, i);
+  }
   const out: SignalResult[] = [];
   for (const s of signals) {
     const i = index.get(s.key);
@@ -53,7 +56,10 @@ export function scoreSignals(signals: SessionSignal[], rounds: LiveRound[]): Sig
 
 /** Entries whose first round lost and whose gale round has not come yet: "do the gale now". */
 export function pendingGales(signals: SessionSignal[], rounds: LiveRound[]): SessionSignal[] {
-  const index = new Map(rounds.map((r, i) => [r.id, i]));
+  const index = new Map<string, number>();
+  for (let i = 0; i < rounds.length; i++) {
+    index.set(rounds[i]!.id, i);
+  }
   return signals.filter((s) => {
     const i = index.get(s.key);
     if (i === undefined) return false;

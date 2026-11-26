@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +9,7 @@ const CREST = "M0 8 C 50 1, 100 1, 150 8 S 250 15, 300 8 S 400 1, 450 8 S 550 15
  * One layer of water: a wavy crest and the body under it, composited as a single group
  * (opacity + mask on the wrapper) so the crest and the body never show a seam or a line.
  */
-function Layer({
+const Layer = memo(function Layer({
   className,
   waveClass,
   offset,
@@ -38,13 +39,13 @@ function Layer({
       <div className="absolute inset-x-0 bottom-0 top-[15px] bg-current" />
     </div>
   );
-}
+});
 
 /**
  * Soft water inside a card: two drifting wave layers with no lines or edges.
  * `level` is the water height in % of the card; it rises and falls smoothly.
  */
-export function Water({
+export const Water = memo(function Water({
   level,
   tone,
   className,
@@ -86,4 +87,4 @@ export function Water({
       />
     </motion.div>
   );
-}
+});
