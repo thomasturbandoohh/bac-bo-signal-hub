@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Ball, outcomeKind, outcomeLabel } from "@/components/bacbo/Ball";
 import type { LiveRound } from "@/lib/live-table";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ function LiveWavesIcon({ className }: { className?: string }) {
       strokeWidth="2.2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       className={className}
     >
       <circle cx="12" cy="12" r="2.2" fill="currentColor" />
@@ -36,36 +37,38 @@ function LiveWavesIcon({ className }: { className?: string }) {
 export function DieFace({
   value,
   tone,
-  size = 32,
+  size = 28,
 }: {
   value: number;
   tone: "player" | "banker";
   size?: number;
 }) {
   const on = PIPS[value] ?? [];
+  const toneLabel = tone === "player" ? "azul do Jogador" : "vermelho da Banca";
   return (
     <span
       role="img"
-      aria-label={value ? `Dado ${value}` : "Dado"}
+      aria-label={value ? `Dado ${toneLabel} com valor ${value}` : `Dado ${toneLabel} aguardando resultado`}
       className={cn(
-        "grid shrink-0 grid-cols-3 grid-rows-3 place-items-center rounded-[24%] transition-transform duration-200",
+        "grid shrink-0 grid-cols-3 grid-rows-3 place-items-center rounded-[24%] transition-transform duration-200 motion-reduce:transition-none",
         tone === "player"
-          ? "bg-gradient-to-br from-[#3b82f6] via-[#1d4ed8] to-[#1e40af] shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.45),inset_0_-2px_4px_rgba(0,0,0,0.5),0_4px_10px_-2px_rgba(30,64,175,0.6)]"
-          : "bg-gradient-to-br from-[#ef4444] via-[#b91c1c] to-[#991b1b] shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.45),inset_0_-2px_4px_rgba(0,0,0,0.5),0_4px_10px_-2px_rgba(185,28,28,0.6)]",
-        !value && "opacity-35",
+          ? "bg-gradient-to-br from-[#3b82f6] via-[#1d4ed8] to-[#1e40af] shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.5),inset_0_-2px_4px_rgba(0,0,0,0.6),0_3px_8px_-2px_rgba(30,64,175,0.7)]"
+          : "bg-gradient-to-br from-[#ef4444] via-[#b91c1c] to-[#991b1b] shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.5),inset_0_-2px_4px_rgba(0,0,0,0.6),0_3px_8px_-2px_rgba(185,28,28,0.7)]",
+        !value && "opacity-30",
       )}
-      style={{ width: size, height: size, padding: Math.round(size * 0.14) }}
+      style={{ width: size, height: size, padding: Math.max(3, Math.round(size * 0.13)) }}
     >
       {Array.from({ length: 9 }, (_, i) => (
         <span
           key={i}
+          aria-hidden="true"
           className={cn(
-            "rounded-full transition-opacity",
+            "rounded-full transition-opacity motion-reduce:transition-none",
             on.includes(i)
-              ? "bg-white shadow-[0_0.5px_1px_rgba(0,0,0,0.4)]"
+              ? "bg-white shadow-[0_0.5px_1px_rgba(0,0,0,0.5)]"
               : "opacity-0",
           )}
-          style={{ width: Math.round(size * 0.18), height: Math.round(size * 0.18) }}
+          style={{ width: Math.max(3, Math.round(size * 0.18)), height: Math.max(3, Math.round(size * 0.18)) }}
         />
       ))}
     </span>
@@ -73,6 +76,7 @@ export function DieFace({
 }
 
 export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
+  const shouldReduceMotion = useReducedMotion();
   const last = rounds[rounds.length - 1] ?? null;
   const pDice = last ? last.p : [0, 0];
   const bDice = last ? last.b : [0, 0];
@@ -81,29 +85,34 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
   const outcome = last?.outcome ?? null;
 
   return (
-    <div className="rounded-[1.6rem] border border-white/10 bg-[#12151c]/90 p-3.5 sm:p-4 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.65)] backdrop-blur-xl">
+    <section
+      aria-label="Mesa ao vivo Bac Bo"
+      className="rounded-[1.6rem] border border-white/15 bg-[#12151c]/95 p-3 sm:p-4 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+    >
       {/* Top Header: MESA AO VIVO and Ao Vivo status badge */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-[#34d399] shadow-inner">
-            <LiveWavesIcon className="h-4.5 w-4.5" />
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-[#34d399] shadow-inner">
+            <LiveWavesIcon className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
           </div>
-          <span className="font-display text-xs font-black uppercase tracking-[0.18em] text-white/90">
+          <h2 className="font-display text-[11px] sm:text-xs font-black uppercase tracking-[0.16em] text-white">
             MESA AO VIVO
-          </span>
+          </h2>
         </div>
 
         <span
+          role="status"
+          aria-label={last ? "Mesa conectada e ao vivo" : "Mesa sem conexão no momento"}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold border transition-colors",
+            "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-bold border transition-colors motion-reduce:transition-none",
             last
-              ? "border-[#1b5e3a]/70 bg-[#0e2a1b]/90 text-[#34d399] shadow-[0_0_12px_rgba(52,211,153,0.15)]"
-              : "border-destructive/40 bg-destructive/10 text-destructive",
+              ? "border-[#1b5e3a] bg-[#0c2417] text-[#34d399] shadow-[0_0_12px_rgba(52,211,153,0.2)]"
+              : "border-destructive/40 bg-destructive/15 text-destructive",
           )}
         >
-          <span className="relative flex h-2 w-2">
+          <span className="relative flex h-2 w-2" aria-hidden="true">
             {last && (
-              <span className="absolute inset-0 animate-ping rounded-full bg-[#34d399] opacity-75" />
+              <span className="absolute inset-0 rounded-full bg-[#34d399] opacity-75 animate-ping motion-reduce:animate-none" />
             )}
             <span
               className={cn(
@@ -119,38 +128,38 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
       {/* Main Table Display: PLAYER | OUTCOME SPHERE | BANKER */}
       <motion.div
         key={last?.id ?? "none"}
-        initial={{ opacity: 0, y: 4 }}
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-        className="relative mt-3 flex items-center justify-between gap-1.5 sm:gap-2.5"
+        transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
+        className="relative mt-2.5 sm:mt-3 flex items-center justify-between gap-1 sm:gap-2.5"
       >
         {/* PLAYER Side */}
         <div
           className={cn(
-            "flex flex-1 flex-col justify-between rounded-2xl border p-2.5 sm:p-3 transition-all duration-300 min-w-0",
+            "flex flex-1 flex-col justify-between rounded-2xl border p-2 sm:p-3 transition-all duration-200 motion-reduce:transition-none min-w-0",
             outcome === "P"
-              ? "border-[#38bdf8]/60 bg-[#0e223d]/90 shadow-[0_0_20px_-4px_rgba(56,189,248,0.3)]"
-              : "border-[#1e3458]/70 bg-[#0c1626]/85",
+              ? "border-[#38bdf8] bg-[#0e223d]/95 shadow-[0_0_20px_-4px_rgba(56,189,248,0.4)]"
+              : "border-[#1e3458]/80 bg-[#0c1626]/90",
           )}
         >
-          <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#38bdf8]">
+          <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#38bdf8]">
             PLAYER
           </span>
-          <div className="mt-2.5 flex items-center gap-2">
-            <DieFace value={pDice[0] ?? 0} tone="player" size={30} />
-            <DieFace value={pDice[1] ?? 0} tone="player" size={30} />
-            <span className="ml-1 sm:ml-2 font-display text-2xl sm:text-3xl font-black tabular-nums text-white/95">
+          <div className="mt-2 flex items-center gap-1 sm:gap-2">
+            <DieFace value={pDice[0] ?? 0} tone="player" size={28} />
+            <DieFace value={pDice[1] ?? 0} tone="player" size={28} />
+            <span className="ml-1 sm:ml-2 font-display text-xl sm:text-2xl lg:text-3xl font-black tabular-nums text-white">
               {pScore}
             </span>
           </div>
         </div>
 
         {/* Center 3D Outcome Ball */}
-        <div className="relative z-10 -mx-2.5 sm:-mx-3 flex items-center justify-center">
+        <div className="relative z-10 -mx-1.5 sm:-mx-3 flex shrink-0 items-center justify-center">
           {last ? (
-            <Ball kind={outcomeKind(last.outcome)} label={outcomeLabel(last.outcome)} size={34} />
+            <Ball kind={outcomeKind(last.outcome)} label={outcomeLabel(last.outcome)} size={32} />
           ) : (
-            <span className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[#181c26] border border-white/10 font-display text-sm font-bold text-muted-foreground">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#181c26] border border-white/15 font-display text-xs font-bold text-muted-foreground">
               –
             </span>
           )}
@@ -159,21 +168,21 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
         {/* BANKER Side */}
         <div
           className={cn(
-            "flex flex-1 flex-col justify-between rounded-2xl border p-2.5 sm:p-3 transition-all duration-300 min-w-0",
+            "flex flex-1 flex-col justify-between rounded-2xl border p-2 sm:p-3 transition-all duration-200 motion-reduce:transition-none min-w-0",
             outcome === "B"
-              ? "border-[#f87171]/60 bg-[#351319]/90 shadow-[0_0_20px_-4px_rgba(248,113,113,0.3)]"
-              : "border-[#521c22]/70 bg-[#240f13]/85",
+              ? "border-[#f87171] bg-[#351319]/95 shadow-[0_0_20px_-4px_rgba(248,113,113,0.4)]"
+              : "border-[#521c22]/80 bg-[#240f13]/90",
           )}
         >
-          <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#f87171] text-right">
+          <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#f87171] text-right">
             BANKER
           </span>
-          <div className="mt-2.5 flex items-center justify-end gap-2">
-            <span className="mr-1 sm:mr-2 font-display text-2xl sm:text-3xl font-black tabular-nums text-white/95">
+          <div className="mt-2 flex items-center justify-end gap-1 sm:gap-2">
+            <span className="mr-1 sm:mr-2 font-display text-xl sm:text-2xl lg:text-3xl font-black tabular-nums text-white">
               {bScore}
             </span>
-            <DieFace value={bDice[0] ?? 0} tone="banker" size={30} />
-            <DieFace value={bDice[1] ?? 0} tone="banker" size={30} />
+            <DieFace value={bDice[0] ?? 0} tone="banker" size={28} />
+            <DieFace value={bDice[1] ?? 0} tone="banker" size={28} />
           </div>
         </div>
       </motion.div>
@@ -183,6 +192,6 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
           Empate pagou {last.multiplier}x
         </p>
       )}
-    </div>
+    </section>
   );
 }
