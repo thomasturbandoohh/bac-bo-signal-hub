@@ -7,7 +7,6 @@ import {
   Loader2,
   Lock,
   Mail,
-  MailCheck,
   ShieldX,
   UserRound,
 } from "lucide-react";
@@ -61,9 +60,7 @@ function AuthPage() {
   const [notice, setNotice] = useState<AccountNotice | null>(search.status ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // E-mail of an account that still has to click the confirmation link (Supabase requires it).
-  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
-  const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
+
   const [form, setForm] = useState({ name: "", email: "", password: "" });
 
   useEffect(() => {
@@ -93,32 +90,11 @@ function AuthPage() {
     setNotice(justCreated && (!status || status === "pending") ? "created" : (status ?? "pending"));
   }
 
-  async function resendConfirmation() {
-    if (!unconfirmedEmail) return;
-    setResendState("sending");
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: unconfirmedEmail,
-      options: { emailRedirectTo: window.location.origin },
-    });
-    if (error) {
-      console.error("[auth] resend confirmation failed", error);
-      setResendState("idle");
-      setError(
-        error.status === 429
-          ? "Aguarde um minuto antes de pedir outro e-mail."
-          : "Não foi possível reenviar o e-mail. Tente de novo.",
-      );
-      return;
-    }
-    setResendState("sent");
-  }
+
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    setUnconfirmedEmail(null);
-    setResendState("idle");
     const parsed = (mode === "login" ? loginSchema : signupSchema).safeParse(form);
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Dados inválidos");
@@ -134,8 +110,7 @@ function AuthPage() {
         if (error) {
           console.error("[auth] sign-in failed", error.code, error.message);
           if (error.code === "email_not_confirmed" || /not confirmed/i.test(error.message)) {
-            setUnconfirmedEmail(parsed.data.email);
-            setError("Confirme seu e-mail antes de entrar. Abra o link que enviamos para você.");
+            setError("Aguarde a aprovação do administrador para liberar seu acesso.");
           } else if (error.code === "invalid_credentials" || /invalid/i.test(error.message)) {
             setError("E-mail ou senha incorretos.");
           } else if (error.status === 429) {
@@ -167,8 +142,8 @@ function AuthPage() {
           await enter(data.user.id, true);
           return;
         }
-        // No session yet: Supabase sent a confirmation link that must be opened before signing in.
-        setNotice("confirm");
+        // Conta criada: aguarda aprovação direta do admin
+        setNotice("created");
       }
     } catch (err) {
       console.error("[auth] unexpected error", err);
@@ -264,19 +239,7 @@ function AuthPage() {
                     )}
                   </AnimatePresence>
 
-                  {unconfirmedEmail && (
-                    <button
-                      type="button"
-                      onClick={() => void resendConfirmation()}
-                      disabled={resendState !== "idle"}
-                      className="flex h-10 w-full items-center justify-center gap-2 rounded-full border border-glass-border bg-background/40 text-sm font-bold text-foreground disabled:opacity-70"
-                    >
-                      {resendState === "sending" && <Loader2 className="h-4 w-4 animate-spin" />}
-                      {resendState === "sent"
-                        ? "E-mail reenviado. Veja sua caixa de entrada e o spam."
-                        : "Reenviar e-mail de confirmação"}
-                    </button>
-                  )}
+
 
                   <motion.button
                     whileTap={{ scale: 0.98 }}
@@ -294,7 +257,6 @@ function AuthPage() {
                     type="button"
                     onClick={() => {
                       setError(null);
-                      setUnconfirmedEmail(null);
                       setMode(mode === "login" ? "signup" : "login");
                     }}
                     className="font-extrabold text-banker-glow"
@@ -339,10 +301,10 @@ const NOTICES: Record<
     body: "Aguarde a aprovação do admin para acessar o robô.",
   },
   confirm: {
-    icon: MailCheck,
-    tone: "text-player-glow border-player-glow/30 bg-player-glow/10",
-    title: "Confirme seu e-mail",
-    body: "Enviamos um link de confirmação para o seu e-mail. Abra o link (veja também o spam) e depois entre com seu e-mail e senha.",
+    icon: CheckCircle2,
+    tone: "text-success border-success/30 bg-success/10",
+    title: "Conta criada com sucesso!",
+    body: "Aguarde a aprovação do admin para acessar o robô.",
   },
   pending: {
     icon: Clock3,
