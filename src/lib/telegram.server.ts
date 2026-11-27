@@ -28,11 +28,20 @@ export interface ActiveSignalState {
   entryMessageId?: number | undefined;
 }
 
+export interface TelegramScoreboard {
+  directGreens: number;
+  galeGreens: number;
+  tieGreens: number;
+  reds: number;
+  lastResetAt?: string | undefined;
+}
+
 export interface TelegramState {
   lastSettledRoundId?: string | undefined;
   activeSignal: ActiveSignalState | null;
   offlineNotified?: boolean | undefined;
   consecutiveGreens?: number | undefined;
+  scoreboard?: TelegramScoreboard | undefined;
   lastUpdated?: string | undefined;
 }
 
@@ -43,6 +52,42 @@ const DEFAULT_TABLE_NAME = "Bac Bo Live";
 let cachedConfig: TelegramConfig | null = null;
 let cachedState: TelegramState | null = null;
 let isProcessing = false;
+
+/** Calcula estatísticas consolidadas do placar. */
+export function calculateScoreboardStats(scoreboard?: TelegramScoreboard) {
+  const direct = scoreboard?.directGreens ?? 0;
+  const gale = scoreboard?.galeGreens ?? 0;
+  const ties = scoreboard?.tieGreens ?? 0;
+  const greens = direct + gale;
+  const reds = scoreboard?.reds ?? 0;
+  const totalWins = greens + ties;
+  const total = totalWins + reds;
+  const rate = total > 0 ? ((totalWins / total) * 100).toFixed(1) : "100.0";
+
+  return { direct, gale, ties, greens, totalWins, reds, total, rate };
+}
+
+/** Linha compacta de placar para entradas ou alertas. */
+export function formatScoreboardLine(scoreboard?: TelegramScoreboard): string {
+  const stats = calculateScoreboardStats(scoreboard);
+  if (stats.total === 0) {
+    return "📊 <b>Placar:</b> 0 ✅ | 0 🟡 | 0 ❌";
+  }
+  return `📊 <b>Placar:</b> ${stats.greens} ✅ | ${stats.ties} 🟡 | ${stats.reds} ❌ (${stats.rate}%)`;
+}
+
+/** Bloco organizado de placar para mensagens de resultado. */
+export function formatScoreboardBlock(scoreboard?: TelegramScoreboard): string {
+  const stats = calculateScoreboardStats(scoreboard);
+  if (stats.total === 0) return "";
+
+  const breakdown = stats.gale > 0 ? ` (${stats.direct} direto • ${stats.gale} G1)` : "";
+
+  return [
+    `📊 <b>Placar:</b> ${stats.greens} ✅${breakdown} | ${stats.ties} 🟡 | ${stats.reds} ❌`,
+    `📈 <b>Assertividade:</b> ${stats.rate}%`,
+  ].join("\n");
+}
 
 /** Lê a configuração do Telegram salva no storage ou nas variáveis de ambiente. */
 export async function readTelegramConfig(admin: Admin): Promise<TelegramConfig | null> {
@@ -123,6 +168,12 @@ export async function readTelegramState(admin: Admin): Promise<TelegramState> {
         offlineNotified: parsed.offlineNotified ?? false,
         consecutiveGreens:
           typeof parsed.consecutiveGreens === "number" ? parsed.consecutiveGreens : 0,
+        scoreboard: parsed.scoreboard ?? {
+          directGreens: 0,
+          galeGreens: 0,
+          tieGreens: 0,
+          reds: 0,
+        },
         lastUpdated: parsed.lastUpdated,
       };
       return cachedState;
@@ -136,6 +187,12 @@ export async function readTelegramState(admin: Admin): Promise<TelegramState> {
     activeSignal: null,
     offlineNotified: false,
     consecutiveGreens: 0,
+    scoreboard: {
+      directGreens: 0,
+      galeGreens: 0,
+      tieGreens: 0,
+      reds: 0,
+    },
   };
   return cachedState;
 }
@@ -157,6 +214,22 @@ export async function saveTelegramState(admin: Admin, state: TelegramState): Pro
   } catch (e) {
     console.error("Failed to persist telegram state to storage", e);
   }
+}
+
+/** Reseta o placar do Telegram mantendo as demais configurações e estado. */
+export async function resetTelegramScoreboard(admin: Admin): Promise<TelegramScoreboard> {
+  const state = await readTelegramState(admin);
+  const empty: TelegramScoreboard = {
+    directGreens: 0,
+    galeGreens: 0,
+    tieGreens: 0,
+    reds: 0,
+    lastResetAt: new Date().toISOString(),
+  };
+  state.scoreboard = empty;
+  state.consecutiveGreens = 0;
+  await saveTelegramState(admin, state);
+  return empty;
 }
 
 interface TelegramApiResponse<T = unknown> {
@@ -203,17 +276,19 @@ export function formatSide(side: Side) {
   };
 }
 
-/** Formata mensagem de entrada confirmada com emotes (versão curta). */
+/** Formata mensagem de entrada confirmada com emotes, placar e chamada curta. */
 export function formatEntryMessage(
   signal: { side: Side; pattern: string; confidence: number },
   config: TelegramConfig,
+  scoreboard?: TelegramScoreboard,
 ): string {
   const s = formatSide(signal.side);
   const table = config.tableName || DEFAULT_TABLE_NAME;
   const platform = config.platformName || DEFAULT_PLATFORM_NAME;
   const url = config.platformUrl || DEFAULT_PLATFORM_URL;
+  const scoreLine = scoreboard ? formatScoreboardLine(scoreboard) : "";
 
-  return [
+  const lines = [
     `🚨 <b>ENTRADA CONFIRMADA</b>`,
     ``,
     `🎲 <b>Mesa:</b> ${table}`,
@@ -221,12 +296,22 @@ export function formatEntryMessage(
     `🎯 <b>Entrada:</b> ${s.emoji} <b>${s.name}</b>`,
     `🟡 <b>Proteção:</b> Empate`,
     `⚡ <b>Gale:</b> Até G1`,
+  ];
+
+  if (scoreLine) {
+    lines.push(scoreLine);
+  }
+
+  lines.push(
     ``,
+    `🚀 <i>Bora forrar! Bate a meta e sai!</i>`,
     `🔗 <a href="${url}">👉 <b>CLIQUE PARA ENTRAR</b></a>`,
-  ].join("\n");
+  );
+
+  return lines.join("\n");
 }
 
-/** Formata mensagem de Gale 1 (G1) (versão curta). */
+/** Formata mensagem de Gale 1 (G1) com alerta de gestão. */
 export function formatGaleMessage(side: Side, config: TelegramConfig): string {
   const s = formatSide(side);
   const table = config.tableName || DEFAULT_TABLE_NAME;
@@ -237,43 +322,62 @@ export function formatGaleMessage(side: Side, config: TelegramConfig): string {
     `🎲 <b>Mesa:</b> ${table}`,
     `🎯 <b>Entrada:</b> ${s.emoji} <b>${s.name}</b>`,
     `🟡 <b>Proteção:</b> Empate`,
+    `⚡ <b>Aposta:</b> Dobrar entrada (gestão)`,
+    ``,
+    `💰 <i>Foco na gestão! Vamos buscar o green!</i>`,
   ].join("\n");
 }
 
 export type ResultType = "direct_green" | "gale_green" | "tie_green" | "red";
 
-/** Formata mensagem de resultado (Green Direto, Green G1, Empate ou Red) com aviso de sequência. */
+/** Formata mensagem de resultado com placar atualizado, sequência e conselho rápido. */
 export function formatResultMessage(
   type: ResultType,
   side: Side,
   config: TelegramConfig,
   streak = 0,
+  scoreboard?: TelegramScoreboard,
 ): string {
   const s = formatSide(side);
   const streakText = streak >= 2 ? `\n🔥 <b>${streak} GREENS SEGUIDOS!</b>` : "";
+  const scoreBlock = scoreboard ? `\n\n${formatScoreboardBlock(scoreboard)}` : "";
 
   if (type === "tie_green") {
-    return [`🟡 <b>EMPATE PAGO!</b> 🤑`, `🎯 Proteção no Empate bateu!${streakText}`].join("\n");
+    return [
+      `🟡 <b>EMPATE PAGO!</b> 🤑`,
+      `🎯 Proteção no Empate bateu!${streakText}${scoreBlock}`,
+      ``,
+      `💰 <i>Multiplicador na conta! Bora forrar!</i>`,
+    ].join("\n");
   }
 
   if (type === "direct_green") {
     return [
       `✅ <b>GREEN DE PRIMEIRA!</b> 🤑`,
-      `🎯 Pagou no ${s.emoji} <b>${s.name}</b>!${streakText}`,
+      `🎯 Pagou no ${s.emoji} <b>${s.name}</b>!${streakText}${scoreBlock}`,
+      ``,
+      `💰 <i>Lucro no bolso! Bate a meta e sai!</i>`,
     ].join("\n");
   }
 
   if (type === "gale_green") {
     return [
       `✅ <b>GREEN NO G1!</b> 🤑`,
-      `🎯 Pagou no ${s.emoji} <b>${s.name}</b>!${streakText}`,
+      `🎯 Pagou no ${s.emoji} <b>${s.name}</b>!${streakText}${scoreBlock}`,
+      ``,
+      `🚀 <i>Recuperado com lucro! Bora pra cima!</i>`,
     ].join("\n");
   }
 
-  return [`❌ <b>RED!</b>`, `🛑 Stop da rodada. Gestão ativada.`].join("\n");
+  return [
+    `❌ <b>RED!</b>`,
+    `🛑 Stop da rodada respeitado.${scoreBlock}`,
+    ``,
+    `🎯 <i>Gestão ativada. Calma que recuperamos!</i>`,
+  ].join("\n");
 }
 
-/** Formata alerta de mesa desconectada ou pausada (versão curta). */
+/** Formata alerta de mesa desconectada ou pausada. */
 export function formatOfflineAlert(config: TelegramConfig): string {
   const table = config.tableName || DEFAULT_TABLE_NAME;
   const platform = config.platformName || DEFAULT_PLATFORM_NAME;
@@ -282,10 +386,12 @@ export function formatOfflineAlert(config: TelegramConfig): string {
     `⚠️ <b>MESA INDISPONÍVEL</b>`,
     `📡 ${table} sem sinal na ${platform}.`,
     `⏸️ Sinais em pausa por segurança.`,
+    ``,
+    `🛑 <i>Proteja sua banca! Aguarde a reconexão.</i>`,
   ].join("\n");
 }
 
-/** Formata aviso de mesa reconectada (versão curta). */
+/** Formata aviso de mesa reconectada. */
 export function formatOnlineAlert(config: TelegramConfig): string {
   const table = config.tableName || DEFAULT_TABLE_NAME;
   const platform = config.platformName || DEFAULT_PLATFORM_NAME;
@@ -294,6 +400,8 @@ export function formatOnlineAlert(config: TelegramConfig): string {
     `🟢 <b>MESA ONLINE</b>`,
     `📡 ${table} conectada na ${platform}.`,
     `🎲 Análise de sinais ativa!`,
+    ``,
+    `🚀 <i>Bora forrar! Preparem as bancas!</i>`,
   ].join("\n");
 }
 
@@ -330,7 +438,7 @@ export async function testTelegramBot(
       `✅ <b>Bot conectado:</b> @${me.result.username || me.result.first_name}`,
       `🎰 <b>Plataforma:</b> ${testPlatform}`,
       ``,
-      `Este canal/grupo está pronto para receber os sinais automatizados em tempo real!`,
+      `Este canal/grupo está pronto para receber os sinais automatizados com placar em tempo real!`,
     ].join("\n");
 
     const sendRes = await callTelegramApi<{ message_id: number }>(botToken, "sendMessage", {
@@ -417,6 +525,12 @@ export async function processTelegramSignals(
     }
 
     const state = await readTelegramState(admin);
+    state.scoreboard = state.scoreboard ?? {
+      directGreens: 0,
+      galeGreens: 0,
+      tieGreens: 0,
+      reds: 0,
+    };
 
     // Gestão de mesa fora do ar / desconectada
     if (isOfflineOrPaused) {
@@ -457,19 +571,33 @@ export async function processTelegramSignals(
         const won = isTie || isGreen(active.side, lastRound.outcome);
 
         if (isTie) {
-          // Empate: vitória com emote amarelo
+          // Empate: vitória com emote amarelo e multiplicador
           state.consecutiveGreens = (state.consecutiveGreens ?? 0) + 1;
+          state.scoreboard.tieGreens += 1;
           await sendTelegramMessage(
             config,
-            formatResultMessage("tie_green", active.side, config, state.consecutiveGreens),
+            formatResultMessage(
+              "tie_green",
+              active.side,
+              config,
+              state.consecutiveGreens,
+              state.scoreboard,
+            ),
           );
           state.activeSignal = null;
         } else if (won) {
           // Green direto
           state.consecutiveGreens = (state.consecutiveGreens ?? 0) + 1;
+          state.scoreboard.directGreens += 1;
           await sendTelegramMessage(
             config,
-            formatResultMessage("direct_green", active.side, config, state.consecutiveGreens),
+            formatResultMessage(
+              "direct_green",
+              active.side,
+              config,
+              state.consecutiveGreens,
+              state.scoreboard,
+            ),
           );
           state.activeSignal = null;
         } else {
@@ -484,25 +612,43 @@ export async function processTelegramSignals(
         const won = isTie || isGreen(active.side, lastRound.outcome);
 
         if (isTie) {
-          // Empate no G1: vitória com emote amarelo
+          // Empate no G1: vitória com proteção
           state.consecutiveGreens = (state.consecutiveGreens ?? 0) + 1;
+          state.scoreboard.tieGreens += 1;
           await sendTelegramMessage(
             config,
-            formatResultMessage("tie_green", active.side, config, state.consecutiveGreens),
+            formatResultMessage(
+              "tie_green",
+              active.side,
+              config,
+              state.consecutiveGreens,
+              state.scoreboard,
+            ),
           );
           state.activeSignal = null;
         } else if (won) {
           // Green no G1
           state.consecutiveGreens = (state.consecutiveGreens ?? 0) + 1;
+          state.scoreboard.galeGreens += 1;
           await sendTelegramMessage(
             config,
-            formatResultMessage("gale_green", active.side, config, state.consecutiveGreens),
+            formatResultMessage(
+              "gale_green",
+              active.side,
+              config,
+              state.consecutiveGreens,
+              state.scoreboard,
+            ),
           );
           state.activeSignal = null;
         } else {
           // Perdeu no G1 -> RED (zera sequência de greens)
           state.consecutiveGreens = 0;
-          await sendTelegramMessage(config, formatResultMessage("red", active.side, config, 0));
+          state.scoreboard.reds += 1;
+          await sendTelegramMessage(
+            config,
+            formatResultMessage("red", active.side, config, 0, state.scoreboard),
+          );
           state.activeSignal = null;
         }
       }
@@ -523,6 +669,7 @@ export async function processTelegramSignals(
             confidence: decision.signal.confidence,
           },
           config,
+          state.scoreboard,
         );
 
         const msgId = await sendTelegramMessage(config, entryMsg, true);
