@@ -1,4 +1,3 @@
-import { NotificationSettingsRow } from "@/components/bacbo/NotificationSettingsCard";
 import { PwaInstallRow } from "@/components/bacbo/PwaInstallPrompt";
 import { useRef, useState, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -118,7 +117,6 @@ function ProfilePage() {
           value={new Date(profile.created_at).toLocaleDateString("pt-BR")}
         />
         <PwaInstallRow />
-        <NotificationSettingsRow />
       </div>
 
       {isAdmin && (

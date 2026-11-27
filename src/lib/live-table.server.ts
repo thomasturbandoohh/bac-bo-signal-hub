@@ -101,17 +101,10 @@ export async function syncLiveRounds(force = false): Promise<void> {
   if (!force) {
     const { data: settings } = await supabaseAdmin
       .from("robot_settings")
-      .select("running, api_paused, maintenance")
+      .select("api_paused")
       .eq("id", 1)
       .maybeSingle();
-
-    if (settings?.api_paused || settings?.maintenance || settings?.running === false) {
-      const { processTelegramSignals } = await import("./telegram.server");
-      await processTelegramSignals(supabaseAdmin, [], true).catch((e) =>
-        console.error("telegram offline alert failed", e),
-      );
-      return;
-    }
+    if (settings?.api_paused) return;
   }
   const { data: claimed, error: claimError } = await supabaseAdmin.rpc("claim_live_feed_sync", {
     _min_interval_ms: force ? 0 : SYNC_INTERVAL_MS,
@@ -174,32 +167,9 @@ export async function syncLiveRounds(force = false): Promise<void> {
       await supabaseAdmin.from("live_rounds").delete().lt("settled_at", cutoff);
     }
     await setStatus({ last_success_at: new Date().toISOString(), last_error: null });
-
-    // Processa os sinais para o Telegram com as rodadas mais recentes sincronizadas
-    const { data: recentRounds } = await supabaseAdmin
-      .from("live_rounds")
-      .select(
-        "id, settled_at, received_at, outcome, player_dice, banker_dice, player_score, banker_score, multiplier",
-      )
-      .order("settled_at", { ascending: false })
-      .limit(60);
-
-    if (recentRounds?.length) {
-      const { rowToLiveRound } = await import("./live-table");
-      const mapped = recentRounds.map(rowToLiveRound);
-      const { processTelegramSignals } = await import("./telegram.server");
-      await processTelegramSignals(supabaseAdmin, mapped, false).catch((e) =>
-        console.error("processTelegramSignals error", e),
-      );
-    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("Live table sync failed:", message);
     await setStatus({ last_error: message.slice(0, 300) });
-
-    const { processTelegramSignals } = await import("./telegram.server");
-    await processTelegramSignals(supabaseAdmin, [], true).catch((e) =>
-      console.error("telegram offline alert error", e),
-    );
   }
 }
