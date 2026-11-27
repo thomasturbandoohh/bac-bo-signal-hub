@@ -220,7 +220,7 @@ export function TelegramControls() {
             htmlFor="tg-bot-token"
             className="mb-1 block text-[0.6875rem] font-semibold uppercase tracking-wider text-muted-foreground"
           >
-            Token da API do Bot (BotFather)
+            Token da API
           </label>
           <div className="relative">
             <input
@@ -228,7 +228,7 @@ export function TelegramControls() {
               type={showToken ? "text" : "password"}
               value={botToken}
               onChange={(e) => setBotToken(e.target.value)}
-              placeholder="Cole o token do seu bot (ex: 123456789:ABCdefGhI...)"
+              placeholder="Cole o token da sua API (ex: 123456789:ABCdefGhI...)"
               className="liquid-glass h-11 w-full rounded-xl pl-3 pr-10 text-sm outline-none font-mono"
               autoComplete="off"
             />
@@ -242,7 +242,7 @@ export function TelegramControls() {
             </button>
           </div>
           <p className="mt-1 text-[0.6875rem] text-muted-foreground">
-            Token HTTP API fornecido pelo @BotFather ao criar seu bot no Telegram.
+            Token da API fornecido pelo @BotFather ao criar seu bot no Telegram.
           </p>
         </div>
 
@@ -252,20 +252,20 @@ export function TelegramControls() {
             htmlFor="tg-chat-id"
             className="mb-1 block text-[0.6875rem] font-semibold uppercase tracking-wider text-muted-foreground"
           >
-            ID do Chat ou Canal
+            ID do seu Chat
           </label>
           <input
             id="tg-chat-id"
             type="text"
             value={chatId}
             onChange={(e) => setChatId(e.target.value)}
-            placeholder="Ex: -1001234567890 ou @seucanalvip"
+            placeholder="ID do seu chat (ex: -1001234567890 ou @seucanalvip)"
             className="liquid-glass h-11 w-full rounded-xl px-3 text-sm outline-none font-mono"
             autoComplete="off"
           />
           <p className="mt-1 text-[0.6875rem] text-muted-foreground">
-            ID do canal ou grupo onde os sinais serão enviados. Certifique-se de adicionar o bot
-            como Administrador com permissão de postar mensagens.
+            ID do seu chat ou canal onde os sinais serão enviados ao vivo. Lembre-se de adicionar o
+            bot como Administrador do canal com permissão de postar.
           </p>
         </div>
 

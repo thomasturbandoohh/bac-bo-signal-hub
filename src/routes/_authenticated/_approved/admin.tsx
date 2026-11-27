@@ -2,15 +2,17 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Radio,
-  RotateCw,
   ArrowLeft,
   Ban,
+  Bot,
   Check,
+  Clock,
   KeyRound,
   Loader2,
   Power,
+  Radio,
   RotateCcw,
+  RotateCw,
   Trash2,
   Users,
   Wrench,
@@ -37,6 +39,7 @@ import { connectLiveTable } from "@/lib/live-table.functions";
 import { liveTableQuery } from "@/lib/queries";
 import { Avatar } from "@/components/bacbo/Avatar";
 import { TelegramControls } from "@/components/bacbo/TelegramControls";
+import { TelegramIcon } from "@/components/bacbo/TelegramIcon";
 import { allProfilesQuery, settingsQuery, type Profile } from "@/lib/queries";
 import { useRobot } from "@/lib/robot-context";
 import { feedErrorMessage } from "@/lib/live-table";
@@ -62,7 +65,7 @@ export const Route = createFileRoute("/_authenticated/_approved/admin")({
   component: AdminPage,
 });
 
-type Tab = "pending" | "users" | "robot";
+type Tab = "pending" | "users" | "robot" | "telegram";
 
 function AdminPage() {
   const { profile: me } = Route.useRouteContext();
@@ -111,9 +114,10 @@ function AdminPage() {
   const others = profiles.filter((p) => p.status !== "pending");
 
   const tabs = [
-    ["pending", "Pendentes"],
-    ["users", "Usuários"],
-    ["robot", "Robô"],
+    { id: "pending", label: "Pendentes", icon: Clock },
+    { id: "users", label: "Usuários", icon: Users },
+    { id: "robot", label: "Robô", icon: Bot },
+    { id: "telegram", label: "Telegram", icon: TelegramIcon },
   ] as const;
 
   return (
@@ -134,12 +138,12 @@ function AdminPage() {
         </div>
       </header>
 
-      <div className="liquid-glass grid grid-cols-3 gap-1 rounded-2xl p-1">
-        {tabs.map(([k, label]) => (
+      <div className="liquid-glass grid grid-cols-4 gap-1 rounded-2xl p-1">
+        {tabs.map(({ id: k, label, icon: TabIcon }) => (
           <button
             key={k}
             onClick={() => setTab(k)}
-            className="relative rounded-xl px-1 py-2 text-xs font-semibold sm:py-2.5 sm:text-sm"
+            className="relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-xl px-1 py-2 text-xs font-semibold sm:py-2.5 sm:text-sm"
           >
             {tab === k && (
               <motion.span
@@ -147,9 +151,20 @@ function AdminPage() {
                 className="absolute inset-0 rounded-xl bg-secondary ring-1 ring-border"
               />
             )}
+            <TabIcon
+              size={18}
+              className={cn(
+                "relative shrink-0 transition-colors",
+                tab === k
+                  ? k === "telegram"
+                    ? "text-[#229ED9]"
+                    : "text-foreground"
+                  : "text-muted-foreground",
+              )}
+            />
             <span
               className={cn(
-                "relative block truncate",
+                "relative block truncate text-[0.6875rem] sm:text-xs",
                 tab === k ? "text-foreground" : "text-muted-foreground",
               )}
             >
@@ -231,7 +246,8 @@ function AdminPage() {
               ))}
             </List>
           )}
-          {tab === "robot" && <RobotControls />}
+          {tab === "robot" && <RobotControls onSelectTelegram={() => setTab("telegram")} />}
+          {tab === "telegram" && <TelegramControls />}
         </motion.div>
       </AnimatePresence>
 
@@ -373,76 +389,119 @@ function IconBtn({
   );
 }
 
-function RobotControls() {
+function RobotControls({ onSelectTelegram }: { onSelectTelegram?: () => void }) {
   const robot = useRobot();
+  const [subView, setSubView] = useState<"robot" | "telegram">("robot");
 
   return (
     <div className="space-y-3">
-      {/* Robô Principal: ligar e desligar operações e sinais */}
-      <div className="liquid-glass flex items-center gap-3 rounded-2xl p-4 sm:p-5">
-        <div
+      {/* Seletor Visual com Ícones: Robô e Telegram */}
+      <div className="liquid-glass grid grid-cols-2 gap-2 rounded-2xl p-1.5">
+        <button
+          type="button"
+          onClick={() => setSubView("robot")}
           className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
-            robot.running
-              ? "border-success/30 bg-success/10 text-success"
-              : "border-white/10 bg-white/5 text-muted-foreground",
+            "flex items-center justify-center gap-2 rounded-xl p-2.5 text-xs sm:text-sm font-semibold transition-all touch-manipulation",
+            subView === "robot"
+              ? "bg-secondary text-foreground ring-1 ring-border shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-white/5",
           )}
         >
-          <Power className="h-5 w-5" aria-hidden="true" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm sm:text-base text-foreground">
-            {robot.running ? "Robô Ligado" : "Robô Desligado"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {robot.running
-              ? "Sinais, leituras e histórico ativos para os usuários."
-              : "Pausar o robô para os sinais e o histórico."}
-          </p>
-        </div>
-        <Switch
-          checked={robot.running}
-          disabled={robot.toggling}
-          aria-label={robot.running ? "Desligar robô" : "Ligar robô"}
-          onCheckedChange={() => robot.toggle()}
-        />
-      </div>
+          <Bot className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+          <span>Operação da Mesa</span>
+        </button>
 
-      {/* Modo Manutenção separado */}
-      <div className="liquid-glass flex items-center gap-3 rounded-2xl p-4 sm:p-5">
-        <div
+        <button
+          type="button"
+          onClick={() => {
+            if (onSelectTelegram) {
+              onSelectTelegram();
+            } else {
+              setSubView("telegram");
+            }
+          }}
           className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
-            robot.maintenance
-              ? "border-tie/40 bg-tie/10 text-tie"
-              : "border-white/10 bg-white/5 text-muted-foreground",
+            "flex items-center justify-center gap-2 rounded-xl p-2.5 text-xs sm:text-sm font-semibold transition-all touch-manipulation",
+            subView === "telegram"
+              ? "bg-[#229ED9]/15 text-[#229ED9] ring-1 ring-[#229ED9]/30 shadow-sm"
+              : "text-muted-foreground hover:text-[#229ED9] hover:bg-[#229ED9]/5",
           )}
         >
-          <Wrench className="h-5 w-5" aria-hidden="true" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm sm:text-base text-foreground">
-            {robot.maintenance ? "Modo Manutenção Ativo" : "Modo Manutenção Desligado"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {robot.maintenance
-              ? "O sistema está em manutenção e pausado para todos os usuários."
-              : "Pausa tudo (robô, leituras e sinais) para todos os usuários."}
-          </p>
-        </div>
-        <Switch
-          checked={robot.maintenance}
-          disabled={robot.maintenanceToggling}
-          aria-label={robot.maintenance ? "Desativar modo manutenção" : "Ativar modo manutenção"}
-          onCheckedChange={() => robot.toggleMaintenance()}
-        />
+          <TelegramIcon size={18} className="shrink-0" />
+          <span>Sinais no Telegram</span>
+        </button>
       </div>
 
-      {/* Gestão e Conexão da API da Mesa */}
-      <FeedStatus />
+      {subView === "telegram" ? (
+        <TelegramControls />
+      ) : (
+        <>
+          {/* Robô Principal: ligar e desligar operações e sinais */}
+          <div className="liquid-glass flex items-center gap-3 rounded-2xl p-4 sm:p-5">
+            <div
+              className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
+                robot.running
+                  ? "border-success/30 bg-success/10 text-success"
+                  : "border-white/10 bg-white/5 text-muted-foreground",
+              )}
+            >
+              <Power className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm sm:text-base text-foreground">
+                {robot.running ? "Robô Ligado" : "Robô Desligado"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {robot.running
+                  ? "Sinais, leituras e histórico ativos para os usuários."
+                  : "Pausar o robô para os sinais e o histórico."}
+              </p>
+            </div>
+            <Switch
+              checked={robot.running}
+              disabled={robot.toggling}
+              aria-label={robot.running ? "Desligar robô" : "Ligar robô"}
+              onCheckedChange={() => robot.toggle()}
+            />
+          </div>
 
-      {/* Gestão e Conexão dos Sinais no Telegram */}
-      <TelegramControls />
+          {/* Modo Manutenção separado */}
+          <div className="liquid-glass flex items-center gap-3 rounded-2xl p-4 sm:p-5">
+            <div
+              className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
+                robot.maintenance
+                  ? "border-tie/40 bg-tie/10 text-tie"
+                  : "border-white/10 bg-white/5 text-muted-foreground",
+              )}
+            >
+              <Wrench className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm sm:text-base text-foreground">
+                {robot.maintenance ? "Modo Manutenção Ativo" : "Modo Manutenção Desligado"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {robot.maintenance
+                  ? "O sistema está em manutenção e pausado para todos os usuários."
+                  : "Pausa tudo (robô, leituras e sinais) para todos os usuários."}
+              </p>
+            </div>
+            <Switch
+              checked={robot.maintenance}
+              disabled={robot.maintenanceToggling}
+              aria-label={
+                robot.maintenance ? "Desativar modo manutenção" : "Ativar modo manutenção"
+              }
+              onCheckedChange={() => robot.toggleMaintenance()}
+            />
+          </div>
+
+          {/* Gestão e Conexão da API da Mesa */}
+          <FeedStatus />
+        </>
+      )}
     </div>
   );
 }
