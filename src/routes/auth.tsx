@@ -1,15 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  CheckCircle2,
-  Clock3,
-  Loader2,
-  Lock,
-  Mail,
-  ShieldX,
-  UserRound,
-} from "lucide-react";
+import { CheckCircle2, Clock3, Loader2, Lock, Mail, ShieldX, UserRound } from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,8 +81,6 @@ function AuthPage() {
     await signOutEverywhere(queryClient);
     setNotice(justCreated && (!status || status === "pending") ? "created" : (status ?? "pending"));
   }
-
-
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -238,8 +228,6 @@ function AuthPage() {
                       </motion.p>
                     )}
                   </AnimatePresence>
-
-
 
                   <motion.button
                     whileTap={{ scale: 0.98 }}
