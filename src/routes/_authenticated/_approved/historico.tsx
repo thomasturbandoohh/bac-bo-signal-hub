@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { motion, useReducedMotion } from "framer-motion";
 import { History } from "lucide-react";
 import { useRobot } from "@/lib/robot-context";
 import { historyEntries, type HistoryEntry } from "@/lib/signal-history";
@@ -22,7 +23,8 @@ export const Route = createFileRoute("/_authenticated/_approved/historico")({
   component: HistoryPage,
 });
 
-const timeFmt = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
+/** The history card always shows exactly this many positions. */
+const HISTORY_SLOTS = 20;
 
 function HistoryPage() {
   const { sessionSignals, results, phase } = useRobot();
@@ -51,13 +53,13 @@ function HistoryPage() {
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <Count label="Green" value={counts.green} tone="text-success" />
-        <Count label="Green G1" value={counts.g1} tone="text-success" />
-        <Count label="Red" value={counts.red} tone="text-destructive" />
+        <Count label="Green" value={counts.green} tone="text-success" dot="bg-success" />
+        <Count label="Green G1" value={counts.g1} tone="text-success" dot="bg-tie-glow" />
+        <Count label="Red" value={counts.red} tone="text-destructive" dot="bg-destructive" />
       </div>
 
       {entries.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card px-4 py-10 text-center">
+        <div className="glass-premium rounded-2xl px-4 py-10 text-center">
           <History className="mx-auto h-8 w-8 text-muted-foreground" />
           <p className="mt-3 font-semibold">Nenhum sinal ainda</p>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -67,60 +69,96 @@ function HistoryPage() {
           </p>
         </div>
       ) : (
-        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-          {entries.map((e) => (
-            <Row key={e.key} entry={e} />
-          ))}
-        </ul>
+        <HistoryGrid entries={entries} />
       )}
     </div>
   );
 }
 
-function Count({ label, value, tone }: { label: string; value: number; tone: string }) {
+function Count({
+  label,
+  value,
+  tone,
+  dot,
+}: {
+  label: string;
+  value: number;
+  tone: string;
+  dot: string;
+}) {
   return (
-    <div className="rounded-2xl border border-border bg-card px-2 py-2.5 text-center">
+    <div className="glass-premium rounded-2xl px-2 py-2.5 text-center">
       <p className={cn("font-display text-lg font-extrabold tabular-nums sm:text-xl", tone)}>
         {value}
       </p>
-      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
+      <p className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
+        <span aria-hidden="true" className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dot)} />
         {label}
       </p>
     </div>
   );
 }
 
-const BADGE: Record<HistoryEntry["result"], { text: string; cls: string }> = {
-  green: { text: "GREEN", cls: "bg-success/15 text-success ring-success/35" },
-  green_g1: { text: "GREEN G1", cls: "bg-success/15 text-success ring-success/35" },
-  red: { text: "RED", cls: "bg-destructive/15 text-destructive ring-destructive/35" },
-  pending: { text: "EM ANDAMENTO", cls: "bg-muted text-muted-foreground ring-border" },
+/** Rim color of each indicator: the result the robot already scored for that signal. */
+const RIM: Record<HistoryEntry["result"], string> = {
+  green: "bg-success",
+  green_g1: "bg-tie-glow",
+  red: "bg-destructive",
+  pending: "bg-white/20 animate-pulse motion-reduce:animate-none",
 };
 
-function Row({ entry }: { entry: HistoryEntry }) {
-  const badge = BADGE[entry.result];
-  const player = entry.side === "player";
+const RESULT_LABEL: Record<HistoryEntry["result"], string> = {
+  green: "Green",
+  green_g1: "Green no G1",
+  red: "Red",
+  pending: "em andamento",
+};
+
+/**
+ * One compact card with the last 20 signals, oldest to newest. When a new signal arrives with
+ * the card full, the oldest one leaves and the new one enters; the card never changes size.
+ */
+function HistoryGrid({ entries }: { entries: HistoryEntry[] }) {
+  const shouldReduceMotion = useReducedMotion();
+  const recent = useMemo(() => entries.slice(0, HISTORY_SLOTS).reverse(), [entries]);
+  const empty = HISTORY_SLOTS - recent.length;
+
   return (
-    <li className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3.5 py-3 sm:px-4">
-      <span className="w-11 font-display text-sm font-bold tabular-nums text-muted-foreground">
-        {timeFmt.format(entry.at)}
-      </span>
-      <span className="flex min-w-0 items-center gap-2">
-        <span
-          className={cn("h-4 w-4 shrink-0 rounded-full", player ? "ball-player" : "ball-banker")}
-        />
-        <span className="truncate text-sm font-semibold">
-          {player ? "Player (Azul)" : "Banker (Vermelho)"}
-        </span>
-      </span>
-      <span
-        className={cn(
-          "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-extrabold tracking-wide ring-1",
-          badge.cls,
-        )}
-      >
-        {badge.text}
-      </span>
-    </li>
+    <section
+      aria-label={`Últimos ${HISTORY_SLOTS} sinais`}
+      className="glass-premium rounded-2xl p-3 sm:p-4"
+    >
+      <ol className="grid grid-cols-10 gap-1.5 sm:gap-2.5">
+        {recent.map((e) => {
+          const player = e.side === "player";
+          return (
+            <motion.li
+              key={e.key}
+              layout={!shouldReduceMotion}
+              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              aria-label={`${player ? "Player" : "Banker"}: ${RESULT_LABEL[e.result]}`}
+              className={cn("aspect-square min-w-0 rounded-full p-[2px]", RIM[e.result])}
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "block h-full w-full rounded-full",
+                  player ? "ball-player" : "ball-banker",
+                )}
+              />
+            </motion.li>
+          );
+        })}
+        {Array.from({ length: empty }, (_, i) => (
+          <li
+            key={`empty-${i}`}
+            aria-hidden="true"
+            className="aspect-square min-w-0 rounded-full border border-dashed border-white/10 bg-white/[0.03]"
+          />
+        ))}
+      </ol>
+    </section>
   );
 }

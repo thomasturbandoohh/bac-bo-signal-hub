@@ -60,7 +60,7 @@ export const Scoreboard = memo(function Scoreboard() {
   );
 
   return (
-    <div className="liquid-glass grid grid-cols-4 rounded-xl px-1.5 py-2.5 sm:py-3">
+    <div className="glass-premium grid grid-cols-4 rounded-xl px-1.5 py-2.5 sm:py-3">
       {items.map((i) => (
         <div key={i.label} className="flex flex-col items-center gap-0.5">
           <Emoji3D src={i.emoji} size={20} />

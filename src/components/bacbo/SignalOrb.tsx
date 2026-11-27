@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Side, Signal } from "@/lib/bacbo-engine";
 import { useNow } from "@/lib/use-now";
@@ -22,8 +23,7 @@ export function SignalOrb({
   const secondsLeft = Math.max(0, Math.ceil((phaseEnd - now) / 1000));
   const left = Math.max(0, Math.min(1, (phaseEnd - now) / (phaseEnd - phaseStart)));
 
-  // "CASA" para Banker, "VISITANTE" para Player
-  const sideTitle = isPlayer ? "VISITANTE" : "CASA";
+  const sideTitle = isPlayer ? "PLAYER" : "BANQUEIRO";
 
   return (
     <motion.section
@@ -36,7 +36,7 @@ export function SignalOrb({
         shouldReduceMotion ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: -4, scale: 0.98 }
       }
       transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: "easeOut" }}
-      className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-[#121622]/95 px-4 py-6 sm:px-6 sm:py-7 text-center shadow-[0_20px_50px_-12px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+      className="glass-premium relative flex flex-col items-center justify-center overflow-hidden rounded-xl px-4 py-6 text-center sm:px-6 sm:py-7 lg:h-full"
     >
       {/* Gale badge if active */}
       {gale && (
@@ -68,10 +68,10 @@ export function SignalOrb({
         {gale ? "ENTRADA GALE 1" : "ENTRADA CONFIRMADA"}
       </span>
 
-      {/* Target Big Label: CASA / VISITANTE */}
+      {/* Target Big Label: PLAYER / BANQUEIRO */}
       <h2
         className={cn(
-          "mt-1 font-display text-3xl sm:text-5xl font-black tracking-wider drop-shadow-md",
+          "mt-1 max-w-full font-display text-3xl font-black tracking-wider drop-shadow-md sm:text-5xl",
           isPlayer ? "text-[#38bdf8]" : "text-[#f87171]",
         )}
       >
@@ -107,16 +107,45 @@ export function SignalOrb({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label="Tempo restante de entrada"
-        className="mt-3.5 h-1.5 w-28 sm:w-36 overflow-hidden rounded-full bg-white/15"
+        className="mt-4 h-1.5 w-36 overflow-hidden rounded-full bg-white/10 sm:w-44"
       >
-        <div
-          className={cn(
-            "h-full rounded-full transition-[width] duration-1000 ease-linear motion-reduce:transition-none",
-            isPlayer ? "bg-[#38bdf8]" : "bg-[#ef4444]",
-          )}
-          style={{ width: `${left * 100}%` }}
-        />
+        <CountdownFill start={phaseStart} end={phaseEnd} reduceMotion={!!shouldReduceMotion} />
       </div>
     </motion.section>
+  );
+}
+
+/** Blue fill that empties smoothly and continuously until the entry window closes. */
+function CountdownFill({
+  start,
+  end,
+  reduceMotion,
+}: {
+  start: number;
+  end: number;
+  reduceMotion: boolean;
+}) {
+  const [plan] = useState(() => {
+    const now = Date.now();
+    const total = Math.max(1, end - start);
+    return {
+      from: Math.min(1, Math.max(0, (end - now) / total)),
+      seconds: Math.max(0.3, (end - now) / 1000),
+    };
+  });
+  return (
+    <motion.div
+      className="progress-blue relative h-full overflow-hidden rounded-full"
+      initial={{ width: `${plan.from * 100}%` }}
+      animate={{ width: "0%" }}
+      transition={{ duration: plan.seconds, ease: "linear" }}
+    >
+      {!reduceMotion && (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 w-1/2 animate-sheen bg-gradient-to-r from-transparent via-white/35 to-transparent"
+        />
+      )}
+    </motion.div>
   );
 }

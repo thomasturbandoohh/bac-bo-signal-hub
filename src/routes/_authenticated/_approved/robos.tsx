@@ -180,8 +180,8 @@ function Panel({ children }: { children: ReactNode }) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
-      transition={{ duration: 0.16 }}
-      className="liquid-glass relative isolate flex flex-col items-center overflow-hidden rounded-xl px-4 py-5 text-center sm:px-5 sm:py-6 lg:h-full lg:justify-center lg:px-6 lg:py-8"
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      className="glass-premium relative isolate flex flex-col items-center overflow-hidden rounded-xl px-4 py-5 text-center sm:px-5 sm:py-6 lg:h-full lg:justify-center lg:px-6 lg:py-8"
     >
       <div className="relative z-10 flex w-full flex-col items-center">{children}</div>
     </motion.div>
@@ -260,32 +260,25 @@ function Analyzing() {
             ? "Mesmo lado da entrada · última tentativa"
             : "Padrão se formando · liberando a entrada"}
       </p>
-      <div className="relative mt-3 h-2 w-full overflow-hidden rounded-full bg-foreground/10">
-        {waiting ? (
-          <Sweep stage={stage} />
-        ) : (
-          <SmoothFill key={phaseStart} start={phaseStart} end={phaseEnd} gale={gale} />
-        )}
+      <div className="relative mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
+        {waiting ? <Sweep /> : <SmoothFill key={phaseStart} start={phaseStart} end={phaseEnd} />}
       </div>
     </Panel>
   );
 }
 
-function Sweep({ stage }: { stage: Stage }) {
+function Sweep() {
   return (
     <motion.div
-      className={cn(
-        "absolute inset-y-0 w-2/5 rounded-full bg-gradient-to-r from-transparent to-transparent",
-        stage === "result" ? "via-player-glow" : "via-tie",
-      )}
+      className="absolute inset-y-0 w-2/5 rounded-full bg-gradient-to-r from-transparent via-player-glow to-transparent shadow-[0_0_12px_-2px_var(--player-glow)]"
       initial={{ left: "-40%" }}
       animate={{ left: ["-40%", "100%"] }}
-      transition={{ duration: 3.2, repeat: Infinity, ease: [0.45, 0, 0.55, 1] }}
+      transition={{ duration: 3.4, repeat: Infinity, ease: [0.45, 0, 0.55, 1] }}
     />
   );
 }
 
-function SmoothFill({ start, end, gale }: { start: number; end: number; gale: boolean }) {
+function SmoothFill({ start, end }: { start: number; end: number }) {
   const [plan] = useState(() => {
     const now = Date.now();
     const total = Math.max(1, end - start);
@@ -294,23 +287,17 @@ function SmoothFill({ start, end, gale }: { start: number; end: number; gale: bo
       seconds: Math.max(0.3, (end - now) / 1000),
     };
   });
-  const transition = { duration: plan.seconds, ease: "linear" as const };
   return (
     <motion.div
-      className="relative h-full overflow-hidden rounded-full bg-tie shadow-[0_0_12px_var(--tie)]"
+      className="progress-blue relative h-full overflow-hidden rounded-full"
       initial={{ width: `${plan.from * 100}%` }}
       animate={{ width: "100%" }}
-      transition={transition}
+      transition={{ duration: plan.seconds, ease: "linear" }}
     >
-      {!gale && (
-        <motion.div
-          className="absolute inset-0 bg-success shadow-[0_0_14px_var(--success)]"
-          initial={{ opacity: plan.from }}
-          animate={{ opacity: 1 }}
-          transition={transition}
-        />
-      )}
-      <div className="absolute inset-y-0 right-0 w-3 rounded-full bg-foreground/70 blur-[3px]" />
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 left-0 w-1/2 animate-sheen bg-gradient-to-r from-transparent via-white/30 to-transparent motion-reduce:hidden"
+      />
     </motion.div>
   );
 }
