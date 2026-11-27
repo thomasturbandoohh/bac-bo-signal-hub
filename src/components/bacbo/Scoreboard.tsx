@@ -81,22 +81,50 @@ export const Scoreboard = memo(function Scoreboard() {
   );
 });
 
-type NoteKind = "green" | "green_tie" | "green_gale" | "gale" | "red" | "streak" | "streak6";
+type NoteKind = "green" | "green_tie" | "green_gale" | "gale" | "red" | "streak" | "streak_up";
 export interface Note {
   id: string;
   kind: NoteKind;
   side?: Side;
+  /** Greens in a row, for the streak_up note (6, 7, 8...). */
+  count?: number;
 }
 
-/** Each notification stays fully on screen for 2s (plus the time it takes to fade in). */
-const NOTE_VISIBLE_MS = 2_000;
+/** Result notifications stay fully on screen for 2s (plus the fade in); the gale call keeps its 7s. */
 const NOTE_ENTER_S = 0.7;
 const NOTE_EXIT_S = 0.6;
-const NOTE_MS = NOTE_VISIBLE_MS + NOTE_ENTER_S * 1000;
+const noteMs = (kind: NoteKind) => (kind === "gale" ? 7_000 : 2_000 + NOTE_ENTER_S * 1000);
+
+const NUM_WORDS = [
+  "zero",
+  "um",
+  "dois",
+  "três",
+  "quatro",
+  "cinco",
+  "seis",
+  "sete",
+  "oito",
+  "nove",
+  "dez",
+  "onze",
+  "doze",
+  "treze",
+  "catorze",
+  "quinze",
+  "dezesseis",
+  "dezessete",
+  "dezoito",
+  "dezenove",
+  "vinte",
+];
+const numWord = (n: number) => NUM_WORDS[n] ?? String(n);
+const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
 /** A result older than this (since its entry showed) is not announced: the gale makes it ~2 rounds. */
 const RESULT_FRESH_MS = 120_000;
 
-const sideName = (side?: Side) => (side === "player" ? "Azul (Player)" : "Vermelho (Banker)");
+const sideName = (side?: Side) => (side === "player" ? "PLAYER" : "BANKER");
 
 function noteContent(n: Note) {
   switch (n.kind) {
@@ -142,13 +170,15 @@ function noteContent(n: Note) {
         tone: "text-success",
         body: "Surra no branco, dinheiro no bolso",
       };
-    case "streak6":
+    case "streak_up": {
+      const word = numWord(n.count ?? 6);
       return {
         emoji: [partyEmoji, moneyBagEmoji],
-        title: "6 GREENS SEGUIDOS",
+        title: `${capitalize(word)} green seguidos`.toUpperCase(),
         tone: "text-success",
-        body: "Estamos com uma sequência de seis green",
+        body: `Estamos com uma sequência de ${word} green`,
       };
+    }
   }
 }
 
@@ -193,7 +223,8 @@ export function ResultBanner() {
       let run = 0;
       for (let i = results.length - 1; i >= 0 && results[i]!.green; i--) run++;
       if (run === 5) add.push({ id: `s:${results.at(-1)!.key}`, kind: "streak" });
-      if (run === 6) add.push({ id: `s6:${results.at(-1)!.key}`, kind: "streak6" });
+      if (run >= 6)
+        add.push({ id: `s${run}:${results.at(-1)!.key}`, kind: "streak_up", count: run });
     }
     if (add.length) setQueue((q) => [...q, ...add].slice(-4));
   }, [results, gales]);
@@ -202,7 +233,7 @@ export function ResultBanner() {
   const currentId = current?.id;
   useEffect(() => {
     if (!current) return;
-    const t = setTimeout(() => setQueue((q) => q.slice(1)), NOTE_MS);
+    const t = setTimeout(() => setQueue((q) => q.slice(1)), noteMs(current.kind));
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId]);
@@ -247,7 +278,7 @@ export function NoteCard({ note }: { note: Note }) {
         (note.kind === "green" ||
           note.kind === "green_gale" ||
           note.kind === "streak" ||
-          note.kind === "streak6") &&
+          note.kind === "streak_up") &&
           "ring-1 ring-success/40",
       )}
       style={{ width: "min(24rem, 94vw)", willChange: "transform, opacity, filter" }}
