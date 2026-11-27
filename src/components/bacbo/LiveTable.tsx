@@ -87,10 +87,7 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
   const outcome = last?.outcome ?? null;
 
   return (
-    <section
-      aria-label="Mesa ao vivo Bac Bo"
-      className="rounded-xl border border-white/15 bg-[#12151c]/95 p-3 sm:p-4 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.7)] backdrop-blur-xl"
-    >
+    <section aria-label="Mesa ao vivo Bac Bo" className="glass-premium rounded-xl p-3 sm:p-4">
       {/* Top Header: MESA AO VIVO and Ao Vivo status badge */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-2.5">
@@ -132,25 +129,23 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
         key={last?.id ?? "none"}
         initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
-        className="relative mt-2.5 sm:mt-3 flex items-center justify-between gap-2 sm:gap-3"
+        transition={{ duration: shouldReduceMotion ? 0 : 0.3, ease: "easeOut" }}
+        className="relative mt-3 grid grid-cols-2 gap-2 sm:gap-3"
       >
         {/* PLAYER Side */}
         <div
           className={cn(
-            "flex flex-1 flex-col justify-between rounded-lg border p-2 sm:p-3 transition-all duration-200 motion-reduce:transition-none min-w-0",
-            outcome === "P"
-              ? "border-[#38bdf8] bg-[#0e223d]/95 shadow-[0_0_20px_-4px_rgba(56,189,248,0.4)]"
-              : "border-[#1e3458]/80 bg-[#0c1626]/90",
+            "side-player flex min-w-0 flex-col items-center justify-center rounded-xl px-2 py-2.5 transition-[border-color,box-shadow] duration-300 motion-reduce:transition-none sm:px-3 sm:py-3",
+            outcome === "P" && "side-player-win",
           )}
         >
-          <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#38bdf8]">
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-player-glow sm:text-xs">
             PLAYER
           </span>
-          <div className="mt-2 flex items-center gap-1 sm:gap-2">
-            <DieFace value={pDice[0] ?? 0} tone="player" size={28} />
-            <DieFace value={pDice[1] ?? 0} tone="player" size={28} />
-            <span className="ml-1 sm:ml-2 font-display text-xl sm:text-2xl lg:text-3xl font-black tabular-nums text-white">
+          <div className="mt-2 flex items-center justify-center gap-1.5">
+            <DieFace value={pDice[0] ?? 0} tone="player" size={32} />
+            <DieFace value={pDice[1] ?? 0} tone="player" size={32} />
+            <span className="ml-1 min-w-[2ch] text-center font-display text-2xl font-black leading-none tabular-nums text-white sm:text-3xl lg:text-4xl">
               {pScore}
             </span>
           </div>
@@ -159,21 +154,19 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
         {/* BANKER Side */}
         <div
           className={cn(
-            "flex flex-1 flex-col justify-between rounded-lg border p-2 sm:p-3 transition-all duration-200 motion-reduce:transition-none min-w-0",
-            outcome === "B"
-              ? "border-[#f87171] bg-[#351319]/95 shadow-[0_0_20px_-4px_rgba(248,113,113,0.4)]"
-              : "border-[#521c22]/80 bg-[#240f13]/90",
+            "side-banker flex min-w-0 flex-col items-center justify-center rounded-xl px-2 py-2.5 transition-[border-color,box-shadow] duration-300 motion-reduce:transition-none sm:px-3 sm:py-3",
+            outcome === "B" && "side-banker-win",
           )}
         >
-          <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#f87171] text-right">
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-banker-glow sm:text-xs">
             BANKER
           </span>
-          <div className="mt-2 flex items-center justify-end gap-1 sm:gap-2">
-            <span className="mr-1 sm:mr-2 font-display text-xl sm:text-2xl lg:text-3xl font-black tabular-nums text-white">
+          <div className="mt-2 flex items-center justify-center gap-1.5">
+            <span className="mr-1 min-w-[2ch] text-center font-display text-2xl font-black leading-none tabular-nums text-white sm:text-3xl lg:text-4xl">
               {bScore}
             </span>
-            <DieFace value={bDice[0] ?? 0} tone="banker" size={28} />
-            <DieFace value={bDice[1] ?? 0} tone="banker" size={28} />
+            <DieFace value={bDice[0] ?? 0} tone="banker" size={32} />
+            <DieFace value={bDice[1] ?? 0} tone="banker" size={32} />
           </div>
         </div>
       </motion.div>
