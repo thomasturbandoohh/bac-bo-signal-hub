@@ -155,7 +155,7 @@ function AdminPage() {
               {label}
             </span>
             {k === "pending" && pending.length > 0 && (
-              <span className="absolute -right-0.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-tie px-1 text-[10px] font-bold text-background">
+              <span className="absolute -right-0.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-tie px-1 text-[0.625rem] font-bold text-background">
                 {pending.length}
               </span>
             )}
@@ -201,7 +201,7 @@ function AdminPage() {
               {others.map((p) => (
                 <UserRow key={p.id} p={p} badge={p.status}>
                   {p.id === me.id ? (
-                    <span className="text-[11px] text-muted-foreground">Você</span>
+                    <span className="text-[0.6875rem] text-muted-foreground">Você</span>
                   ) : (
                     <>
                       {p.status === "approved" ? (
@@ -326,7 +326,7 @@ function UserRow({ p, badge, children }: { p: Profile; badge?: Status; children:
           {badge && (
             <span
               className={cn(
-                "shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase",
+                "shrink-0 rounded-full border px-2 py-0.5 text-[0.625rem] font-bold uppercase",
                 BADGE[badge],
               )}
             >
@@ -555,7 +555,7 @@ function FeedStatus() {
           <div>
             <label
               htmlFor="api-provider-select"
-              className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+              className="mb-1 block text-[0.6875rem] font-semibold uppercase tracking-wider text-muted-foreground"
             >
               Provedor
             </label>
@@ -571,12 +571,12 @@ function FeedStatus() {
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-[11px] text-muted-foreground">{selected.help}</p>
+            <p className="mt-1 text-[0.6875rem] text-muted-foreground">{selected.help}</p>
           </div>
           <div>
             <label
               htmlFor="api-key-input"
-              className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+              className="mb-1 block text-[0.6875rem] font-semibold uppercase tracking-wider text-muted-foreground"
             >
               Chave da API
             </label>

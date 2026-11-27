@@ -72,7 +72,7 @@ export const Scoreboard = memo(function Scoreboard() {
           >
             {i.value}
           </span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
+          <span className="text-[0.625rem] font-bold uppercase tracking-wider text-muted-foreground sm:text-[0.6875rem]">
             {i.label}
           </span>
         </div>
@@ -81,25 +81,50 @@ export const Scoreboard = memo(function Scoreboard() {
   );
 });
 
-type NoteKind = "green" | "green_tie" | "green_gale" | "gale" | "red" | "streak";
+type NoteKind = "green" | "green_tie" | "green_gale" | "gale" | "red" | "streak" | "streak_up";
 export interface Note {
   id: string;
   kind: NoteKind;
   side?: Side;
+  /** Greens in a row, for the streak_up note (6, 7, 8...). */
+  count?: number;
 }
 
-const NOTE_MS: Record<NoteKind, number> = {
-  green: 3_400,
-  green_tie: 3_400,
-  green_gale: 4_000,
-  gale: 7_000,
-  red: 3_400,
-  streak: 4_500,
-};
+/** Result notifications stay fully on screen for 2s (plus the fade in); the gale call keeps its 7s. */
+const NOTE_ENTER_S = 0.7;
+const NOTE_EXIT_S = 0.6;
+const noteMs = (kind: NoteKind) => (kind === "gale" ? 7_000 : 2_000 + NOTE_ENTER_S * 1000);
+
+const NUM_WORDS = [
+  "zero",
+  "um",
+  "dois",
+  "três",
+  "quatro",
+  "cinco",
+  "seis",
+  "sete",
+  "oito",
+  "nove",
+  "dez",
+  "onze",
+  "doze",
+  "treze",
+  "catorze",
+  "quinze",
+  "dezesseis",
+  "dezessete",
+  "dezoito",
+  "dezenove",
+  "vinte",
+];
+const numWord = (n: number) => NUM_WORDS[n] ?? String(n);
+const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
 /** A result older than this (since its entry showed) is not announced: the gale makes it ~2 rounds. */
 const RESULT_FRESH_MS = 120_000;
 
-const sideName = (side?: Side) => (side === "player" ? "Azul (Player)" : "Vermelho (Banker)");
+const sideName = (side?: Side) => (side === "player" ? "PLAYER" : "BANKER");
 
 function noteContent(n: Note) {
   switch (n.kind) {
@@ -145,6 +170,15 @@ function noteContent(n: Note) {
         tone: "text-success",
         body: "Surra no branco, dinheiro no bolso",
       };
+    case "streak_up": {
+      const word = numWord(n.count ?? 6);
+      return {
+        emoji: [partyEmoji, moneyBagEmoji],
+        title: `${capitalize(word)} green seguidos`.toUpperCase(),
+        tone: "text-success",
+        body: `Estamos com uma sequência de ${word} green`,
+      };
+    }
   }
 }
 
@@ -185,9 +219,12 @@ export function ResultBanner() {
             : "green";
       add.push({ id: `r:${r.key}`, kind, side: r.side });
     }
-    const last5 = results.slice(-5);
-    if (freshResults.length && last5.length === 5 && last5.every((r) => r.green)) {
-      add.push({ id: `s:${results.at(-1)!.key}`, kind: "streak" });
+    if (freshResults.length) {
+      let run = 0;
+      for (let i = results.length - 1; i >= 0 && results[i]!.green; i--) run++;
+      if (run === 5) add.push({ id: `s:${results.at(-1)!.key}`, kind: "streak" });
+      if (run >= 6)
+        add.push({ id: `s${run}:${results.at(-1)!.key}`, kind: "streak_up", count: run });
     }
     if (add.length) setQueue((q) => [...q, ...add].slice(-4));
   }, [results, gales]);
@@ -196,7 +233,7 @@ export function ResultBanner() {
   const currentId = current?.id;
   useEffect(() => {
     if (!current) return;
-    const t = setTimeout(() => setQueue((q) => q.slice(1)), NOTE_MS[current.kind]);
+    const t = setTimeout(() => setQueue((q) => q.slice(1)), noteMs(current.kind));
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId]);
@@ -218,17 +255,33 @@ export function NoteCard({ note }: { note: Note }) {
   return (
     <motion.div
       role="status"
-      initial={{ opacity: 0, y: -36, scale: 0.92 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -24, scale: 0.96 }}
-      transition={{ type: "spring", stiffness: 320, damping: 26 }}
+      // Slides down while fading in, then fades out softly, lifting slightly as it goes.
+      initial={{ opacity: 0, y: -28, scale: 0.97, filter: "blur(6px)" }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        filter: "blur(0px)",
+        transition: { duration: NOTE_ENTER_S, ease: [0.22, 1, 0.36, 1] },
+      }}
+      exit={{
+        opacity: 0,
+        y: -14,
+        scale: 0.98,
+        filter: "blur(4px)",
+        transition: { duration: NOTE_EXIT_S, ease: [0.4, 0, 0.2, 1] },
+      }}
       className={cn(
         "liquid-glass flex items-center gap-3 overflow-hidden rounded-[1.4rem] px-3.5 py-3",
         note.kind === "gale" && "ring-1 ring-tie/40",
         note.kind === "red" && "ring-1 ring-destructive/40",
-        (note.kind === "green" || note.kind === "green_gale") && "ring-1 ring-success/40",
+        (note.kind === "green" ||
+          note.kind === "green_gale" ||
+          note.kind === "streak" ||
+          note.kind === "streak_up") &&
+          "ring-1 ring-success/40",
       )}
-      style={{ width: "min(380px, 94vw)" }}
+      style={{ width: "min(24rem, 94vw)", willChange: "transform, opacity, filter" }}
     >
       <div className="glass-icon relative h-12 w-12 shrink-0">
         <motion.div
@@ -243,7 +296,7 @@ export function NoteCard({ note }: { note: Note }) {
         )}
       </div>
       <div className="min-w-0 flex-1 leading-tight">
-        <p className={cn("font-display text-[15px] font-extrabold tracking-wide", c.tone)}>
+        <p className={cn("font-display text-[0.9375rem] font-extrabold tracking-wide", c.tone)}>
           {c.title}
         </p>
         <p className="mt-0.5 text-xs font-bold text-foreground/85">{c.body}</p>

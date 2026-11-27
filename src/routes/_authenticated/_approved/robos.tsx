@@ -110,13 +110,13 @@ function RobotsPage() {
               <div className="glass-icon h-11 w-11 text-tie">
                 <Wrench className="h-5 w-5" strokeWidth={2.2} />
               </div>
-              <span className="mt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="mt-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Modo manutenção
               </span>
               <h2 className="mt-0.5 font-display text-base font-extrabold sm:text-lg">
                 ROBÔ PAUSADO
               </h2>
-              <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
+              <p className="mt-1 text-[0.6875rem] text-muted-foreground sm:text-xs">
                 {isAdmin
                   ? "O robô está em modo manutenção. Edite as configurações no painel administrativo."
                   : "O administrador está calibrando o sistema. Volte em instantes."}
@@ -128,7 +128,7 @@ function RobotsPage() {
                 <Moon className="h-5 w-5" fill="currentColor" strokeWidth={1.6} />
               </div>
               <h2 className="mt-2 font-display text-base font-extrabold sm:text-lg">STANDBY</h2>
-              <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
+              <p className="mt-1 text-[0.6875rem] text-muted-foreground sm:text-xs">
                 {isAdmin
                   ? "Acesse o painel Admin para iniciar as operações do robô."
                   : "Aguarde o administrador iniciar o robô."}
@@ -139,13 +139,13 @@ function RobotsPage() {
               <div className="glass-icon h-11 w-11 text-destructive">
                 <WifiOff className="h-5 w-5" strokeWidth={2.2} />
               </div>
-              <span className="mt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="mt-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Robô ligado
               </span>
               <h2 className="mt-0.5 font-display text-base font-extrabold sm:text-lg">
                 SEM CONEXÃO COM A MESA
               </h2>
-              <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
+              <p className="mt-1 text-[0.6875rem] text-muted-foreground sm:text-xs">
                 {isAdmin
                   ? "Nenhuma rodada recente recebida da mesa. Verifique a chave no painel Admin."
                   : "Aguardando novas rodadas da mesa para gerar o próximo sinal."}
@@ -166,7 +166,7 @@ function RobotsPage() {
         </AnimatePresence>
       </div>
 
-      <p className="px-3 text-center lg:col-span-12 text-[10px] leading-relaxed text-muted-foreground/70">
+      <p className="px-3 text-center lg:col-span-12 text-[0.625rem] leading-relaxed text-muted-foreground/70">
         As rodadas analisadas vêm da mesa Bac Bo Live ao vivo. Os sinais são leituras de padrões e
         não garantem ganhos. Jogue com responsabilidade · +18.
       </p>
@@ -243,7 +243,7 @@ function Analyzing() {
       </h2>
       <span
         className={cn(
-          "mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.16em] ring-1 transition-colors duration-500",
+          "mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.625rem] font-extrabold uppercase tracking-[0.16em] ring-1 transition-colors duration-500",
           st.chip,
         )}
       >
@@ -253,7 +253,7 @@ function Analyzing() {
         </span>
         {st.label}
       </span>
-      <p className="mt-1.5 text-[11px] font-bold text-muted-foreground">
+      <p className="mt-1.5 text-[0.6875rem] font-bold text-muted-foreground">
         {waiting
           ? (WAIT_TEXT[reason ?? ""] ?? "Lendo os padrões da mesa")
           : gale

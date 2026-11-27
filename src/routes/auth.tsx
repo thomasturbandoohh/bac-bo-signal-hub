@@ -191,7 +191,7 @@ function AuthPage() {
                         autoComplete="name"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="w-full bg-transparent text-[15px] font-semibold text-foreground outline-none placeholder:font-medium placeholder:text-muted-foreground"
+                        className="w-full bg-transparent text-[0.9375rem] font-semibold text-foreground outline-none placeholder:font-medium placeholder:text-muted-foreground"
                       />
                     </Field>
                   )}
@@ -202,7 +202,7 @@ function AuthPage() {
                       autoComplete="email"
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full bg-transparent text-[15px] font-semibold text-foreground outline-none placeholder:font-medium placeholder:text-muted-foreground"
+                      className="w-full bg-transparent text-[0.9375rem] font-semibold text-foreground outline-none placeholder:font-medium placeholder:text-muted-foreground"
                     />
                   </Field>
                   <Field label="Senha" icon={<Lock className="h-4 w-4" strokeWidth={2.4} />}>
@@ -212,7 +212,7 @@ function AuthPage() {
                       autoComplete={mode === "login" ? "current-password" : "new-password"}
                       value={form.password}
                       onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      className="w-full bg-transparent text-[15px] font-semibold text-foreground outline-none placeholder:font-medium placeholder:text-muted-foreground"
+                      className="w-full bg-transparent text-[0.9375rem] font-semibold text-foreground outline-none placeholder:font-medium placeholder:text-muted-foreground"
                     />
                   </Field>
 
@@ -232,7 +232,7 @@ function AuthPage() {
                   <motion.button
                     whileTap={{ scale: 0.98 }}
                     disabled={loading}
-                    className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-banker to-banker-glow text-[15px] font-extrabold text-primary-foreground shadow-[0_18px_40px_-18px_var(--banker)] disabled:opacity-70 sm:h-12"
+                    className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-banker to-banker-glow text-[0.9375rem] font-extrabold text-primary-foreground shadow-[0_18px_40px_-18px_var(--banker)] disabled:opacity-70 sm:h-12"
                   >
                     {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                     {mode === "login" ? "Entrar com E-mail" : "Criar conta"}
@@ -256,7 +256,7 @@ function AuthPage() {
             </motion.div>
           )}
         </AnimatePresence>
-        <p className="mt-auto pt-5 text-center text-[11px] text-muted-foreground/70 sm:pt-8">
+        <p className="mt-auto pt-5 text-center text-[0.6875rem] text-muted-foreground/70 sm:pt-8">
           Jogue com responsabilidade · Proibido para menores de 18 anos
         </p>
       </div>
