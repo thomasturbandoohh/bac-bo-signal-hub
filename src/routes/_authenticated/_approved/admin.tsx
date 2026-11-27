@@ -36,6 +36,7 @@ import { deleteUserAccount } from "@/lib/admin.functions";
 import { connectLiveTable } from "@/lib/live-table.functions";
 import { liveTableQuery } from "@/lib/queries";
 import { Avatar } from "@/components/bacbo/Avatar";
+import { TelegramControls } from "@/components/bacbo/TelegramControls";
 import { allProfilesQuery, settingsQuery, type Profile } from "@/lib/queries";
 import { useRobot } from "@/lib/robot-context";
 import { feedErrorMessage } from "@/lib/live-table";
@@ -439,6 +440,9 @@ function RobotControls() {
 
       {/* Gestão e Conexão da API da Mesa */}
       <FeedStatus />
+
+      {/* Gestão e Conexão dos Sinais no Telegram */}
+      <TelegramControls />
     </div>
   );
 }
