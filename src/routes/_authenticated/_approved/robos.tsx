@@ -1,3 +1,4 @@
+import { PwaInstallCard } from "@/components/bacbo/PwaInstallPrompt";
 import { useMemo, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
@@ -90,6 +91,7 @@ function RobotsPage() {
       </header>
 
       <div className="space-y-3 sm:space-y-3.5 lg:col-span-7 lg:flex lg:flex-col lg:gap-3.5 lg:space-y-0">
+        <PwaInstallCard />
         <div className="lg:order-1">
           <Scoreboard />
         </div>
