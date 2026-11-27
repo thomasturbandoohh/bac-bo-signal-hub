@@ -1,7 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Clock3, Loader2, Lock, Mail, MailCheck, ShieldX, UserRound } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock3,
+  Loader2,
+  Lock,
+  Mail,
+  MailCheck,
+  ShieldX,
+  UserRound,
+} from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";

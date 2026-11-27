@@ -48,7 +48,9 @@ export function DieFace({
   return (
     <span
       role="img"
-      aria-label={value ? `Dado ${toneLabel} com valor ${value}` : `Dado ${toneLabel} aguardando resultado`}
+      aria-label={
+        value ? `Dado ${toneLabel} com valor ${value}` : `Dado ${toneLabel} aguardando resultado`
+      }
       className={cn(
         "grid shrink-0 grid-cols-3 grid-rows-3 place-items-center rounded-[24%] transition-transform duration-200 motion-reduce:transition-none",
         tone === "player"
@@ -64,11 +66,12 @@ export function DieFace({
           aria-hidden="true"
           className={cn(
             "rounded-full transition-opacity motion-reduce:transition-none",
-            on.includes(i)
-              ? "bg-white shadow-[0_0.5px_1px_rgba(0,0,0,0.5)]"
-              : "opacity-0",
+            on.includes(i) ? "bg-white shadow-[0_0.5px_1px_rgba(0,0,0,0.5)]" : "opacity-0",
           )}
-          style={{ width: Math.max(3, Math.round(size * 0.18)), height: Math.max(3, Math.round(size * 0.18)) }}
+          style={{
+            width: Math.max(3, Math.round(size * 0.18)),
+            height: Math.max(3, Math.round(size * 0.18)),
+          }}
         />
       ))}
     </span>
