@@ -51,6 +51,8 @@ interface RobotState extends RobotView {
   results: SignalResult[];
   toggling: boolean;
   toggle: () => void;
+  maintenanceToggling: boolean;
+  toggleMaintenance: () => void;
   toggleApiPause: () => void;
   pausedUntil: number | null;
 }
@@ -221,7 +223,6 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
       const patch = {
         running: on,
         started_at: on ? stamp : null,
-        ...(on ? { maintenance: false } : {}),
         updated_at: stamp,
       };
       const { data, error } = await supabase
@@ -254,6 +255,39 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
     if (!isAdmin || togglePending || isPaused) return;
     toggleMutate(!running);
   }, [isAdmin, togglePending, toggleMutate, running, isPaused]);
+
+  const maintenanceMutation = useMutation({
+    mutationFn: async (on: boolean) => {
+      const stamp = new Date(Date.now() + clockOffset).toISOString();
+      const patch = {
+        maintenance: on,
+        updated_at: stamp,
+      };
+      const { data, error } = await supabase
+        .from("robot_settings")
+        .update(patch)
+        .eq("id", 1)
+        .select("*")
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: RobotSettings) => {
+      queryClient.setQueryData(settingsQuery.queryKey, data);
+      const msg = data.maintenance ? "Modo manutenção ativado" : "Modo manutenção desativado";
+      toast.success(msg);
+      logAdminAction(data.maintenance ? "Ativou manutenção" : "Desativou manutenção");
+    },
+    onError: () => {
+      toast.error("Não foi possível alterar o modo manutenção.");
+    },
+  });
+
+  const { mutate: maintenanceMutate, isPending: maintenancePending } = maintenanceMutation;
+  const toggleMaintenance = useCallback(() => {
+    if (!isAdmin || maintenancePending || !settings) return;
+    maintenanceMutate(!maintenance);
+  }, [isAdmin, maintenancePending, maintenanceMutate, maintenance, settings]);
 
   const apiPause = useMutation({
     mutationFn: async (paused: boolean) => {
@@ -311,6 +345,8 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
       results,
       toggling: mutation.isPending,
       toggle,
+      maintenanceToggling: maintenanceMutation.isPending,
+      toggleMaintenance,
       toggleApiPause,
       pausedUntil,
     }),
@@ -332,6 +368,8 @@ export function RobotProvider({ isAdmin, children }: { isAdmin: boolean; childre
       results,
       mutation.isPending,
       toggle,
+      maintenanceMutation.isPending,
+      toggleMaintenance,
       toggleApiPause,
       pausedUntil,
     ],

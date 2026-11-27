@@ -1,5 +1,4 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { Ball, outcomeKind, outcomeLabel } from "@/components/bacbo/Ball";
 import type { LiveRound } from "@/lib/live-table";
 import { cn } from "@/lib/utils";
 
@@ -128,13 +127,13 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
         </span>
       </div>
 
-      {/* Main Table Display: PLAYER | OUTCOME SPHERE | BANKER */}
+      {/* Main Table Display: PLAYER | BANKER */}
       <motion.div
         key={last?.id ?? "none"}
         initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
-        className="relative mt-2.5 sm:mt-3 flex items-center justify-between gap-1 sm:gap-2.5"
+        className="relative mt-2.5 sm:mt-3 flex items-center justify-between gap-2 sm:gap-3"
       >
         {/* PLAYER Side */}
         <div
@@ -155,17 +154,6 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
               {pScore}
             </span>
           </div>
-        </div>
-
-        {/* Center 3D Outcome Ball */}
-        <div className="relative z-10 -mx-1.5 sm:-mx-3 flex shrink-0 items-center justify-center">
-          {last ? (
-            <Ball kind={outcomeKind(last.outcome)} label={outcomeLabel(last.outcome)} size={32} />
-          ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#181c26] border border-white/15 font-display text-xs font-bold text-muted-foreground">
-              –
-            </span>
-          )}
         </div>
 
         {/* BANKER Side */}

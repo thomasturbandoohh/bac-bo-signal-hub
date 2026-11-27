@@ -26,9 +26,7 @@ export function SignalOrb({
   const sideTitle = isPlayer ? "VISITANTE" : "CASA";
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Main Signal Card inspired directly by reference */}
-      <motion.section
+    <motion.section
         aria-label={`Entrada confirmada no lado ${sideTitle}`}
         initial={
           shouldReduceMotion ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 8, scale: 0.98 }
@@ -120,19 +118,5 @@ export function SignalOrb({
           />
         </div>
       </motion.section>
-
-      {/* CASINO 1 Gold Button below the card */}
-      <a
-        href="#casino"
-        aria-label="Abrir mesa no Casino 1 em nova aba"
-        onClick={(e) => {
-          e.preventDefault();
-          window.open("https://bacbo.live", "_blank", "noopener,noreferrer");
-        }}
-        className="group relative flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-[#ffd44d] via-[#f7c22d] to-[#e8b31a] py-3.5 px-6 font-display text-xs sm:text-sm font-black uppercase tracking-[0.16em] text-[#1c1400] shadow-[0_8px_24px_-4px_rgba(247,194,45,0.45)] transition-all duration-200 hover:brightness-105 active:scale-[0.99] touch-manipulation cursor-pointer motion-reduce:transition-none"
-      >
-        <span>CASINO 1</span>
-      </a>
-    </div>
   );
 }

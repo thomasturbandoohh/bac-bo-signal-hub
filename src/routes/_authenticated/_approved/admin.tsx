@@ -377,37 +377,67 @@ function RobotControls() {
 
   return (
     <div className="space-y-3">
-      {/* Robô Principal: ao desligar, ativa automaticamente o modo manutenção */}
+      {/* Robô Principal: ligar e desligar operações e sinais */}
       <div className="liquid-glass flex items-center gap-3 rounded-2xl p-4 sm:p-5">
         <div
           className={cn(
             "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
             robot.running
               ? "border-success/30 bg-success/10 text-success"
-              : "border-tie/40 bg-tie/10 text-tie",
+              : "border-white/10 bg-white/5 text-muted-foreground",
           )}
         >
           <Power className="h-5 w-5" aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm sm:text-base text-foreground">
-            {robot.running ? "Robô Ligado (Operando)" : "Robô Desligado (Modo Manutenção)"}
+            {robot.running ? "Robô Ligado" : "Robô Desligado"}
           </p>
           <p className="text-xs text-muted-foreground">
             {robot.running
-              ? "Sinais, leituras e histórico ativos para todos os usuários."
-              : "Ao desligar o robô, o sistema entra diretamente em manutenção e pausa as operações para todos."}
+              ? "Sinais, leituras e histórico ativos para os usuários."
+              : "Pausar o robô para os sinais e o histórico."}
           </p>
         </div>
         <Switch
           checked={robot.running}
           disabled={robot.toggling}
-          aria-label={robot.running ? "Desligar robô e ativar modo manutenção" : "Ligar robô"}
+          aria-label={robot.running ? "Desligar robô" : "Ligar robô"}
           onCheckedChange={() => robot.toggle()}
         />
       </div>
 
-      {/* Gestão e Conexão da API com ações de Desligar e Reconexão */}
+      {/* Modo Manutenção separado */}
+      <div className="liquid-glass flex items-center gap-3 rounded-2xl p-4 sm:p-5">
+        <div
+          className={cn(
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
+            robot.maintenance
+              ? "border-tie/40 bg-tie/10 text-tie"
+              : "border-white/10 bg-white/5 text-muted-foreground",
+          )}
+        >
+          <Wrench className="h-5 w-5" aria-hidden="true" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm sm:text-base text-foreground">
+            {robot.maintenance ? "Modo Manutenção Ativo" : "Modo Manutenção Desligado"}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {robot.maintenance
+              ? "O sistema está em manutenção e pausado para todos os usuários."
+              : "Pausa tudo (robô, leituras e sinais) para todos os usuários."}
+          </p>
+        </div>
+        <Switch
+          checked={robot.maintenance}
+          disabled={robot.maintenanceToggling}
+          aria-label={robot.maintenance ? "Desativar modo manutenção" : "Ativar modo manutenção"}
+          onCheckedChange={() => robot.toggleMaintenance()}
+        />
+      </div>
+
+      {/* Gestão e Conexão da API da Mesa */}
       <FeedStatus />
     </div>
   );
@@ -502,35 +532,14 @@ function FeedStatus() {
         </div>
       </div>
 
-      {/* While connected, the panel only exposes the two useful live controls. */}
-      <div className="flex flex-wrap items-center gap-2 pt-1">
-        <button
-          type="button"
-          disabled={apiToggling}
-          onClick={() => toggleApiPause()}
-          aria-label={apiPaused ? "Ligar API da mesa" : "Desligar API da mesa"}
-          className={cn(
-            "flex h-10 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold transition-all disabled:opacity-50 touch-manipulation motion-reduce:transition-none",
-            apiPaused
-              ? "bg-success/20 text-success border border-success/30 hover:bg-success/30"
-              : "bg-destructive/20 text-destructive border border-destructive/30 hover:bg-destructive/30",
-          )}
-        >
-          {apiToggling ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <Power className="h-4 w-4" aria-hidden="true" />
-          )}
-          <span>{apiPaused ? "Ligar API" : "Desligar API"}</span>
-        </button>
-
-        {connected && (
+      {connected && (
+        <div className="pt-1">
           <button
             type="button"
             disabled={reconnecting}
             onClick={onReconnect}
             aria-label="Reconectar API da mesa"
-            className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-xs font-bold text-white transition-all hover:bg-white/15 disabled:opacity-50 touch-manipulation motion-reduce:transition-none"
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 text-xs font-bold text-white transition-all hover:bg-white/15 disabled:opacity-50 touch-manipulation motion-reduce:transition-none"
           >
             <RotateCw
               className={cn("h-4 w-4", reconnecting && "animate-spin")}
@@ -538,8 +547,8 @@ function FeedStatus() {
             />
             <span>Reconexão</span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {!connected && (
         <form onSubmit={onConnect} className="space-y-3 border-t border-white/10 pt-3">
