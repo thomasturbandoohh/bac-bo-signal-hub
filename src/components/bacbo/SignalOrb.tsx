@@ -23,7 +23,7 @@ export function SignalOrb({
   const secondsLeft = Math.max(0, Math.ceil((phaseEnd - now) / 1000));
   const left = Math.max(0, Math.min(1, (phaseEnd - now) / (phaseEnd - phaseStart)));
 
-  const sideTitle = isPlayer ? "PLAYER" : "BANQUEIRO";
+  const sideTitle = isPlayer ? "PLAYER" : "BANKER";
 
   return (
     <motion.section
@@ -42,7 +42,7 @@ export function SignalOrb({
       {gale && (
         <span
           role="status"
-          className="mb-2.5 rounded-full border border-amber-500/50 bg-amber-500/20 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.2em] text-amber-300 shadow-sm"
+          className="mb-2.5 rounded-full border border-amber-500/50 bg-amber-500/20 px-3 py-0.5 text-[0.625rem] font-extrabold uppercase tracking-[0.2em] text-amber-300 shadow-sm"
         >
           Gale 1 · Última tentativa
         </span>
@@ -64,11 +64,11 @@ export function SignalOrb({
       </div>
 
       {/* Subtitle */}
-      <span className="mt-3 text-[11px] sm:text-xs font-black uppercase tracking-[0.22em] text-white/80">
+      <span className="mt-3 text-[0.6875rem] sm:text-xs font-black uppercase tracking-[0.22em] text-white/80">
         {gale ? "ENTRADA GALE 1" : "ENTRADA CONFIRMADA"}
       </span>
 
-      {/* Target Big Label: PLAYER / BANQUEIRO */}
+      {/* Target Big Label: PLAYER / BANKER */}
       <h2
         className={cn(
           "mt-1 max-w-full font-display text-3xl font-black tracking-wider drop-shadow-md sm:text-5xl",
@@ -86,7 +86,7 @@ export function SignalOrb({
       </div>
 
       {/* Timing and Protection Details */}
-      <div className="mt-3 sm:mt-3.5 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-bold">
+      <div className="mt-3 sm:mt-3.5 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[0.625rem] sm:text-[0.6875rem] font-bold">
         <span className="rounded-full bg-white/[0.08] border border-white/15 px-2.5 py-0.5 text-white">
           Aposte em até <strong className="text-white tabular-nums">{secondsLeft}s</strong>
         </span>

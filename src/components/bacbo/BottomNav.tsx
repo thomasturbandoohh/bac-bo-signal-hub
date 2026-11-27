@@ -1,11 +1,10 @@
 import { memo } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Bot, History, UserRound } from "lucide-react";
+import { Bot, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/robos", label: "Robôs", icon: Bot },
-  { to: "/historico", label: "Histórico", icon: History },
   { to: "/perfil", label: "Perfil", icon: UserRound },
 ] as const;
 

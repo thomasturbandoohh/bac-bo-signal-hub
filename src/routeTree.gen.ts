@@ -14,7 +14,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedApprovedRouteRouteImport } from './routes/_authenticated/_approved/route'
 import { Route as AuthenticatedApprovedAdminRouteImport } from './routes/_authenticated/_approved/admin'
-import { Route as AuthenticatedApprovedHistoricoRouteImport } from './routes/_authenticated/_approved/historico'
 import { Route as AuthenticatedApprovedPerfilRouteImport } from './routes/_authenticated/_approved/perfil'
 import { Route as AuthenticatedApprovedRobosRouteImport } from './routes/_authenticated/_approved/robos'
 import { Route as ApiPublicJobsSyncLiveTableRouteImport } from './routes/api/public/jobs/sync-live-table'
@@ -44,12 +43,6 @@ const AuthenticatedApprovedAdminRoute =
     path: '/admin',
     getParentRoute: () => AuthenticatedApprovedRouteRoute,
   } as any)
-const AuthenticatedApprovedHistoricoRoute =
-  AuthenticatedApprovedHistoricoRouteImport.update({
-    id: '/historico',
-    path: '/historico',
-    getParentRoute: () => AuthenticatedApprovedRouteRoute,
-  } as any)
 const AuthenticatedApprovedPerfilRoute =
   AuthenticatedApprovedPerfilRouteImport.update({
     id: '/perfil',
@@ -73,7 +66,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedApprovedAdminRoute
-  '/historico': typeof AuthenticatedApprovedHistoricoRoute
   '/perfil': typeof AuthenticatedApprovedPerfilRoute
   '/robos': typeof AuthenticatedApprovedRobosRoute
   '/api/public/jobs/sync-live-table': typeof ApiPublicJobsSyncLiveTableRoute
@@ -82,7 +74,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/admin': typeof AuthenticatedApprovedAdminRoute
-  '/historico': typeof AuthenticatedApprovedHistoricoRoute
   '/perfil': typeof AuthenticatedApprovedPerfilRoute
   '/robos': typeof AuthenticatedApprovedRobosRoute
   '/api/public/jobs/sync-live-table': typeof ApiPublicJobsSyncLiveTableRoute
@@ -94,7 +85,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/_approved': typeof AuthenticatedApprovedRouteRouteWithChildren
   '/_authenticated/_approved/admin': typeof AuthenticatedApprovedAdminRoute
-  '/_authenticated/_approved/historico': typeof AuthenticatedApprovedHistoricoRoute
   '/_authenticated/_approved/perfil': typeof AuthenticatedApprovedPerfilRoute
   '/_authenticated/_approved/robos': typeof AuthenticatedApprovedRobosRoute
   '/api/public/jobs/sync-live-table': typeof ApiPublicJobsSyncLiveTableRoute
@@ -105,7 +95,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/admin'
-    | '/historico'
     | '/perfil'
     | '/robos'
     | '/api/public/jobs/sync-live-table'
@@ -114,7 +103,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/admin'
-    | '/historico'
     | '/perfil'
     | '/robos'
     | '/api/public/jobs/sync-live-table'
@@ -125,7 +113,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/_approved'
     | '/_authenticated/_approved/admin'
-    | '/_authenticated/_approved/historico'
     | '/_authenticated/_approved/perfil'
     | '/_authenticated/_approved/robos'
     | '/api/public/jobs/sync-live-table'
@@ -175,13 +162,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApprovedAdminRouteImport
       parentRoute: typeof AuthenticatedApprovedRouteRoute
     }
-    '/_authenticated/_approved/historico': {
-      id: '/_authenticated/_approved/historico'
-      path: '/historico'
-      fullPath: '/historico'
-      preLoaderRoute: typeof AuthenticatedApprovedHistoricoRouteImport
-      parentRoute: typeof AuthenticatedApprovedRouteRoute
-    }
     '/_authenticated/_approved/perfil': {
       id: '/_authenticated/_approved/perfil'
       path: '/perfil'
@@ -208,7 +188,6 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedApprovedRouteRouteChildren {
   AuthenticatedApprovedAdminRoute: typeof AuthenticatedApprovedAdminRoute
-  AuthenticatedApprovedHistoricoRoute: typeof AuthenticatedApprovedHistoricoRoute
   AuthenticatedApprovedPerfilRoute: typeof AuthenticatedApprovedPerfilRoute
   AuthenticatedApprovedRobosRoute: typeof AuthenticatedApprovedRobosRoute
 }
@@ -216,7 +195,6 @@ interface AuthenticatedApprovedRouteRouteChildren {
 const AuthenticatedApprovedRouteRouteChildren: AuthenticatedApprovedRouteRouteChildren =
   {
     AuthenticatedApprovedAdminRoute: AuthenticatedApprovedAdminRoute,
-    AuthenticatedApprovedHistoricoRoute: AuthenticatedApprovedHistoricoRoute,
     AuthenticatedApprovedPerfilRoute: AuthenticatedApprovedPerfilRoute,
     AuthenticatedApprovedRobosRoute: AuthenticatedApprovedRobosRoute,
   }

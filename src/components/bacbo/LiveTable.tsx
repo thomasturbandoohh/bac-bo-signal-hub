@@ -94,7 +94,7 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
           <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-[#34d399] shadow-inner">
             <LiveWavesIcon className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
           </div>
-          <h2 className="font-display text-[11px] sm:text-xs font-black uppercase tracking-[0.16em] text-white">
+          <h2 className="font-display text-[0.6875rem] sm:text-xs font-black uppercase tracking-[0.16em] text-white">
             MESA AO VIVO
           </h2>
         </div>
@@ -103,7 +103,7 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
           role="status"
           aria-label={last ? "Mesa conectada e ao vivo" : "Mesa sem conexão no momento"}
           className={cn(
-            "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-bold border transition-colors motion-reduce:transition-none",
+            "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 sm:py-1 text-[0.625rem] sm:text-[0.6875rem] font-bold border transition-colors motion-reduce:transition-none",
             last
               ? "border-[#1b5e3a] bg-[#0c2417] text-[#34d399] shadow-[0_0_12px_rgba(52,211,153,0.2)]"
               : "border-destructive/40 bg-destructive/15 text-destructive",
@@ -139,7 +139,7 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
             outcome === "P" && "side-player-win",
           )}
         >
-          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-player-glow sm:text-xs">
+          <span className="text-[0.625rem] font-black uppercase tracking-[0.18em] text-player-glow sm:text-xs">
             PLAYER
           </span>
           <div className="mt-2 flex items-center justify-center gap-1.5">
@@ -158,7 +158,7 @@ export function LiveTableCard({ rounds }: { rounds: LiveRound[] }) {
             outcome === "B" && "side-banker-win",
           )}
         >
-          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-banker-glow sm:text-xs">
+          <span className="text-[0.625rem] font-black uppercase tracking-[0.18em] text-banker-glow sm:text-xs">
             BANKER
           </span>
           <div className="mt-2 flex items-center justify-center gap-1.5">

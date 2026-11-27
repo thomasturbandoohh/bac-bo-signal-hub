@@ -72,7 +72,7 @@ export const Scoreboard = memo(function Scoreboard() {
           >
             {i.value}
           </span>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
+          <span className="text-[0.625rem] font-bold uppercase tracking-wider text-muted-foreground sm:text-[0.6875rem]">
             {i.label}
           </span>
         </div>
@@ -81,21 +81,18 @@ export const Scoreboard = memo(function Scoreboard() {
   );
 });
 
-type NoteKind = "green" | "green_tie" | "green_gale" | "gale" | "red" | "streak";
+type NoteKind = "green" | "green_tie" | "green_gale" | "gale" | "red" | "streak" | "streak6";
 export interface Note {
   id: string;
   kind: NoteKind;
   side?: Side;
 }
 
-const NOTE_MS: Record<NoteKind, number> = {
-  green: 3_400,
-  green_tie: 3_400,
-  green_gale: 4_000,
-  gale: 7_000,
-  red: 3_400,
-  streak: 4_500,
-};
+/** Each notification stays fully on screen for 2s (plus the time it takes to fade in). */
+const NOTE_VISIBLE_MS = 2_000;
+const NOTE_ENTER_S = 0.7;
+const NOTE_EXIT_S = 0.6;
+const NOTE_MS = NOTE_VISIBLE_MS + NOTE_ENTER_S * 1000;
 /** A result older than this (since its entry showed) is not announced: the gale makes it ~2 rounds. */
 const RESULT_FRESH_MS = 120_000;
 
@@ -145,6 +142,13 @@ function noteContent(n: Note) {
         tone: "text-success",
         body: "Surra no branco, dinheiro no bolso",
       };
+    case "streak6":
+      return {
+        emoji: [partyEmoji, moneyBagEmoji],
+        title: "6 GREENS SEGUIDOS",
+        tone: "text-success",
+        body: "Estamos com uma sequência de seis green",
+      };
   }
 }
 
@@ -185,9 +189,11 @@ export function ResultBanner() {
             : "green";
       add.push({ id: `r:${r.key}`, kind, side: r.side });
     }
-    const last5 = results.slice(-5);
-    if (freshResults.length && last5.length === 5 && last5.every((r) => r.green)) {
-      add.push({ id: `s:${results.at(-1)!.key}`, kind: "streak" });
+    if (freshResults.length) {
+      let run = 0;
+      for (let i = results.length - 1; i >= 0 && results[i]!.green; i--) run++;
+      if (run === 5) add.push({ id: `s:${results.at(-1)!.key}`, kind: "streak" });
+      if (run === 6) add.push({ id: `s6:${results.at(-1)!.key}`, kind: "streak6" });
     }
     if (add.length) setQueue((q) => [...q, ...add].slice(-4));
   }, [results, gales]);
@@ -196,7 +202,7 @@ export function ResultBanner() {
   const currentId = current?.id;
   useEffect(() => {
     if (!current) return;
-    const t = setTimeout(() => setQueue((q) => q.slice(1)), NOTE_MS[current.kind]);
+    const t = setTimeout(() => setQueue((q) => q.slice(1)), NOTE_MS);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId]);
@@ -218,17 +224,33 @@ export function NoteCard({ note }: { note: Note }) {
   return (
     <motion.div
       role="status"
-      initial={{ opacity: 0, y: -36, scale: 0.92 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -24, scale: 0.96 }}
-      transition={{ type: "spring", stiffness: 320, damping: 26 }}
+      // Slides down while fading in, then fades out softly, lifting slightly as it goes.
+      initial={{ opacity: 0, y: -28, scale: 0.97, filter: "blur(6px)" }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        filter: "blur(0px)",
+        transition: { duration: NOTE_ENTER_S, ease: [0.22, 1, 0.36, 1] },
+      }}
+      exit={{
+        opacity: 0,
+        y: -14,
+        scale: 0.98,
+        filter: "blur(4px)",
+        transition: { duration: NOTE_EXIT_S, ease: [0.4, 0, 0.2, 1] },
+      }}
       className={cn(
         "liquid-glass flex items-center gap-3 overflow-hidden rounded-[1.4rem] px-3.5 py-3",
         note.kind === "gale" && "ring-1 ring-tie/40",
         note.kind === "red" && "ring-1 ring-destructive/40",
-        (note.kind === "green" || note.kind === "green_gale") && "ring-1 ring-success/40",
+        (note.kind === "green" ||
+          note.kind === "green_gale" ||
+          note.kind === "streak" ||
+          note.kind === "streak6") &&
+          "ring-1 ring-success/40",
       )}
-      style={{ width: "min(380px, 94vw)" }}
+      style={{ width: "min(24rem, 94vw)", willChange: "transform, opacity, filter" }}
     >
       <div className="glass-icon relative h-12 w-12 shrink-0">
         <motion.div
@@ -243,7 +265,7 @@ export function NoteCard({ note }: { note: Note }) {
         )}
       </div>
       <div className="min-w-0 flex-1 leading-tight">
-        <p className={cn("font-display text-[15px] font-extrabold tracking-wide", c.tone)}>
+        <p className={cn("font-display text-[0.9375rem] font-extrabold tracking-wide", c.tone)}>
           {c.title}
         </p>
         <p className="mt-0.5 text-xs font-bold text-foreground/85">{c.body}</p>

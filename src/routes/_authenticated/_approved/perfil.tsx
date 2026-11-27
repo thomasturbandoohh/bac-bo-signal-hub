@@ -96,11 +96,11 @@ function ProfilePage() {
           {uploading ? "Enviando foto…" : "Alterar foto de perfil"}
         </button>
         <div className="relative mt-3 flex justify-center gap-2">
-          <span className="rounded-full border border-success/30 bg-success/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-success">
+          <span className="rounded-full border border-success/30 bg-success/10 px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-wider text-success">
             Acesso aprovado
           </span>
           {isAdmin && (
-            <span className="rounded-full border border-tie/30 bg-tie/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-tie">
+            <span className="rounded-full border border-tie/30 bg-tie/10 px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-wider text-tie">
               Admin
             </span>
           )}

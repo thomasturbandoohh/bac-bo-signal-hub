@@ -46,7 +46,7 @@ const Pane = memo(function Pane({
           {value}%
         </motion.span>
       )}
-      <span className="relative z-10 mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/85 sm:text-[11px]">
+      <span className="relative z-10 mt-1 text-[0.625rem] font-bold uppercase tracking-[0.2em] text-foreground/85 sm:text-[0.6875rem]">
         {label}
       </span>
     </motion.div>
@@ -92,14 +92,14 @@ export const LiquidBoard = memo(function LiquidBoard({
       {/* The tie is never an entry: it only shows that the bet must be covered as protection. */}
       <div className="pane-tie absolute left-1/2 top-1/2 z-10 flex h-[5.6rem] w-[5.6rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full sm:h-[6.6rem] sm:w-[6.6rem]">
         <Water level={LOW + 2} tone="tie" calm />
-        <span className="relative z-10 text-[9px] font-bold uppercase tracking-[0.18em] text-foreground/90 sm:text-[10px]">
+        <span className="relative z-10 text-[0.5625rem] font-bold uppercase tracking-[0.18em] text-foreground/90 sm:text-[0.625rem]">
           Empate
         </span>
         {winner && (
           <motion.span
             initial={{ opacity: 0, y: 3 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative z-10 mt-0.5 text-[8px] font-extrabold uppercase tracking-[0.14em] text-foreground/75 sm:text-[9px]"
+            className="relative z-10 mt-0.5 text-[0.5rem] font-extrabold uppercase tracking-[0.14em] text-foreground/75 sm:text-[0.5625rem]"
           >
             Proteção
           </motion.span>

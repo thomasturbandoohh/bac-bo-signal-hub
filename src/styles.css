@@ -143,6 +143,29 @@
 
   html {
     color-scheme: dark;
+    /* Keep iOS/Android from inflating text on rotation */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Phones: native 16px base */
+    font-size: 100%;
+  }
+  /* Small phones (iPhone SE, compact Androids): slightly tighter */
+  @media (max-width: 359px) {
+    html {
+      font-size: 93.75%;
+    }
+  }
+  /* Tablets (iPad, Android tablets): a touch larger */
+  @media (min-width: 768px) {
+    html {
+      font-size: clamp(16px, calc(0.3vw + 13.7px), 17px);
+    }
+  }
+  /* Laptops and desktops (MacBook, Windows, Linux): scale with the screen, never tiny, never huge */
+  @media (min-width: 1024px) {
+    html {
+      font-size: clamp(16px, calc(0.5vw + 10.9px), 21px);
+    }
   }
   html,
   body {
