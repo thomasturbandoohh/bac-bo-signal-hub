@@ -1,4 +1,4 @@
-const CACHE_NAME = "bacbo-live-cache-v2";
+const CACHE_NAME = "bacbo-live-cache-v1";
 const STATIC_ASSETS = [
   "/",
   "/manifest.webmanifest",
@@ -31,59 +31,6 @@ self.addEventListener("activate", (event) => {
   );
   self.clients.claim();
 });
-
-/* ------------------------------------------------------------------ */
-/* Push & Notification Handling (Native Mobile & Desktop Background) */
-/* ------------------------------------------------------------------ */
-
-self.addEventListener("push", (event) => {
-  let data = {};
-  try {
-    data = event.data ? event.data.json() : {};
-  } catch {
-    data = {
-      title: "🎲 Sinal Bac Bo Live",
-      body: event.data ? event.data.text() : "Nova oportunidade identificada na mesa!",
-    };
-  }
-
-  const title = data.title || "🎲 Sinal Bac Bo Live";
-  const options = {
-    body: data.body || "Nova oportunidade na mesa. Abra o aplicativo para apostar!",
-    icon: data.icon || "/icon-192.png",
-    badge: "/favicon.png",
-    vibrate: [200, 100, 200, 100, 300],
-    tag: data.tag || "bacbo-signal",
-    renotify: true,
-    data: {
-      url: data.url || "/robos",
-    },
-  };
-
-  event.waitUntil(self.registration.showNotification(title, options));
-});
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || "/robos";
-
-  event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes("/robos") && "focus" in client) {
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
-      }
-    }),
-  );
-});
-
-/* ------------------------------------------------------------------ */
-/* Network Caching Strategy                                           */
-/* ------------------------------------------------------------------ */
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
