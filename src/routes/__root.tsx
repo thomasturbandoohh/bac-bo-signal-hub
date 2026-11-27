@@ -175,6 +175,16 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator && import.meta.env.PROD) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").catch((err) => {
+          console.error("Falha ao registrar Service Worker:", err);
+        });
+      });
+    }
+  }, []);
+
+  useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();

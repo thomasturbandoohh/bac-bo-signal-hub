@@ -1,3 +1,4 @@
+import { PwaInstallRow } from "@/components/bacbo/PwaInstallPrompt";
 import { useRef, useState, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -115,6 +116,7 @@ function ProfilePage() {
           label="Membro desde"
           value={new Date(profile.created_at).toLocaleDateString("pt-BR")}
         />
+        <PwaInstallRow />
       </div>
 
       {isAdmin && (
