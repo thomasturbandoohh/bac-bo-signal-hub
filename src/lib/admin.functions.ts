@@ -82,8 +82,9 @@ export const getTelegramSettings = createServerFn({ method: "GET" })
     }
     const { getAdminClient } = await import("./admin-client.server");
     const admin = getAdminClient();
-    const { readTelegramConfig } = await import("./telegram.server");
+    const { readTelegramConfig, readTelegramState } = await import("./telegram.server");
     const cfg = await readTelegramConfig(admin);
+    const state = await readTelegramState(admin);
 
     return {
       configured: !!(cfg?.botToken && cfg?.chatId),
@@ -93,6 +94,8 @@ export const getTelegramSettings = createServerFn({ method: "GET" })
       platformName: cfg?.platformName ?? "ElephantBet",
       platformUrl: cfg?.platformUrl ?? "https://www.elephantbet.com",
       tableName: cfg?.tableName ?? "Bac Bo Live",
+      scoreboard: state.scoreboard ?? { directGreens: 0, galeGreens: 0, tieGreens: 0, reds: 0 },
+      consecutiveGreens: state.consecutiveGreens ?? 0,
     };
   });
 
@@ -195,4 +198,24 @@ export const testTelegramConnection = createServerFn({ method: "POST" })
     );
 
     return res;
+  });
+
+/** Reseta o placar acumulado do Telegram (Admin only). */
+export const resetTelegramScoreboardAction = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: callerIsAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!callerIsAdmin) {
+      return { ok: false as const, error: "Acesso restrito a administradores." };
+    }
+
+    const { getAdminClient } = await import("./admin-client.server");
+    const admin = getAdminClient();
+    const { resetTelegramScoreboard } = await import("./telegram.server");
+    const empty = await resetTelegramScoreboard(admin);
+
+    return { ok: true as const, scoreboard: empty };
   });
