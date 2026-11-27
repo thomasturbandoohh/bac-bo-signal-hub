@@ -47,12 +47,14 @@ create policy "Admins update any profile" on public.profiles for update to authe
 create or replace function public.protect_profile_fields()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  if (new.status is distinct from old.status or new.email is distinct from old.email)
-     and not public.has_role(auth.uid(), 'admin') then
-    raise exception 'Not allowed to change status';
-  end if;
-  if new.id = auth.uid() and public.has_role(auth.uid(), 'admin') and new.status <> 'approved' then
-    raise exception 'Admin cannot block own account';
+  if auth.uid() is not null then
+    if (new.status is distinct from old.status or new.email is distinct from old.email)
+       and not public.has_role(auth.uid(), 'admin') then
+      raise exception 'Not allowed to change status';
+    end if;
+    if new.id = auth.uid() and public.has_role(auth.uid(), 'admin') and new.status <> 'approved' then
+      raise exception 'Admin cannot block own account';
+    end if;
   end if;
   new.updated_at := now();
   return new;
