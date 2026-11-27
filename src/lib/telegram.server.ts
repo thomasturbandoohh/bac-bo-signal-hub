@@ -32,6 +32,7 @@ export interface TelegramState {
   lastSettledRoundId?: string | undefined;
   activeSignal: ActiveSignalState | null;
   offlineNotified?: boolean | undefined;
+  consecutiveGreens?: number | undefined;
   lastUpdated?: string | undefined;
 }
 
@@ -120,6 +121,8 @@ export async function readTelegramState(admin: Admin): Promise<TelegramState> {
         lastSettledRoundId: parsed.lastSettledRoundId,
         activeSignal: parsed.activeSignal ?? null,
         offlineNotified: parsed.offlineNotified ?? false,
+        consecutiveGreens:
+          typeof parsed.consecutiveGreens === "number" ? parsed.consecutiveGreens : 0,
         lastUpdated: parsed.lastUpdated,
       };
       return cachedState;
@@ -132,6 +135,7 @@ export async function readTelegramState(admin: Admin): Promise<TelegramState> {
     lastSettledRoundId: undefined,
     activeSignal: null,
     offlineNotified: false,
+    consecutiveGreens: 0,
   };
   return cachedState;
 }
@@ -187,19 +191,19 @@ export async function callTelegramApi<T = unknown>(
 export function formatSide(side: Side) {
   if (side === "player") {
     return {
-      name: "PLAYER (Azul)",
+      name: "PLAYER",
       emoji: "🔵",
       badge: "AZUL",
     };
   }
   return {
-    name: "BANKER (Vermelho)",
+    name: "BANKER",
     emoji: "🔴",
     badge: "VERMELHO",
   };
 }
 
-/** Formata mensagem de entrada confirmada com emotes. */
+/** Formata mensagem de entrada confirmada com emotes (versão curta). */
 export function formatEntryMessage(
   signal: { side: Side; pattern: string; confidence: number },
   config: TelegramConfig,
@@ -210,126 +214,86 @@ export function formatEntryMessage(
   const url = config.platformUrl || DEFAULT_PLATFORM_URL;
 
   return [
-    `🚨 <b>ENTRADA CONFIRMADA!</b> 🚨`,
+    `🚨 <b>ENTRADA CONFIRMADA</b>`,
     ``,
     `🎲 <b>Mesa:</b> ${table}`,
-    `🎰 <b>Plataforma:</b> <a href="${url}">${platform}</a>`,
+    `🎰 <b>Casa:</b> <a href="${url}">${platform}</a>`,
+    `🎯 <b>Entrada:</b> ${s.emoji} <b>${s.name}</b>`,
+    `🟡 <b>Proteção:</b> Empate`,
+    `⚡ <b>Gale:</b> Até G1`,
     ``,
-    `🎯 <b>Apostar em:</b> ${s.emoji} <b>${s.name}</b>`,
-    `🟡 <b>Cobrir o EMPATE (TIE) com proteção</b>`,
-    `⚡ <b>Até 1 Martingale (G1)</b>`,
-    ``,
-    `📊 <b>Assertividade estimada:</b> ${signal.confidence}%`,
-    `🧠 <b>Padrão analisado:</b> <i>${signal.pattern}</i>`,
-    ``,
-    `⚠️ <i>Gestão recomendada: 1% a 2% da banca. Jogue com responsabilidade.</i>`,
-    `🔗 <a href="${url}">👉 <b>CLIQUE AQUI PARA ABRIR A MESA</b></a>`,
+    `🔗 <a href="${url}">👉 <b>CLIQUE PARA ENTRAR</b></a>`,
   ].join("\n");
 }
 
-/** Formata mensagem de Gale 1 (G1). */
+/** Formata mensagem de Gale 1 (G1) (versão curta). */
 export function formatGaleMessage(side: Side, config: TelegramConfig): string {
   const s = formatSide(side);
   const table = config.tableName || DEFAULT_TABLE_NAME;
 
   return [
-    `⚠️ <b>ATENÇÃO: VAMOS PARA O GALE 1 (G1)</b> ⚠️`,
+    `⚠️ <b>ATENÇÃO: VAMOS PARA O G1!</b>`,
     ``,
     `🎲 <b>Mesa:</b> ${table}`,
-    `🎯 <b>Manter entrada no:</b> ${s.emoji} <b>${s.name}</b>`,
-    `🟡 <b>Reforçar proteção no EMPATE</b>`,
-    ``,
-    `⚡ <i>Primeira tentativa não bateu. Entrando no G1 agora!</i>`,
+    `🎯 <b>Entrada:</b> ${s.emoji} <b>${s.name}</b>`,
+    `🟡 <b>Proteção:</b> Empate`,
   ].join("\n");
 }
 
 export type ResultType = "direct_green" | "gale_green" | "tie_green" | "red";
 
-/** Formata mensagem de resultado (Green Direto, Green G1, Empate ou Red). */
-export function formatResultMessage(type: ResultType, side: Side, config: TelegramConfig): string {
+/** Formata mensagem de resultado (Green Direto, Green G1, Empate ou Red) com aviso de sequência. */
+export function formatResultMessage(
+  type: ResultType,
+  side: Side,
+  config: TelegramConfig,
+  streak = 0,
+): string {
   const s = formatSide(side);
-  const table = config.tableName || DEFAULT_TABLE_NAME;
-  const platform = config.platformName || DEFAULT_PLATFORM_NAME;
+  const streakText = streak >= 2 ? `\n🔥 <b>${streak} GREENS SEGUIDOS!</b>` : "";
 
   if (type === "tie_green") {
-    return [
-      `🟡🟡🟡 <b>EMPATE / TIE — GREEN!</b> 🟡🟡🟡`,
-      ``,
-      `🎯 <b>A proteção no empate pagou com multiplicação!</b>`,
-      `🎲 <b>Mesa:</b> ${table}`,
-      `🎰 <b>Plataforma:</b> ${platform}`,
-      `💰 <b>Resultado:</b> 🟡 <b>EMPATE</b> (Conta como WIN!)`,
-      ``,
-      `✅ <i>Vitória confirmada! Excelente cobertura.</i>`,
-    ].join("\n");
+    return [`🟡 <b>EMPATE PAGO!</b> 🤑`, `🎯 Proteção no Empate bateu!${streakText}`].join("\n");
   }
 
   if (type === "direct_green") {
     return [
-      `✅✅✅ <b>GREEN DIRETO!</b> ✅✅✅`,
-      ``,
-      `🎯 <b>Vitória certeira de primeira!</b>`,
-      `🎲 <b>Mesa:</b> ${table}`,
-      `🎰 <b>Plataforma:</b> ${platform}`,
-      `💰 <b>Entrada vencedora:</b> ${s.emoji} ${s.name}`,
-      ``,
-      `🚀 <i>Análise precisa do robô. Parabéns a quem pegou!</i>`,
+      `✅ <b>GREEN DE PRIMEIRA!</b> 🤑`,
+      `🎯 Pagou no ${s.emoji} <b>${s.name}</b>!${streakText}`,
     ].join("\n");
   }
 
   if (type === "gale_green") {
     return [
-      `✅✅ <b>GREEN NO G1!</b> ✅✅`,
-      ``,
-      `🎯 <b>Vitória confirmada no Gale 1!</b>`,
-      `🎲 <b>Mesa:</b> ${table}`,
-      `🎰 <b>Plataforma:</b> ${platform}`,
-      `💰 <b>Entrada vencedora:</b> ${s.emoji} ${s.name}`,
-      ``,
-      `📈 <i>Recuperação com lucro concluída no G1!</i>`,
+      `✅ <b>GREEN NO G1!</b> 🤑`,
+      `🎯 Pagou no ${s.emoji} <b>${s.name}</b>!${streakText}`,
     ].join("\n");
   }
 
-  return [
-    `❌ <b>RED</b> ❌`,
-    ``,
-    `🎲 <b>Mesa:</b> ${table}`,
-    `🎰 <b>Plataforma:</b> ${platform}`,
-    `⚠️ <b>Ciclo finalizado no G1.</b>`,
-    ``,
-    `🛡️ <i>Respeite rigorosamente a gestão de banca (Stop Loss). Aguardando o próximo padrão com alta confluência!</i>`,
-  ].join("\n");
+  return [`❌ <b>RED!</b>`, `🛑 Stop da rodada. Gestão ativada.`].join("\n");
 }
 
-/** Formata alerta de mesa desconectada ou pausada. */
+/** Formata alerta de mesa desconectada ou pausada (versão curta). */
 export function formatOfflineAlert(config: TelegramConfig): string {
   const table = config.tableName || DEFAULT_TABLE_NAME;
   const platform = config.platformName || DEFAULT_PLATFORM_NAME;
 
   return [
-    `⚠️ <b>ATENÇÃO: MESA PAUSADA / FORA DO AR</b> ⚠️`,
-    ``,
-    `🎲 <b>Mesa:</b> ${table}`,
-    `🎰 <b>Plataforma:</b> ${platform}`,
-    ``,
-    `A leitura ao vivo da mesa ou a API da plataforma não está ligada no momento.`,
-    `Os sinais automáticos estão pausados até o retorno da conexão normalizada.`,
+    `⚠️ <b>MESA INDISPONÍVEL</b>`,
+    `📡 ${table} sem sinal na ${platform}.`,
+    `⏸️ Sinais em pausa por segurança.`,
   ].join("\n");
 }
 
-/** Formata aviso de mesa reconectada. */
+/** Formata aviso de mesa reconectada (versão curta). */
 export function formatOnlineAlert(config: TelegramConfig): string {
   const table = config.tableName || DEFAULT_TABLE_NAME;
   const platform = config.platformName || DEFAULT_PLATFORM_NAME;
 
   return [
-    `🟢 <b>MESA CONECTADA E OPERACIONAL!</b> 🟢`,
-    ``,
-    `🎲 <b>Mesa:</b> ${table}`,
-    `🎰 <b>Plataforma:</b> ${platform}`,
-    ``,
-    `A transmissão de dados da mesa Bac Bo Live está ativa e operando normalmente.`,
-    `O robô está analisando os padrões ao vivo. Fique atento às próximas entradas!`,
+    `🟢 <b>MESA ONLINE</b>`,
+    `📡 ${table} conectada na ${platform}.`,
+    `🎲 Análise de sinais ativa!`,
   ].join("\n");
 }
 
@@ -493,18 +457,23 @@ export async function processTelegramSignals(
         const won = isTie || isGreen(active.side, lastRound.outcome);
 
         if (isTie) {
-          // Empate: conta como win e manda emote amarelo de empate
-          await sendTelegramMessage(config, formatResultMessage("tie_green", active.side, config));
+          // Empate: vitória com emote amarelo
+          state.consecutiveGreens = (state.consecutiveGreens ?? 0) + 1;
+          await sendTelegramMessage(
+            config,
+            formatResultMessage("tie_green", active.side, config, state.consecutiveGreens),
+          );
           state.activeSignal = null;
         } else if (won) {
           // Green direto
+          state.consecutiveGreens = (state.consecutiveGreens ?? 0) + 1;
           await sendTelegramMessage(
             config,
-            formatResultMessage("direct_green", active.side, config),
+            formatResultMessage("direct_green", active.side, config, state.consecutiveGreens),
           );
           state.activeSignal = null;
         } else {
-          // Entrada direta perdeu -> Entra em G1 (Gale 1)
+          // Entrada direta não bateu -> Entra em G1 (Gale 1)
           await sendTelegramMessage(config, formatGaleMessage(active.side, config));
           active.stage = "gale";
           active.galeRoundId = lastRound.id;
@@ -515,16 +484,25 @@ export async function processTelegramSignals(
         const won = isTie || isGreen(active.side, lastRound.outcome);
 
         if (isTie) {
-          // Empate no G1: conta como win
-          await sendTelegramMessage(config, formatResultMessage("tie_green", active.side, config));
+          // Empate no G1: vitória com emote amarelo
+          state.consecutiveGreens = (state.consecutiveGreens ?? 0) + 1;
+          await sendTelegramMessage(
+            config,
+            formatResultMessage("tie_green", active.side, config, state.consecutiveGreens),
+          );
           state.activeSignal = null;
         } else if (won) {
           // Green no G1
-          await sendTelegramMessage(config, formatResultMessage("gale_green", active.side, config));
+          state.consecutiveGreens = (state.consecutiveGreens ?? 0) + 1;
+          await sendTelegramMessage(
+            config,
+            formatResultMessage("gale_green", active.side, config, state.consecutiveGreens),
+          );
           state.activeSignal = null;
         } else {
-          // Perdeu no G1 -> RED
-          await sendTelegramMessage(config, formatResultMessage("red", active.side, config));
+          // Perdeu no G1 -> RED (zera sequência de greens)
+          state.consecutiveGreens = 0;
+          await sendTelegramMessage(config, formatResultMessage("red", active.side, config, 0));
           state.activeSignal = null;
         }
       }
