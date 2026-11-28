@@ -1,7 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Clock3, Loader2, Lock, Mail, ShieldX, UserRound } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock3,
+  Loader2,
+  Lock,
+  Mail,
+  ShieldX,
+  UserRound,
+  Sparkles,
+} from "lucide-react";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -132,7 +141,6 @@ function AuthPage() {
           await enter(data.user.id, true);
           return;
         }
-        // Conta criada: aguarda aprovação direta do admin
         setNotice("created");
       }
     } catch (err) {
@@ -168,26 +176,32 @@ function AuthPage() {
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             >
-              <h1 className="text-center font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
-                {mode === "login" ? "Bem-vindo de volta" : "Criar conta"}
-              </h1>
-              <p className="mt-1 text-center text-sm font-semibold text-muted-foreground">
-                {mode === "login"
-                  ? "Entre para acessar seus robôs"
-                  : "Seu acesso é liberado após aprovação do admin"}
-              </p>
+              <div className="text-center">
+                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[0.625rem] font-black uppercase tracking-widest text-player-glow">
+                  <Sparkles className="h-3 w-3" />
+                  ACESSO VIP
+                </span>
+                <h1 className="mt-2 font-display text-2xl font-black tracking-tight sm:text-3xl text-white">
+                  {mode === "login" ? "Bem-vindo de volta" : "Criar sua conta"}
+                </h1>
+                <p className="mt-1 text-xs sm:text-sm font-semibold text-muted-foreground">
+                  {mode === "login"
+                    ? "Acesse a central de sinais em tempo real"
+                    : "Cadastro exclusivo para membros aprovados"}
+                </p>
+              </div>
 
               <motion.div
-                className="relative mt-4 overflow-hidden rounded-2xl border border-white/10 bg-card/85 p-4 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md transition-all sm:mt-6 sm:p-5 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent"
+                className="glass-premium relative mt-5 overflow-hidden rounded-2xl border border-white/10 p-5 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.9)] backdrop-blur-2xl transition-all sm:mt-6 sm:p-6"
                 initial={{ opacity: 0, y: 10, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.45, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
               >
-                <form onSubmit={onSubmit} className="space-y-3">
+                <form onSubmit={onSubmit} className="space-y-3.5">
                   {mode === "signup" && (
                     <Field label="Nome" icon={<UserRound className="h-4 w-4" strokeWidth={2.4} />}>
                       <input
-                        placeholder="Seu nome"
+                        placeholder="Seu nome completo"
                         autoComplete="name"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -198,7 +212,7 @@ function AuthPage() {
                   <Field label="E-mail" icon={<Mail className="h-4 w-4" strokeWidth={2.4} />}>
                     <input
                       type="email"
-                      placeholder="voce@email.com"
+                      placeholder="seu@email.com"
                       autoComplete="email"
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -208,7 +222,7 @@ function AuthPage() {
                   <Field label="Senha" icon={<Lock className="h-4 w-4" strokeWidth={2.4} />}>
                     <input
                       type="password"
-                      placeholder="Sua senha"
+                      placeholder="Sua senha secreta"
                       autoComplete={mode === "login" ? "current-password" : "new-password"}
                       value={form.password}
                       onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -222,7 +236,7 @@ function AuthPage() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="text-center text-sm font-bold text-destructive"
+                        className="text-center text-xs font-black text-destructive"
                       >
                         {error}
                       </motion.p>
@@ -232,31 +246,31 @@ function AuthPage() {
                   <motion.button
                     whileTap={{ scale: 0.98 }}
                     disabled={loading}
-                    className="mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-banker to-banker-glow text-[0.9375rem] font-extrabold text-primary-foreground shadow-[0_18px_40px_-18px_var(--banker)] disabled:opacity-70 sm:h-12"
+                    className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-red-600 via-rose-600 to-rose-500 text-[0.9375rem] font-black text-white shadow-[0_12px_32px_-8px_rgba(244,63,94,0.6)] hover:brightness-110 active:scale-[0.99] disabled:opacity-70 transition-all"
                   >
                     {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {mode === "login" ? "Entrar com E-mail" : "Criar conta"}
+                    {mode === "login" ? "Entrar na Plataforma" : "Solicitar Acesso VIP"}
                   </motion.button>
                 </form>
 
-                <p className="mt-4 text-center text-sm font-semibold text-muted-foreground">
-                  {mode === "login" ? "Não tem uma conta? " : "Já tem uma conta? "}
+                <p className="mt-4 text-center text-xs sm:text-sm font-semibold text-muted-foreground">
+                  {mode === "login" ? "Ainda não tem acesso? " : "Já possui conta? "}
                   <button
                     type="button"
                     onClick={() => {
                       setError(null);
                       setMode(mode === "login" ? "signup" : "login");
                     }}
-                    className="font-extrabold text-banker-glow"
+                    className="font-black text-amber-300 hover:text-amber-200 transition-colors ml-1"
                   >
-                    {mode === "login" ? "Criar conta" : "Entrar"}
+                    {mode === "login" ? "Criar conta" : "Fazer login"}
                   </button>
                 </p>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
-        <p className="mt-auto pt-5 text-center text-[0.6875rem] text-muted-foreground/70 sm:pt-8">
+        <p className="mt-auto pt-6 text-center text-[0.625rem] text-muted-foreground/60 sm:pt-8">
           Jogue com responsabilidade · Proibido para menores de 18 anos
         </p>
       </div>
@@ -267,10 +281,10 @@ function AuthPage() {
 function Field({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block pl-1 text-xs font-extrabold uppercase tracking-[0.12em] text-foreground/85">
+      <span className="mb-1 block pl-1 text-[0.6875rem] font-black uppercase tracking-[0.14em] text-foreground/80">
         {label}
       </span>
-      <span className="flex h-12 items-center gap-3 rounded-xl border border-white/15 bg-card/70 pl-3 pr-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-sm transition-all duration-200 focus-within:border-player-glow/60 focus-within:bg-card/90">
+      <span className="flex h-12 items-center gap-3 rounded-2xl border border-white/12 bg-black/40 pl-3.5 pr-4 shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)] backdrop-blur-sm transition-all duration-200 focus-within:border-player-glow/70 focus-within:ring-2 focus-within:ring-player-glow/20 focus-within:bg-black/60">
         <span className="shrink-0 text-muted-foreground">{icon}</span>
         {children}
       </span>
@@ -284,31 +298,31 @@ const NOTICES: Record<
 > = {
   created: {
     icon: CheckCircle2,
-    tone: "text-success border-success/30 bg-success/10",
-    title: "Conta criada com sucesso!",
-    body: "Aguarde a aprovação do admin para acessar o robô.",
+    tone: "text-emerald-400 border-emerald-500/40 bg-emerald-500/15 shadow-[0_0_20px_rgba(52,211,153,0.3)]",
+    title: "Conta cadastrada com sucesso!",
+    body: "Seu cadastro foi recebido. O administrador liberará seu acesso em instantes.",
   },
   confirm: {
     icon: CheckCircle2,
-    tone: "text-success border-success/30 bg-success/10",
-    title: "Conta criada com sucesso!",
-    body: "Aguarde a aprovação do admin para acessar o robô.",
+    tone: "text-emerald-400 border-emerald-500/40 bg-emerald-500/15 shadow-[0_0_20px_rgba(52,211,153,0.3)]",
+    title: "Conta confirmada!",
+    body: "Aguarde a aprovação do administrador para acessar o robô.",
   },
   pending: {
     icon: Clock3,
-    tone: "text-tie border-tie/30 bg-tie/10",
+    tone: "text-amber-400 border-amber-500/40 bg-amber-500/15 shadow-[0_0_20px_rgba(251,191,36,0.3)]",
     title: "Cadastro em análise",
-    body: "Seu acesso ainda está aguardando a aprovação do administrador. Tente novamente mais tarde.",
+    body: "Seu acesso ainda está aguardando a liberação do administrador.",
   },
   rejected: {
     icon: ShieldX,
-    tone: "text-destructive border-destructive/30 bg-destructive/10",
-    title: "Cadastro recusado",
+    tone: "text-rose-400 border-rose-500/40 bg-rose-500/15 shadow-[0_0_20px_rgba(244,63,94,0.3)]",
+    title: "Cadastro não aprovado",
     body: "O administrador não aprovou este cadastro.",
   },
   blocked: {
     icon: ShieldX,
-    tone: "text-destructive border-destructive/30 bg-destructive/10",
+    tone: "text-rose-400 border-rose-500/40 bg-rose-500/15 shadow-[0_0_20px_rgba(244,63,94,0.3)]",
     title: "Acesso bloqueado",
     body: "Seu acesso foi desativado pelo administrador.",
   },
@@ -323,7 +337,7 @@ function NoticeCard({ notice, onBack }: { notice: AccountNotice; onBack: () => v
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="relative mt-3 overflow-hidden rounded-2xl border border-white/10 bg-card/85 p-5 text-center shadow-[0_12px_40px_-12px_rgba(0,0,0,0.6)] backdrop-blur-md sm:mt-4 sm:p-7 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/25 before:to-transparent"
+      className="glass-premium relative mt-3 overflow-hidden rounded-2xl border border-white/15 p-6 text-center shadow-[0_20px_50px_-12px_rgba(0,0,0,0.9)] backdrop-blur-2xl sm:mt-4 sm:p-8"
     >
       <div
         className={cn(
@@ -333,13 +347,13 @@ function NoticeCard({ notice, onBack }: { notice: AccountNotice; onBack: () => v
       >
         <Icon className="h-7 w-7 sm:h-8 sm:w-8" />
       </div>
-      <h2 className="mt-4 font-display text-xl font-bold tracking-tight sm:mt-5 sm:text-2xl">
+      <h2 className="mt-4 font-display text-xl font-black tracking-tight sm:mt-5 sm:text-2xl text-white">
         {n.title}
       </h2>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{n.body}</p>
+      <p className="mt-2 text-xs sm:text-sm leading-relaxed text-muted-foreground">{n.body}</p>
       <button
         onClick={onBack}
-        className="mt-4 h-11 w-full rounded-full border border-border bg-secondary text-sm font-semibold transition-colors hover:bg-accent sm:mt-6 sm:h-12"
+        className="mt-5 h-12 w-full rounded-full border border-white/15 bg-white/[0.08] text-xs sm:text-sm font-black text-white transition-all hover:bg-white/[0.12] sm:mt-6"
       >
         Voltar para o login
       </button>
