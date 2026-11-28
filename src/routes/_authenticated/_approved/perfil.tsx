@@ -3,7 +3,17 @@ import { useRef, useState, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Camera, ChevronRight, Loader2, LogOut, Mail, ShieldCheck, UserRound } from "lucide-react";
+import {
+  Camera,
+  ChevronRight,
+  Loader2,
+  LogOut,
+  Mail,
+  ShieldCheck,
+  UserRound,
+  Sparkles,
+  CheckCircle2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/bacbo/Avatar";
 import { signOutEverywhere } from "@/lib/auth-helpers";
@@ -57,24 +67,34 @@ function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto space-y-3 pt-2 sm:space-y-4 sm:pt-3 lg:max-w-3xl">
-      <h1 className="font-display text-xl font-bold tracking-tight sm:text-2xl">Perfil</h1>
+    <div className="mx-auto space-y-3.5 pt-1 sm:space-y-4 sm:pt-2 lg:max-w-3xl">
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-xl font-black tracking-tight sm:text-2xl">Minha Conta</h1>
+        <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/40 bg-amber-500/10 px-2.5 py-0.5 text-[0.625rem] font-black uppercase tracking-widest text-amber-300">
+          <Sparkles className="h-3 w-3 text-amber-400" />
+          VIP MEMBER
+        </span>
+      </div>
 
-      <div className="liquid-glass relative overflow-hidden rounded-[1.75rem] p-5 text-center sm:p-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-player/20 via-transparent to-banker/20" />
-        <div className="relative mx-auto mt-2 h-24 w-24 sm:mt-4 sm:h-28 sm:w-28">
+      {/* Main VIP Profile Card */}
+      <div className="glass-premium relative overflow-hidden rounded-2xl p-6 text-center sm:p-7 shadow-[0_20px_45px_-12px_rgba(0,0,0,0.85)] border border-white/10">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-player/15 via-transparent to-banker/15" />
+
+        {/* Avatar with luxury glowing rim */}
+        <div className="relative mx-auto mt-1 h-24 w-24 sm:mt-2 sm:h-28 sm:w-28">
+          <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-player-glow via-white/30 to-banker-glow blur-[2px] opacity-75" />
           <Avatar
             value={avatar}
             name={profile.name}
-            className="h-24 w-24 border-4 sm:h-28 sm:w-28 border-background shadow-xl"
-            textClass="text-3xl"
+            className="relative h-24 w-24 border-4 sm:h-28 sm:w-28 border-[#090d18] shadow-2xl"
+            textClass="text-3xl font-black"
           />
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
             aria-label="Alterar foto de perfil"
-            className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-background bg-tie text-background shadow-lg disabled:opacity-70"
+            className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#090d18] bg-gradient-to-br from-amber-300 to-amber-500 text-black shadow-lg transition-transform hover:scale-105 active:scale-95 disabled:opacity-70"
           >
             {uploading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -84,61 +104,79 @@ function ProfilePage() {
           </button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPick} />
         </div>
-        <h2 className="relative mt-3 font-display text-lg font-bold sm:mt-4 sm:text-xl">
-          {profile.name || "Usuário"}
+
+        <h2 className="relative mt-3.5 font-display text-lg font-black sm:text-xl">
+          {profile.name || "Usuário VIP"}
         </h2>
-        <p className="relative mt-0.5 text-sm text-muted-foreground">{profile.email}</p>
+        <p className="relative mt-0.5 text-xs text-muted-foreground sm:text-sm">{profile.email}</p>
+
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
-          className="relative mt-2 text-xs font-semibold text-tie disabled:opacity-60"
+          className="relative mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 hover:text-amber-200 transition-colors disabled:opacity-60"
         >
-          {uploading ? "Enviando foto…" : "Alterar foto de perfil"}
+          {uploading ? "Enviando nova foto…" : "Alterar foto de perfil"}
         </button>
-        <div className="relative mt-3 flex justify-center gap-2">
-          <span className="rounded-full border border-success/30 bg-success/10 px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-wider text-success">
-            Acesso aprovado
+
+        <div className="relative mt-4 flex justify-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-[0.6875rem] font-black uppercase tracking-wider text-emerald-300 shadow-sm">
+            <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+            Acesso Aprovado
           </span>
           {isAdmin && (
-            <span className="rounded-full border border-tie/30 bg-tie/10 px-3 py-1 text-[0.6875rem] font-bold uppercase tracking-wider text-tie">
-              Admin
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-[0.6875rem] font-black uppercase tracking-wider text-amber-300 shadow-sm">
+              <ShieldCheck className="h-3 w-3 text-amber-400" />
+              Administrador
             </span>
           )}
         </div>
       </div>
 
-      <div className="liquid-glass divide-y divide-border rounded-[1.5rem]">
-        <Row icon={<UserRound className="h-4 w-4" />} label="Nome" value={profile.name} />
-        <Row icon={<Mail className="h-4 w-4" />} label="E-mail" value={profile.email} />
+      {/* Account Info Details */}
+      <div className="glass-premium divide-y divide-white/[0.08] rounded-2xl border border-white/10 overflow-hidden shadow-lg">
         <Row
-          icon={<ShieldCheck className="h-4 w-4" />}
+          icon={<UserRound className="h-4 w-4 text-player-glow" />}
+          label="Nome"
+          value={profile.name}
+        />
+        <Row
+          icon={<Mail className="h-4 w-4 text-player-glow" />}
+          label="E-mail"
+          value={profile.email}
+        />
+        <Row
+          icon={<ShieldCheck className="h-4 w-4 text-player-glow" />}
           label="Membro desde"
           value={new Date(profile.created_at).toLocaleDateString("pt-BR")}
         />
         <PwaInstallRow />
       </div>
 
+      {/* Admin Panel Link */}
       {isAdmin && (
         <Link
           to="/admin"
-          className="liquid-glass flex items-center gap-3 rounded-[1.5rem] p-4 transition-colors hover:bg-accent/40"
+          className="glass-premium flex items-center gap-3.5 rounded-2xl p-4 border border-amber-500/30 transition-all duration-300 hover:border-amber-500/60 hover:bg-white/[0.05] shadow-lg group"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-tie/30 bg-tie/10 text-tie">
-            <ShieldCheck className="h-5 w-5" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-amber-500/40 bg-amber-500/15 text-amber-300 shadow-inner group-hover:scale-105 transition-transform">
+            <ShieldCheck className="h-6 w-6" />
           </div>
           <div className="flex-1">
-            <p className="font-semibold">Painel do Administrador</p>
-            <p className="text-xs text-muted-foreground">Cadastros e robô</p>
+            <p className="font-display font-black text-white text-sm sm:text-base">
+              Painel do Administrador
+            </p>
+            <p className="text-xs text-muted-foreground">Gerenciar usuários, chave de API e mesa</p>
           </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 group-hover:text-amber-300 transition-all" />
         </Link>
       )}
 
+      {/* Logout button */}
       <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={logout}
-        className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-destructive/30 sm:h-14 bg-destructive/10 font-semibold text-destructive"
+        className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-rose-500/30 sm:h-13 bg-rose-500/10 font-bold text-rose-400 shadow-lg hover:bg-rose-500/15 transition-colors"
       >
         <LogOut className="h-4 w-4" /> Sair da conta
       </motion.button>
@@ -149,9 +187,13 @@ function ProfilePage() {
 function Row({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-center gap-3 px-4 py-3.5">
-      <span className="shrink-0 text-muted-foreground">{icon}</span>
-      <span className="shrink-0 text-sm text-muted-foreground">{label}</span>
-      <span className="ml-auto min-w-0 truncate text-sm font-medium">{value}</span>
+      <span className="shrink-0">{icon}</span>
+      <span className="shrink-0 text-xs sm:text-sm font-semibold text-muted-foreground">
+        {label}
+      </span>
+      <span className="ml-auto min-w-0 truncate text-xs sm:text-sm font-bold text-white">
+        {value}
+      </span>
     </div>
   );
 }

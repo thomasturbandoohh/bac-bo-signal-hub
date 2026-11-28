@@ -36,7 +36,10 @@ export const Emoji3D = memo(function Emoji3D({
       loading="lazy"
       decoding="async"
       draggable={false}
-      className={cn("select-none drop-shadow-lg", className)}
+      className={cn(
+        "select-none drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] transition-transform duration-200",
+        className,
+      )}
     />
   );
 });
@@ -46,33 +49,65 @@ export const Scoreboard = memo(function Scoreboard() {
   const s = useMemo(() => summarize(results), [results]);
   const items = useMemo(
     () => [
-      { label: "Greens", value: s.greens, tone: "text-success", emoji: checkEmoji },
-      { label: "Reds", value: s.reds, tone: "text-destructive", emoji: crossEmoji },
+      {
+        label: "Greens",
+        value: s.greens,
+        tone: "text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.35)]",
+        borderTone: "border-emerald-500/25 bg-emerald-500/[0.04]",
+        emoji: checkEmoji,
+      },
+      {
+        label: "Reds",
+        value: s.reds,
+        tone: "text-rose-400 drop-shadow-[0_0_10px_rgba(244,63,94,0.35)]",
+        borderTone: "border-rose-500/25 bg-rose-500/[0.04]",
+        emoji: crossEmoji,
+      },
       {
         label: "Acerto",
         value: s.total ? `${s.rate}%` : "—",
-        tone: "text-foreground",
+        tone: "text-cyan-300 drop-shadow-[0_0_10px_rgba(103,232,249,0.35)]",
+        borderTone: "border-cyan-500/25 bg-cyan-500/[0.04]",
         emoji: moneyBagEmoji,
       },
-      { label: "Sequência", value: s.best, tone: "text-tie-glow", emoji: fireEmoji },
+      {
+        label: "Sequência",
+        value: s.best,
+        tone: "text-amber-300 drop-shadow-[0_0_10px_rgba(252,211,77,0.35)]",
+        borderTone: "border-amber-500/25 bg-amber-500/[0.04]",
+        emoji: fireEmoji,
+      },
     ],
     [s],
   );
 
   return (
-    <div className="glass-premium grid grid-cols-4 rounded-xl px-1.5 py-2.5 sm:py-3">
+    <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
       {items.map((i) => (
-        <div key={i.label} className="flex flex-col items-center gap-0.5">
-          <Emoji3D src={i.emoji} size={20} />
+        <div
+          key={i.label}
+          className={cn(
+            "relative flex flex-col items-center justify-center rounded-2xl border p-2 text-center backdrop-blur-xl shadow-[0_8px_24px_-8px_rgba(0,0,0,0.7)] transition-all duration-300 sm:p-3",
+            i.borderTone,
+          )}
+        >
+          {/* Subtle top reflection line */}
+          <span className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+          <div className="mb-1 flex h-6 w-6 items-center justify-center">
+            <Emoji3D src={i.emoji} size={22} />
+          </div>
+
           <span
             className={cn(
-              "font-display text-lg font-extrabold tabular-nums leading-tight sm:text-xl",
+              "font-display text-lg font-black tabular-nums leading-none tracking-tight sm:text-2xl",
               i.tone,
             )}
           >
             {i.value}
           </span>
-          <span className="text-[0.625rem] font-bold uppercase tracking-wider text-muted-foreground sm:text-[0.6875rem]">
+
+          <span className="mt-1 text-[0.5625rem] font-extrabold uppercase tracking-[0.14em] text-white/60 sm:text-[0.625rem]">
             {i.label}
           </span>
         </div>
@@ -235,7 +270,6 @@ export function ResultBanner() {
     if (!current) return;
     const t = setTimeout(() => setQueue((q) => q.slice(1)), noteMs(current.kind));
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId]);
 
   return (
@@ -255,7 +289,6 @@ export function NoteCard({ note }: { note: Note }) {
   return (
     <motion.div
       role="status"
-      // Slides down while fading in, then fades out softly, lifting slightly as it goes.
       initial={{ opacity: 0, y: -28, scale: 0.97, filter: "blur(6px)" }}
       animate={{
         opacity: 1,
@@ -272,14 +305,14 @@ export function NoteCard({ note }: { note: Note }) {
         transition: { duration: NOTE_EXIT_S, ease: [0.4, 0, 0.2, 1] },
       }}
       className={cn(
-        "liquid-glass flex items-center gap-3 overflow-hidden rounded-[1.4rem] px-3.5 py-3",
-        note.kind === "gale" && "ring-1 ring-tie/40",
-        note.kind === "red" && "ring-1 ring-destructive/40",
+        "liquid-glass flex items-center gap-3 overflow-hidden rounded-[1.6rem] border px-4 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl",
+        note.kind === "gale" && "border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.25)]",
+        note.kind === "red" && "border-rose-500/50 shadow-[0_0_30px_rgba(244,63,94,0.25)]",
         (note.kind === "green" ||
           note.kind === "green_gale" ||
           note.kind === "streak" ||
           note.kind === "streak_up") &&
-          "ring-1 ring-success/40",
+          "border-emerald-500/50 shadow-[0_0_30px_rgba(52,211,153,0.25)]",
       )}
       style={{ width: "min(24rem, 94vw)", willChange: "transform, opacity, filter" }}
     >
@@ -289,10 +322,10 @@ export function NoteCard({ note }: { note: Note }) {
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 12, delay: 0.05 }}
         >
-          <Emoji3D src={c.emoji[0]!} size={34} />
+          <Emoji3D src={c.emoji[0]!} size={32} />
         </motion.div>
         {c.emoji[1] && (
-          <Emoji3D src={c.emoji[1]} size={20} className="absolute -bottom-1 -right-1" />
+          <Emoji3D src={c.emoji[1]} size={18} className="absolute -bottom-1 -right-1" />
         )}
       </div>
       <div className="min-w-0 flex-1 leading-tight">
@@ -304,7 +337,7 @@ export function NoteCard({ note }: { note: Note }) {
       {note.side && (
         <span
           className={cn(
-            "h-6 w-6 shrink-0 rounded-full",
+            "h-6 w-6 shrink-0 rounded-full shadow-md",
             note.side === "player" ? "ball-player" : "ball-banker",
           )}
         />
