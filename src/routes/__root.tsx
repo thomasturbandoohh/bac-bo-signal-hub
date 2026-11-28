@@ -118,13 +118,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Bac Bo Live" },
-      { title: "Bac Bo Live — Robô de Sinais" },
+      { name: "apple-mobile-web-app-title", content: "LORD M." },
+      { title: "LORD M. — Robô de Sinais" },
       {
         name: "description",
         content: "Robô de sinais para Bac Bo Live: o sinal de Player ou Banker assim que é gerado.",
       },
-      { property: "og:title", content: "Bac Bo Live — Robô de Sinais" },
+      { property: "og:title", content: "LORD M. — Robô de Sinais" },
       {
         property: "og:description",
         content: "Leitura de padrões Xadrez, Surf, Parzinho, 3-1-3 e Rampa com proteção de empate.",

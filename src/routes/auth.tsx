@@ -22,12 +22,12 @@ export const Route = createFileRoute("/auth")({
     isNotice(s["status"]) ? { status: s["status"] } : {},
   head: () => ({
     meta: [
-      { title: "Entrar — Bac Bo Live" },
+      { title: "Entrar — LORD M." },
       {
         name: "description",
         content: "Acesse sua conta do robô de sinais Bac Bo Live ou crie um cadastro.",
       },
-      { property: "og:title", content: "Entrar — Bac Bo Live" },
+      { property: "og:title", content: "Entrar — LORD M." },
       { property: "og:description", content: "Acesse o robô de sinais Bac Bo Live." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
