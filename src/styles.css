@@ -70,9 +70,6 @@
   --animate-wave-slow: wave-x 11s linear infinite;
   --animate-bob: bob 3.2s ease-in-out infinite;
   --animate-sheen: sheen 2.6s ease-in-out infinite;
-  --animate-radar: radar-spin 4s linear infinite;
-  --animate-pulse-slow: pulse-glow 3s ease-in-out infinite;
-  --animate-float: float 4s ease-in-out infinite;
 
   @keyframes wave-x {
     from { transform: translateX(0); }
@@ -86,68 +83,56 @@
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-3px); }
   }
-  @keyframes radar-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  @keyframes pulse-glow {
-    0%, 100% { opacity: 0.4; transform: scale(0.98); }
-    50% { opacity: 0.9; transform: scale(1.02); }
-  }
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-4px); }
-  }
 }
 
 :root {
   --radius: 1rem;
-  --background: oklch(0.04 0.008 260);
-  --foreground: oklch(0.98 0.004 250);
-  --card: oklch(0.12 0.012 260);
-  --card-foreground: oklch(0.98 0.004 250);
-  --popover: oklch(0.12 0.012 260);
-  --popover-foreground: oklch(0.98 0.004 250);
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.96 0.004 250);
+  --card: oklch(0.17 0.008 260);
+  --card-foreground: oklch(0.96 0.004 250);
+  --popover: oklch(0.17 0.008 260);
+  --popover-foreground: oklch(0.96 0.004 250);
   --primary: oklch(0.62 0.21 25);
   --primary-foreground: oklch(0.98 0.005 25);
-  --secondary: oklch(0.18 0.012 260);
+  --secondary: oklch(0.21 0.01 260);
   --secondary-foreground: oklch(0.92 0.006 250);
-  --muted: oklch(0.16 0.01 260);
-  --muted-foreground: oklch(0.65 0.015 255);
-  --accent: oklch(0.22 0.015 260);
-  --accent-foreground: oklch(0.98 0.004 250);
+  --muted: oklch(0.2 0.008 260);
+  --muted-foreground: oklch(0.64 0.015 255);
+  --accent: oklch(0.24 0.012 260);
+  --accent-foreground: oklch(0.96 0.004 250);
   --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.98 0.005 25);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.65 0.19 255);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.62 0.18 255);
   --chart-1: oklch(0.62 0.2 255);
   --chart-2: oklch(0.62 0.22 25);
   --chart-3: oklch(0.82 0.14 85);
   --chart-4: oklch(0.72 0.17 155);
   --chart-5: oklch(0.7 0.1 300);
-  --sidebar: oklch(0.11 0.01 260);
-  --sidebar-foreground: oklch(0.98 0.004 250);
+  --sidebar: oklch(0.15 0.007 260);
+  --sidebar-foreground: oklch(0.96 0.004 250);
   --sidebar-primary: oklch(0.62 0.21 25);
   --sidebar-primary-foreground: oklch(0.98 0.005 25);
-  --sidebar-accent: oklch(0.18 0.012 260);
-  --sidebar-accent-foreground: oklch(0.98 0.004 250);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.65 0.19 255);
+  --sidebar-accent: oklch(0.21 0.01 260);
+  --sidebar-accent-foreground: oklch(0.96 0.004 250);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.62 0.18 255);
 
   --player: oklch(0.6 0.2 258);
-  --player-glow: oklch(0.75 0.17 245);
+  --player-glow: oklch(0.74 0.16 245);
   --banker: oklch(0.58 0.22 25);
-  --banker-glow: oklch(0.72 0.19 30);
-  --tie: oklch(0.82 0.16 85);
-  --tie-glow: oklch(0.92 0.14 95);
-  --success: oklch(0.76 0.18 155);
+  --banker-glow: oklch(0.72 0.18 30);
+  --tie: oklch(0.8 0.15 85);
+  --tie-glow: oklch(0.9 0.13 95);
+  --success: oklch(0.74 0.17 155);
   --glass: oklch(1 0 0 / 5%);
-  --glass-border: oklch(1 0 0 / 12%);
+  --glass-border: oklch(1 0 0 / 11%);
   --glass-highlight: oklch(1 0 0 / 22%);
-  --glass-fill: oklch(0.16 0.015 260 / 65%);
-  --glass-sheen: linear-gradient(160deg, oklch(1 0 0 / 12%) 0%, oklch(1 0 0 / 3%) 35%, oklch(1 0 0 / 0%) 60%, oklch(1 0 0 / 4%) 100%);
-  --glass-shadow: inset 0 1px 0 var(--glass-highlight), inset 0 -1px 0 oklch(1 0 0 / 4%), 0 16px 36px -18px oklch(0 0 0 / 95%);
+  --glass-fill: oklch(0.22 0.01 260 / 55%);
+  --glass-sheen: linear-gradient(160deg, oklch(1 0 0 / 10%) 0%, oklch(1 0 0 / 3%) 38%, oklch(1 0 0 / 0%) 60%, oklch(1 0 0 / 4%) 100%);
+  --glass-shadow: inset 0 1px 0 var(--glass-highlight), inset 0 -1px 0 oklch(1 0 0 / 4%), 0 12px 32px -18px oklch(0 0 0 / 90%);
   --pip: oklch(0.98 0.005 90);
 }
 
@@ -158,20 +143,25 @@
 
   html {
     color-scheme: dark;
+    /* Keep iOS/Android from inflating text on rotation */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    /* Phones: native 16px base */
     font-size: 100%;
   }
+  /* Small phones (iPhone SE, compact Androids): slightly tighter */
   @media (max-width: 359px) {
     html {
       font-size: 93.75%;
     }
   }
+  /* Tablets (iPad, Android tablets): a touch larger */
   @media (min-width: 768px) {
     html {
       font-size: clamp(16px, calc(0.3vw + 13.7px), 17px);
     }
   }
+  /* Laptops and desktops (MacBook, Windows, Linux): scale with the screen, never tiny, never huge */
   @media (min-width: 1024px) {
     html {
       font-size: clamp(16px, calc(0.5vw + 10.9px), 21px);
@@ -179,6 +169,7 @@
   }
   html,
   body {
+    /* Never let a card push the page sideways on phones */
     overflow-x: clip;
   }
   body {
@@ -193,7 +184,7 @@
   }
 }
 
-/* Simple solid card style */
+/* Simple solid card style (no blur) */
 @utility glass {
   background: var(--card);
   border: 1px solid var(--border);
@@ -201,17 +192,17 @@
 
 @utility ball-player {
   background: radial-gradient(circle at 32% 28%, oklch(0.92 0.06 245) 0%, var(--player-glow) 22%, var(--player) 55%, oklch(0.32 0.14 262) 100%);
-  box-shadow: inset -3px -4px 8px oklch(0 0 0 / 40%), 0 4px 14px -3px var(--player);
+  box-shadow: inset -3px -4px 8px oklch(0 0 0 / 35%), 0 4px 14px -4px var(--player);
 }
 
 @utility ball-banker {
   background: radial-gradient(circle at 32% 28%, oklch(0.93 0.05 30) 0%, var(--banker-glow) 22%, var(--banker) 55%, oklch(0.3 0.14 25) 100%);
-  box-shadow: inset -3px -4px 8px oklch(0 0 0 / 40%), 0 4px 14px -3px var(--banker);
+  box-shadow: inset -3px -4px 8px oklch(0 0 0 / 35%), 0 4px 14px -4px var(--banker);
 }
 
 @utility ball-tie {
   background: radial-gradient(circle at 32% 28%, oklch(0.97 0.05 95) 0%, var(--tie-glow) 22%, var(--tie) 55%, oklch(0.45 0.1 70) 100%);
-  box-shadow: inset -3px -4px 8px oklch(0 0 0 / 35%), 0 4px 14px -3px var(--tie);
+  box-shadow: inset -3px -4px 8px oklch(0 0 0 / 30%), 0 4px 14px -4px var(--tie);
 }
 
 @utility text-gold {
@@ -224,14 +215,15 @@
   padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
 }
 
-/* Liquid glass: translucent fill, blur, light rim and soft sheen */
+/* Liquid glass: translucent fill, blur, light rim and a soft sheen */
 @utility liquid-glass {
   background: var(--glass-sheen), var(--glass-fill);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(170%);
+  /* Phones: a lighter blur keeps scrolling and animations smooth. */
   @media (max-width: 767px) {
-    backdrop-filter: blur(12px) saturate(150%);
+    backdrop-filter: blur(10px) saturate(140%);
   }
 }
 
@@ -240,27 +232,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 28%;
-  background: linear-gradient(180deg, oklch(1 0 0 / 18%), oklch(1 0 0 / 4%)), var(--glass-fill);
+  border-radius: 30%;
+  background: linear-gradient(180deg, oklch(1 0 0 / 16%), oklch(1 0 0 / 4%)), var(--glass-fill);
   border: 1px solid var(--glass-border);
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 35%), inset 0 -2px 6px oklch(0 0 0 / 30%), 0 8px 20px -8px oklch(0 0 0 / 90%);
-  backdrop-filter: blur(18px) saturate(170%);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 30%), inset 0 -2px 6px oklch(0 0 0 / 25%), 0 6px 16px -8px oklch(0 0 0 / 80%);
+  backdrop-filter: blur(16px) saturate(160%);
   @media (max-width: 767px) {
     backdrop-filter: none;
   }
 }
 
-/* Impeccable luxury ambient lighting: rich depth, glowing neon nodes, subtle micro-grid */
+/* Soft colored light behind the app so the glass has something to refract */
 @utility bg-ambient {
-  background-color: #05070d;
-  background-image:
-    radial-gradient(ellipse 70% 50% at 12% 0%, color-mix(in oklab, var(--player) 26%, transparent), transparent 75%),
-    radial-gradient(ellipse 65% 45% at 92% 16%, color-mix(in oklab, var(--banker) 22%, transparent), transparent 75%),
-    radial-gradient(ellipse 50% 35% at 50% 100%, color-mix(in oklab, var(--tie) 12%, transparent), transparent 70%),
-    radial-gradient(circle at 50% 40%, rgba(15, 23, 42, 0.45) 0%, transparent 80%),
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+  background:
+    radial-gradient(60% 40% at 10% 0%, color-mix(in oklab, var(--player) 22%, transparent), transparent 70%),
+    radial-gradient(55% 38% at 95% 18%, color-mix(in oklab, var(--banker) 18%, transparent), transparent 70%),
+    radial-gradient(50% 30% at 50% 100%, color-mix(in oklab, var(--tie) 8%, transparent), transparent 70%),
+    var(--background);
 }
 
 /* Realistic translucent dice (Player blue, Banker red) */
@@ -276,90 +264,91 @@
 
 /* Glass colored panes for the distribution card */
 @utility pane-player {
-  background: var(--glass-sheen), linear-gradient(180deg, color-mix(in oklab, var(--player) 75%, transparent), color-mix(in oklab, var(--player) 40%, transparent));
-  border: 1px solid color-mix(in oklab, var(--player-glow) 50%, transparent);
-  box-shadow: inset 0 1.5px 0 oklch(1 0 0 / 35%), inset 0 -10px 24px -12px oklch(0 0 0 / 50%), 0 16px 36px -18px var(--player);
-  backdrop-filter: blur(20px) saturate(180%);
+  background: var(--glass-sheen), linear-gradient(180deg, color-mix(in oklab, var(--player) 72%, transparent), color-mix(in oklab, var(--player) 42%, transparent));
+  border: 1px solid color-mix(in oklab, var(--player-glow) 45%, transparent);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 30%), inset 0 -10px 24px -12px oklch(0 0 0 / 40%), 0 14px 30px -18px var(--player);
+  backdrop-filter: blur(18px) saturate(170%);
 }
 
 @utility pane-banker {
-  background: var(--glass-sheen), linear-gradient(180deg, color-mix(in oklab, var(--banker) 75%, transparent), color-mix(in oklab, var(--banker) 40%, transparent));
-  border: 1px solid color-mix(in oklab, var(--banker-glow) 50%, transparent);
-  box-shadow: inset 0 1.5px 0 oklch(1 0 0 / 35%), inset 0 -10px 24px -12px oklch(0 0 0 / 50%), 0 16px 36px -18px var(--banker);
-  backdrop-filter: blur(20px) saturate(180%);
+  background: var(--glass-sheen), linear-gradient(180deg, color-mix(in oklab, var(--banker) 72%, transparent), color-mix(in oklab, var(--banker) 42%, transparent));
+  border: 1px solid color-mix(in oklab, var(--banker-glow) 45%, transparent);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 30%), inset 0 -10px 24px -12px oklch(0 0 0 / 40%), 0 14px 30px -18px var(--banker);
+  backdrop-filter: blur(18px) saturate(170%);
 }
 
 /* Opaque base so neighbor player/banker colors never show through the Empate circle */
 @utility pane-tie {
   background:
     var(--glass-sheen),
-    linear-gradient(180deg, color-mix(in oklab, var(--tie) 90%, oklch(0.2 0.02 80)), color-mix(in oklab, oklch(0.42 0.12 75) 92%, oklch(0.12 0.02 70)));
-  border: 1.5px solid color-mix(in oklab, var(--tie-glow) 70%, transparent);
+    linear-gradient(180deg, color-mix(in oklab, var(--tie) 88%, oklch(0.2 0.02 80)), color-mix(in oklab, oklch(0.42 0.12 75) 92%, oklch(0.12 0.02 70)));
+  border: 1px solid color-mix(in oklab, var(--tie-glow) 60%, transparent);
   box-shadow:
-    inset 0 1.5px 0 oklch(1 0 0 / 45%),
-    inset 0 -10px 22px -10px oklch(0 0 0 / 50%),
-    0 0 0 5px var(--background),
-    0 16px 36px -14px var(--tie);
+    inset 0 1px 0 oklch(1 0 0 / 35%),
+    inset 0 -10px 22px -10px oklch(0 0 0 / 40%),
+    0 0 0 6px var(--background),
+    0 14px 30px -14px var(--tie);
+  /* No backdrop-filter: keeps the circle solid and blocks blue/red bleed */
 }
 
 @utility text-emboss {
-  text-shadow: 0 1px 0 oklch(1 0 0 / 30%), 0 2px 10px oklch(0 0 0 / 60%);
+  text-shadow: 0 1px 0 oklch(1 0 0 / 25%), 0 2px 8px oklch(0 0 0 / 45%);
 }
 
 /*
- * Ultra-Premium liquid glass: refined border with specular highlight,
- * balanced transparency, multi-layer ambient neon depth.
+ * Premium liquid glass for the main cards: soft blur, balanced transparency, translucent rim,
+ * a discreet top reflection and a faint neon depth glow.
  */
 @utility glass-premium {
   background:
-    linear-gradient(155deg, oklch(1 0 0 / 9%) 0%, oklch(1 0 0 / 2%) 32%, oklch(1 0 0 / 0%) 58%, oklch(1 0 0 / 3%) 100%),
-    oklch(0.14 0.016 262 / 72%);
-  border: 1px solid oklch(1 0 0 / 12%);
+    linear-gradient(155deg, oklch(1 0 0 / 9%) 0%, oklch(1 0 0 / 2.5%) 32%, oklch(1 0 0 / 0%) 58%, oklch(1 0 0 / 3%) 100%),
+    oklch(0.18 0.014 262 / 62%);
+  border: 1px solid oklch(1 0 0 / 11%);
   box-shadow:
-    inset 0 1px 0 oklch(1 0 0 / 20%),
+    inset 0 1px 0 oklch(1 0 0 / 16%),
     inset 0 -1px 0 oklch(1 0 0 / 4%),
-    0 24px 50px -24px oklch(0 0 0 / 95%),
-    0 0 45px -24px color-mix(in oklab, var(--player-glow) 40%, transparent);
-  backdrop-filter: blur(24px) saturate(180%);
+    0 22px 48px -26px oklch(0 0 0 / 95%),
+    0 0 40px -24px color-mix(in oklab, var(--player-glow) 45%, transparent);
+  backdrop-filter: blur(20px) saturate(160%);
   @media (max-width: 767px) {
-    backdrop-filter: blur(14px) saturate(150%);
+    backdrop-filter: blur(10px) saturate(140%);
   }
 }
 
 /* Player / Banker sides of the live table: tinted glass with a discreet rim */
 @utility side-player {
   background:
-    linear-gradient(160deg, oklch(1 0 0 / 8%) 0%, oklch(1 0 0 / 0%) 45%),
-    color-mix(in oklab, var(--player) 18%, oklch(0.14 0.02 262 / 75%));
-  border: 1px solid color-mix(in oklab, var(--player-glow) 26%, transparent);
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 14%);
+    linear-gradient(160deg, oklch(1 0 0 / 7%) 0%, oklch(1 0 0 / 0%) 45%),
+    color-mix(in oklab, var(--player) 16%, oklch(0.16 0.02 262 / 70%));
+  border: 1px solid color-mix(in oklab, var(--player-glow) 22%, transparent);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 10%);
 }
 
 @utility side-banker {
   background:
-    linear-gradient(160deg, oklch(1 0 0 / 8%) 0%, oklch(1 0 0 / 0%) 45%),
-    color-mix(in oklab, var(--banker) 18%, oklch(0.14 0.02 20 / 75%));
-  border: 1px solid color-mix(in oklab, var(--banker-glow) 26%, transparent);
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 14%);
+    linear-gradient(160deg, oklch(1 0 0 / 7%) 0%, oklch(1 0 0 / 0%) 45%),
+    color-mix(in oklab, var(--banker) 16%, oklch(0.16 0.02 20 / 70%));
+  border: 1px solid color-mix(in oklab, var(--banker-glow) 22%, transparent);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 10%);
 }
 
-/* Winning side: same glass, a slightly stronger rim and a soft glow */
+/* Winning side: same glass, a slightly stronger rim and a soft glow (no harsh outline) */
 @utility side-player-win {
-  border-color: color-mix(in oklab, var(--player-glow) 75%, transparent);
+  border-color: color-mix(in oklab, var(--player-glow) 62%, transparent);
   box-shadow:
-    inset 0 1px 0 oklch(1 0 0 / 22%),
-    0 0 28px -8px color-mix(in oklab, var(--player-glow) 80%, transparent);
+    inset 0 1px 0 oklch(1 0 0 / 14%),
+    0 0 22px -10px color-mix(in oklab, var(--player-glow) 70%, transparent);
 }
 
 @utility side-banker-win {
-  border-color: color-mix(in oklab, var(--banker-glow) 75%, transparent);
+  border-color: color-mix(in oklab, var(--banker-glow) 62%, transparent);
   box-shadow:
-    inset 0 1px 0 oklch(1 0 0 / 22%),
-    0 0 28px -8px color-mix(in oklab, var(--banker-glow) 80%, transparent);
+    inset 0 1px 0 oklch(1 0 0 / 14%),
+    0 0 22px -10px color-mix(in oklab, var(--banker-glow) 70%, transparent);
 }
 
 /* Blue progress fill with a discreet glow */
 @utility progress-blue {
   background: linear-gradient(90deg, var(--player), var(--player-glow));
-  box-shadow: 0 0 14px -1px color-mix(in oklab, var(--player-glow) 80%, transparent);
+  box-shadow: 0 0 10px -1px color-mix(in oklab, var(--player-glow) 75%, transparent);
 }
