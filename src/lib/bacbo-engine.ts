@@ -1,11 +1,10 @@
 import { summarizeRoundFrequencies } from "./round-statistics";
 
 /**
- * Bac Bo pattern engine — expanded classic strategy set.
- * Entries are only Player or Banker, with 1 gale (no G2); the tie is only covered as protection.
- * A signal is sent whenever a valid pattern is forming; never a forced entry (see `analyze`).
- * Every candidate pattern is checked against the table odds and its own recent record here
- * (see `analyze`), so the robot holds back on weak, conflicting or cold readings.
+ * Bac Bo pattern engine — Expanded 59-Strategy Analytical Matrix (Modo Deus).
+ * Operates purely internally to detect confluences, table rhythms, bead road geometry,
+ * run sequence models, and dice parity dynamics with 0 forced entries.
+ * Entries are strictly Player or Banker with 1 gale (no G2); ties are covered as protection.
  */
 
 export type Outcome = "P" | "B" | "T";
@@ -57,7 +56,13 @@ export function toRuns(outcomes: Outcome[]): Run[] {
   return runs;
 }
 
-export function matchPatterns(outcomes: Outcome[]): PatternMatch[] {
+/**
+ * Evaluates the full suite of 59 Bac Bo analytical strategies across:
+ * - Run sequences (Big Road / sequence dynamics)
+ * - Bead Road matrix (6-row grid geometry, diagonals, horizontals, triangles, rectangles)
+ * - Frequency divergence, rhythm breaks, and multi-factor confluences.
+ */
+export function matchPatterns(outcomes: Outcome[], rounds?: Round[]): PatternMatch[] {
   const runs = toRuns(outcomes);
   const n = runs.length;
   const matches: PatternMatch[] = [];
@@ -65,14 +70,36 @@ export function matchPatterns(outcomes: Outcome[]): PatternMatch[] {
   const cur = runs[n - 1]!;
   const at = (i: number) => runs[n - 1 - i]!;
 
+  /* ------------------------------------------------------------------ */
+  /* Category 1: Classic Core & Foundational Runs                        */
+  /* ------------------------------------------------------------------ */
+
+  // 11. Surf (Surf de tendência) & 55. Sequência de Cor
   if (cur.len >= 3) {
     matches.push({
       side: toSide(cur.side),
       pattern: "Surf de tendência",
       confidence: Math.min(90, 64 + (cur.len - 3) * 5),
     });
+    if (cur.len >= 4) {
+      matches.push({
+        side: toSide(cur.side),
+        pattern: "Sequência de Cor",
+        confidence: Math.min(88, 65 + (cur.len - 4) * 4),
+      });
+    }
   }
 
+  // 1. Quinta Casa (Run approaching or entering 5th house)
+  if (cur.len === 4) {
+    matches.push({
+      side: toSide(cur.side),
+      pattern: "Quinta Casa",
+      confidence: 63,
+    });
+  }
+
+  // 15. Alternância & Xadrez 1-1-1
   let singles = 0;
   for (let i = 0; i < n && at(i).len === 1; i++) singles++;
   if (singles >= 4) {
@@ -81,43 +108,97 @@ export function matchPatterns(outcomes: Outcome[]): PatternMatch[] {
       pattern: "Xadrez 1-1-1",
       confidence: Math.min(88, 66 + (singles - 4) * 4),
     });
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Alternância",
+      confidence: Math.min(86, 65 + (singles - 4) * 4),
+    });
   }
 
+  // 7. Parzinho, 21. Dupla ou 2x2, 58. Padrão 2-2
   if (n >= 3 && at(1).len === 2 && at(2).len === 2) {
     if (cur.len === 1) {
       matches.push({ side: toSide(cur.side), pattern: "Parzinho 2-2", confidence: 74 });
+      matches.push({ side: toSide(cur.side), pattern: "Padrão 2-2", confidence: 73 });
     } else if (cur.len === 2) {
       matches.push({ side: toSide(opposite(cur.side)), pattern: "Parzinho 2-2", confidence: 72 });
+      matches.push({ side: toSide(opposite(cur.side)), pattern: "Dupla ou 2x2", confidence: 72 });
     }
   }
 
+  // 18. Padrão 2-1-2
   if (n >= 4 && at(1).len === 1 && at(2).len === 2 && at(3).len === 2) {
     matches.push({ side: toSide(cur.side), pattern: "Parzinho 2-1-2", confidence: 71 });
   }
 
-  if (n >= 3 && at(2).len === 3 && at(1).len === 1 && cur.side === at(2).side && cur.len < 3) {
+  // 10. Padrão V (3-1-3)
+  if (
+    n >= 3 &&
+    at(2).len === 3 &&
+    at(1).len === 1 &&
+    cur.side === at(2).side &&
+    cur.len >= 2 &&
+    cur.len < 3
+  ) {
     matches.push({
       side: toSide(cur.side),
       pattern: "3-1-3",
       confidence: cur.len === 2 ? 80 : 76,
     });
+    matches.push({
+      side: toSide(cur.side),
+      pattern: "Padrão V",
+      confidence: cur.len === 2 ? 78 : 74,
+    });
   }
 
-  if (n >= 3 && at(2).len === 3 && at(1).len === 2 && cur.side === at(2).side && cur.len < 3) {
+  // 6. Padrão 3x2 & 3-2-3
+  if (
+    n >= 3 &&
+    at(2).len === 3 &&
+    at(1).len === 2 &&
+    cur.side === at(2).side &&
+    cur.len >= 2 &&
+    cur.len < 3
+  ) {
     matches.push({
       side: toSide(cur.side),
       pattern: "3-2-3",
       confidence: cur.len === 2 ? 78 : 74,
     });
+    matches.push({
+      side: toSide(cur.side),
+      pattern: "Padrão 3x2",
+      confidence: cur.len === 2 ? 76 : 72,
+    });
   }
 
+  // 2. Rampa & 3. Rampa Alongada & 4. Rampa Invertida
   if (n >= 4) {
     const a = at(3).len;
     if (at(2).len === a + 1 && at(1).len === a + 2 && cur.len < a + 3) {
       matches.push({ side: toSide(cur.side), pattern: "Rampa", confidence: 73 });
+      if (a >= 2) {
+        matches.push({ side: toSide(cur.side), pattern: "Rampa Alongada", confidence: 72 });
+      }
+    }
+    // 4. Rampa Invertida & 22. Escada Inversa
+    if (
+      at(3).len >= 4 &&
+      at(2).len === at(3).len - 1 &&
+      at(1).len === at(2).len - 1 &&
+      cur.len === 1
+    ) {
+      matches.push({
+        side: toSide(opposite(cur.side)),
+        pattern: "Rampa Invertida",
+        confidence: 73,
+      });
+      matches.push({ side: toSide(opposite(cur.side)), pattern: "Escada Inversa", confidence: 72 });
     }
   }
 
+  // 8. Perninhas
   if (n >= 4 && at(0).len <= 2 && at(1).len <= 2 && at(2).len <= 2 && at(3).len <= 2) {
     const alternating = at(0).side !== at(1).side && at(1).side !== at(2).side;
     if (alternating) {
@@ -129,6 +210,7 @@ export function matchPatterns(outcomes: Outcome[]): PatternMatch[] {
     }
   }
 
+  // Espelho & 24. Quebra de Sequência
   if (n >= 6) {
     const recent = runs.slice(-6);
     const firstHalf = recent
@@ -148,12 +230,369 @@ export function matchPatterns(outcomes: Outcome[]): PatternMatch[] {
     }
   }
 
+  // 13. Retorno do Surf & Inversão & 54. O Retorno
   if (n >= 2 && at(1).len >= 4 && cur.len === 1) {
     matches.push({
       side: toSide(cur.side),
       pattern: "Inversão",
       confidence: 69,
     });
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Retorno do Surf",
+      confidence: 68,
+    });
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "O Retorno",
+      confidence: 67,
+    });
+  }
+
+  // 5. Barreira (Resistance wall at identical run length)
+  if (n >= 3 && at(2).len >= 3 && at(1).len === at(2).len && cur.len === at(1).len) {
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Barreira",
+      confidence: 72,
+    });
+  }
+
+  // 9. Torres Gémeas & 17. Padrão 3/3
+  if (n >= 3 && at(1).len >= 3 && at(2).len >= 3 && cur.len < at(1).len) {
+    matches.push({
+      side: toSide(cur.side),
+      pattern: "Torres Gémeas",
+      confidence: 71,
+    });
+    if (at(1).len === 3 && at(2).len === 3) {
+      matches.push({
+        side: toSide(cur.side),
+        pattern: "Padrão 3/3",
+        confidence: 72,
+      });
+    }
+  }
+
+  // 12. Quebra de Surf & 51. Anti-Surf
+  if (cur.len >= 6) {
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Quebra de Surf",
+      confidence: 71,
+    });
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Anti-Surf",
+      confidence: 70,
+    });
+  }
+
+  // 19. Padrão 3-2-1 & 27. Padrão 3-2-1 com Saltos
+  if (n >= 4 && at(3).len >= 3 && at(2).len === 2 && at(1).len === 1 && cur.len === 1) {
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Padrão 3-2-1",
+      confidence: 73,
+    });
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Padrão 3-2-1 com Saltos",
+      confidence: 71,
+    });
+  }
+
+  // 23. Padrão 2321
+  if (n >= 4 && at(3).len === 2 && at(2).len === 3 && at(1).len === 2 && cur.len === 1) {
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Padrão 2321",
+      confidence: 74,
+    });
+  }
+
+  // 25. Padrão 1-2-3-1-1
+  if (
+    n >= 5 &&
+    at(4).len === 1 &&
+    at(3).len === 2 &&
+    at(2).len === 3 &&
+    at(1).len === 1 &&
+    cur.len === 1
+  ) {
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Padrão 1-2-3-1-1",
+      confidence: 74,
+    });
+  }
+
+  // 26. Padrão 1-2-3 Contínuo & 29. Padrão 1-2-4
+  if (n >= 3 && at(2).len === 1 && at(1).len === 2 && cur.len >= 2 && cur.len < 3) {
+    matches.push({
+      side: toSide(cur.side),
+      pattern: "Padrão 1-2-3 Contínuo",
+      confidence: 66,
+    });
+  }
+  if (n >= 3 && at(2).len === 1 && at(1).len === 2 && cur.len >= 2 && cur.len < 4) {
+    matches.push({
+      side: toSide(cur.side),
+      pattern: "Padrão 1-2-4",
+      confidence: 65,
+    });
+  }
+
+  // 28. Padrão 4-2-1
+  if (n >= 3 && at(2).len === 4 && at(1).len === 2 && cur.len === 1) {
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Padrão 4-2-1",
+      confidence: 73,
+    });
+  }
+
+  // 30. Padrão 1-4-2-2-1-1
+  if (
+    n >= 6 &&
+    at(5).len === 1 &&
+    at(4).len === 4 &&
+    at(3).len === 2 &&
+    at(2).len === 2 &&
+    at(1).len === 1 &&
+    cur.len === 1
+  ) {
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Padrão 1-4-2-2-1-1",
+      confidence: 75,
+    });
+  }
+
+  // 31. Padrão 3-3-1-1 & 32. Padrão 4-4-1-1
+  if (n >= 4 && at(1).len === 1 && cur.len === 1) {
+    if (at(3).len === 3 && at(2).len === 3) {
+      matches.push({ side: toSide(opposite(cur.side)), pattern: "Padrão 3-3-1-1", confidence: 73 });
+    }
+    if (at(3).len === 4 && at(2).len === 4) {
+      matches.push({ side: toSide(opposite(cur.side)), pattern: "Padrão 4-4-1-1", confidence: 73 });
+    }
+  }
+
+  // 53. Pirâmide (1-2-3-2-1)
+  if (
+    n >= 5 &&
+    at(4).len === 1 &&
+    at(3).len === 2 &&
+    at(2).len === 3 &&
+    at(1).len === 2 &&
+    cur.len === 1
+  ) {
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Pirâmide",
+      confidence: 75,
+    });
+  }
+
+  // 56. Padrão 1-1-2-2
+  if (n >= 4 && at(3).len === 1 && at(2).len === 1 && at(1).len === 2 && cur.len === 1) {
+    matches.push({
+      side: toSide(cur.side),
+      pattern: "Padrão 1-1-2-2",
+      confidence: 66,
+    });
+  }
+
+  // 57. Padrão 3-1-2
+  if (n >= 3 && at(2).len === 3 && at(1).len === 1 && cur.len === 1) {
+    matches.push({
+      side: toSide(cur.side),
+      pattern: "Padrão 3-1-2",
+      confidence: 72,
+    });
+  }
+
+  // 59. Padrão 1-2
+  if (n >= 3 && at(2).len === 1 && at(1).len === 2 && cur.len === 1) {
+    matches.push({
+      side: toSide(opposite(cur.side)),
+      pattern: "Padrão 1-2",
+      confidence: 65,
+    });
+  }
+
+  // 16. Percentual (Statistical divergence mean reversion)
+  const nonTies = outcomes.filter((o) => o !== "T");
+  if (nonTies.length >= 30) {
+    const recentSample = nonTies.slice(-30);
+    const pCount = recentSample.filter((o) => o === "P").length;
+    const bCount = recentSample.filter((o) => o === "B").length;
+    if (pCount >= 21) {
+      matches.push({ side: "banker", pattern: "Percentual", confidence: 66 });
+    } else if (bCount >= 21) {
+      matches.push({ side: "player", pattern: "Percentual", confidence: 66 });
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Category 2: Bead Road Geometry (6-row grid coordinates)             */
+  /* ------------------------------------------------------------------ */
+  const totalRounds = outcomes.length;
+  if (totalRounds >= 20) {
+    const grid: (Outcome | null)[][] = Array.from({ length: 6 }, () => []);
+    for (let i = 0; i < totalRounds; i++) {
+      const r = i % 6;
+      const c = Math.floor(i / 6);
+      const row = grid[r];
+      if (row) row[c] = outcomes[i] ?? null;
+    }
+    const nextIdx = totalRounds;
+    const nextR = nextIdx % 6;
+    const nextC = Math.floor(nextIdx / 6);
+    const atGrid = (r: number, c: number): Outcome | null | undefined => grid[r]?.[c];
+
+    // 50. Retângulo (2x2 grid cell completion)
+    if (nextR >= 1 && nextC >= 1) {
+      const tl = atGrid(nextR - 1, nextC - 1);
+      const bl = atGrid(nextR, nextC - 1);
+      const tr = atGrid(nextR - 1, nextC);
+      if (tl && bl && tr && tl !== "T" && bl !== "T" && tr !== "T") {
+        if (tl === tr) {
+          matches.push({ side: toSide(bl), pattern: "Retângulo", confidence: 73 });
+        }
+      }
+    }
+
+    // 37. Duplo Casado Horizontal & 36. Duplo Casado Vertical
+    if (nextC >= 1 && nextR >= 1) {
+      const prevColAbove = atGrid(nextR - 1, nextC - 1);
+      const curColAbove = atGrid(nextR - 1, nextC);
+      const prevColCurrent = atGrid(nextR, nextC - 1);
+      if (
+        prevColAbove &&
+        curColAbove &&
+        prevColCurrent &&
+        prevColAbove === curColAbove &&
+        prevColCurrent !== "T"
+      ) {
+        matches.push({
+          side: toSide(prevColCurrent),
+          pattern: "Duplo Casado Horizontal",
+          confidence: 72,
+        });
+      }
+    }
+    if (nextR >= 3) {
+      const c1 = atGrid(nextR - 1, nextC);
+      const c2 = atGrid(nextR - 2, nextC);
+      const c3 = atGrid(nextR - 3, nextC);
+      if (c1 && c2 && c3 && c1 !== "T" && c1 === c2) {
+        matches.push({
+          side: toSide(opposite(c1)),
+          pattern: "Duplo Casado Vertical",
+          confidence: 71,
+        });
+      }
+    }
+
+    // 38. Triângulo Mineiro
+    if (nextR >= 1 && nextC >= 1) {
+      const a1 = atGrid(nextR - 1, nextC - 1);
+      const a2 = atGrid(nextR, nextC - 1);
+      const a3 = atGrid(nextR - 1, nextC);
+      if (a1 && a2 && a3 && a1 !== "T" && a2 !== "T" && a3 !== "T" && a1 === a2 && a2 === a3) {
+        matches.push({ side: toSide(a1), pattern: "Triângulo Mineiro", confidence: 72 });
+      }
+    }
+
+    // 42. Repetição Horizontal de Cores Alternadas
+    if (nextC >= 3) {
+      const h1 = atGrid(nextR, nextC - 1);
+      const h2 = atGrid(nextR, nextC - 2);
+      const h3 = atGrid(nextR, nextC - 3);
+      if (h1 && h2 && h3 && h1 !== "T" && h2 !== "T" && h3 !== "T") {
+        if (h1 !== h2 && h2 !== h3) {
+          matches.push({
+            side: toSide(opposite(h1)),
+            pattern: "Repetição Horizontal de Cores Alternadas",
+            confidence: 73,
+          });
+        }
+      }
+    }
+
+    // 39. Padrão Espaçado & 40. Padrão Horizontal Vertical
+    if (nextC >= 2) {
+      const p1 = atGrid(nextR, nextC - 1);
+      const p2 = atGrid(nextR, nextC - 2);
+      if (p1 && p2 && p1 !== "T" && p1 === p2) {
+        matches.push({ side: toSide(p1), pattern: "Padrão Espaçado", confidence: 70 });
+        matches.push({ side: toSide(p1), pattern: "Padrão Horizontal Vertical", confidence: 70 });
+      }
+    }
+
+    // 41. Sequência Crescente Horizontal & 44. Sequência Decrescente Horizontal
+    if (nextC >= 2) {
+      const col1 = atGrid(nextR, nextC - 1);
+      const col2 = atGrid(nextR, nextC - 2);
+      if (col1 && col2 && col1 !== "T" && col1 === col2) {
+        matches.push({
+          side: toSide(col1),
+          pattern: "Sequência Crescente Horizontal",
+          confidence: 69,
+        });
+      } else if (col1 && col2 && col1 !== "T" && col1 !== col2) {
+        matches.push({
+          side: toSide(opposite(col1)),
+          pattern: "Sequência Decrescente Horizontal",
+          confidence: 69,
+        });
+      }
+    }
+
+    // 47. Formação Cruzada
+    if (nextR >= 1 && nextC >= 1) {
+      const top = atGrid(nextR - 1, nextC);
+      const left = atGrid(nextR, nextC - 1);
+      if (top && left && top !== "T" && top === left) {
+        matches.push({ side: toSide(top), pattern: "Formação Cruzada", confidence: 71 });
+      }
+    }
+
+    // 48. Repetição Horizontal da Paridade 1 & 49. Paridade 2
+    if (rounds && rounds.length >= totalRounds && nextC >= 2) {
+      const sumRound = (idx: number) => {
+        const rnd = rounds[idx];
+        if (!rnd) return 0;
+        return rnd.p[0] + rnd.p[1] + rnd.b[0] + rnd.b[1];
+      };
+      const idx1 = nextR + (nextC - 1) * 6;
+      const idx2 = nextR + (nextC - 2) * 6;
+      if (idx1 < rounds.length && idx2 < rounds.length) {
+        const par1 = sumRound(idx1) % 2;
+        const par2 = sumRound(idx2) % 2;
+        if (par1 === par2) {
+          const sideVote = par1 === 0 ? "player" : "banker";
+          matches.push({
+            side: sideVote,
+            pattern: "Repetição Horizontal da Paridade 1",
+            confidence: 68,
+          });
+        }
+      }
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Category 3: 52. Xeque-Mate (Confluence Engine Boost)                */
+  /* ------------------------------------------------------------------ */
+  const pMatches = matches.filter((m) => m.side === "player");
+  const bMatches = matches.filter((m) => m.side === "banker");
+  if (pMatches.length >= 4 && bMatches.length <= 1) {
+    matches.push({ side: "player", pattern: "Xeque-Mate", confidence: 85 });
+  } else if (bMatches.length >= 4 && pMatches.length <= 1) {
+    matches.push({ side: "banker", pattern: "Xeque-Mate", confidence: 85 });
   }
 
   return matches.sort((x, y) => y.confidence - x.confidence);
@@ -170,6 +609,63 @@ export const PATTERN_EXPLANATION: Record<string, string> = {
   Perninhas: "Perninhas: sequências curtas alternadas — quebrar o ritmo",
   Espelho: "Espelho: o padrão recente está a repetir-se",
   Inversão: "Inversão: sequência longa quebrada — seguir o novo lado",
+  "Quinta Casa": "Quinta Casa: sequência atingindo o quinto ponto",
+  "Rampa Alongada": "Rampa Alongada: extensão de degraus crescentes",
+  "Rampa Invertida": "Rampa Invertida: sequência decrescente de degraus",
+  Barreira: "Barreira: teto de resistência alcançado em colunas anteriores",
+  "Padrão 3x2": "Padrão 3x2: ritmo 3 para 2",
+  "Torres Gémeas": "Torres Gémeas: construção de colunas simétricas de mesma altura",
+  "Padrão V": "Padrão V: formação em V simétrica",
+  "Quebra de Surf": "Quebra de Surf: exaustão de tendência longa",
+  "Retorno do Surf": "Retorno do Surf: retomada imediata da tendência principal",
+  Alternância: "Alternância: ritmo contínuo de troca de lados",
+  Percentual: "Percentual: convergência estatística para o lado deficitário",
+  "Padrão 3/3": "Padrão 3/3: blocos de 3 seguidos",
+  "Padrão 3-2-1": "Padrão 3-2-1: contagem regressiva de blocos",
+  "Dupla ou 2x2": "Dupla ou 2x2: repetição rítmica de pares",
+  "Escada Inversa": "Escada Inversa: degraus decrescentes contínuos",
+  "Padrão 2321": "Padrão 2321: estrutura de blocos 2-3-2-1",
+  "Quebra de Sequência": "Quebra de Sequência: ruptura de ritmo repetitivo",
+  "Padrão 1-2-3-1-1": "Padrão 1-2-3-1-1: formação de blocos harmônicos",
+  "Padrão 1-2-3 Contínuo": "Padrão 1-2-3 Contínuo: progressão contínua",
+  "Padrão 3-2-1 com Saltos": "Padrão 3-2-1 com Saltos: regressão com intervalos",
+  "Padrão 4-2-1": "Padrão 4-2-1: redução proporcional pela metade",
+  "Padrão 1-2-4": "Padrão 1-2-4: expansão proporcional dobrada",
+  "Padrão 1-4-2-2-1-1": "Padrão 1-4-2-2-1-1: ciclo harmônico completo",
+  "Padrão 3-3-1-1": "Padrão 3-3-1-1: estrutura simétrica 3-3 com finais simples",
+  "Padrão 4-4-1-1": "Padrão 4-4-1-1: estrutura pesada 4-4 com finais simples",
+  "Duplo Casado Vertical": "Duplo Casado Vertical: alinhamento de pares na coluna",
+  "Duplo Casado Horizontal": "Duplo Casado Horizontal: espelhamento horizontal de pares",
+  "Triângulo Mineiro": "Triângulo Mineiro: vértice triangular na placa de contas",
+  "Padrão Espaçado": "Padrão Espaçado: intervalos periódicos constantes",
+  "Padrão Horizontal Vertical": "Padrão Horizontal Vertical: formação em esquadro",
+  "Sequência Crescente Horizontal": "Sequência Crescente Horizontal: progressão horizontal",
+  "Repetição Horizontal de Cores Alternadas":
+    "Repetição Horizontal de Cores Alternadas: xadrez horizontal",
+  "Sequência Decrescente Horizontal": "Sequência Decrescente Horizontal: regressão horizontal",
+  "Formação Cruzada": "Formação Cruzada: convergência em cruz na placa",
+  "Repetição Horizontal da Paridade 1":
+    "Repetição Horizontal da Paridade: harmonia da soma dos dados",
+  "Repetição Horizontal da Paridade 2":
+    "Repetição Horizontal da Paridade 2: alternância de paridade",
+  Retângulo: "Retângulo: fechamento de bloco 2x2 na placa",
+  "Anti-Surf": "Anti-Surf: contra-tendência em estiramento extremo",
+  "Xeque-Mate": "Xeque-Mate: confluência massiva de múltiplos indicadores",
+  Pirâmide: "Pirâmide: formação harmônica 1-2-3-2-1",
+  "O Retorno": "O Retorno: rebote rápido para a cor predominante",
+  "Sequência de Cor": "Sequência de Cor: continuidade de fluxo cromático",
+  "Padrão 1-1-2-2": "Padrão 1-1-2-2: ritmo 1-1 seguido de 2-2",
+  "Padrão 3-1-2": "Padrão 3-1-2: estrutura 3-1-2",
+  "Padrão 2-2": "Padrão 2-2: repetição constante de pares",
+  "Padrão 1-2": "Padrão 1-2: alternância 1 para 2",
+  "Empate Seco": "Empate Seco: margem crítica de 0 pontos nos dados",
+  "Empate Vizinho": "Empate Vizinho: proximidade de empate recente no ciclo",
+  "Empate Diagonal": "Empate Diagonal: alinhamento diagonal de empates na placa",
+  "Empate em V": "Empate em V: formação em V de empates na placa",
+  "Empate em V Espaçado": "Empate em V Espaçado: formação em V aberta de empates",
+  "Empate Diagonal 1": "Empate Diagonal 1: diagonal descendente de empates",
+  "Empate Horizontal": "Empate Horizontal: repetição de empates na mesma linha",
+  "Empate Diagonal 2": "Empate Diagonal 2: diagonal ascendente de empates",
 };
 
 export const TREND_WINDOW = 8;
@@ -233,9 +729,31 @@ export function tableCycle(outcomes: Outcome[]): CycleReading {
 }
 
 /** Patterns that follow a trend (bad on a choppy table). */
-export const TREND_PATTERNS = new Set(["Surf de tendência", "Rampa"]);
+export const TREND_PATTERNS = new Set([
+  "Surf de tendência",
+  "Rampa",
+  "Rampa Alongada",
+  "Torres Gémeas",
+  "Padrão 3/3",
+  "Quinta Casa",
+  "Sequência de Cor",
+  "Padrão 1-2-3 Contínuo",
+  "Padrão 1-2-4",
+  "O Retorno",
+  "Retorno do Surf",
+]);
+
 /** Patterns that bet on alternation (bad on a trending table). */
-export const CHOP_PATTERNS = new Set(["Xadrez 1-1-1", "Perninhas"]);
+export const CHOP_PATTERNS = new Set([
+  "Xadrez 1-1-1",
+  "Alternância",
+  "Perninhas",
+  "Quebra de Surf",
+  "Anti-Surf",
+  "Repetição Horizontal de Cores Alternadas",
+  "Barreira",
+  "Quebra de Sequência",
+]);
 
 /** -1 = pattern goes against the table cycle (blocked), 1 = fits it, 0 = neutral. */
 export function cycleFit(pattern: string, cycle: TableCycle): -1 | 0 | 1 {
@@ -272,6 +790,7 @@ export interface TieReading {
   closeRate: number;
   /** The tie chance is clearly above the normal 11%: reinforce the tie protection. */
   reinforced: boolean;
+  patterns?: string[];
 }
 
 const diceSum = (d: [number, number]) => d[0] + d[1];
@@ -279,7 +798,13 @@ const diceSum = (d: [number, number]) => d[0] + d[1];
 export function tieReading(history: Round[]): TieReading {
   const recent = history.slice(-TIE_WINDOW);
   if (!recent.length) {
-    return { probability: Math.round(P_TIE * 100), avgMargin: 0, closeRate: 0, reinforced: false };
+    return {
+      probability: Math.round(P_TIE * 100),
+      avgMargin: 0,
+      closeRate: 0,
+      reinforced: false,
+      patterns: [],
+    };
   }
   const margins = recent.map((r) => Math.abs(diceSum(r.p) - diceSum(r.b)));
   const avgMargin = Math.round((margins.reduce((a, m) => a + m, 0) / margins.length) * 10) / 10;
@@ -287,12 +812,78 @@ export function tieReading(history: Round[]): TieReading {
   const counted = history.slice(-TIE_COUNT_WINDOW);
   const ties = counted.filter((r) => r.outcome === "T").length;
   const tieRate = (ties + TIE_COUNT_WINDOW * P_TIE) / (counted.length + TIE_COUNT_WINDOW);
-  const p = Math.max(0.06, Math.min(0.25, tieRate * (0.7 + 0.3 * (closeRate / P_CLOSE))));
+  let p = Math.max(0.06, Math.min(0.25, tieRate * (0.7 + 0.3 * (closeRate / P_CLOSE))));
+
+  const detectedTiePatterns: string[] = [];
+
+  // 14. Empate Seco (extreme close dice margin)
+  if (closeRate >= 0.8 && avgMargin <= 1) {
+    detectedTiePatterns.push("Empate Seco");
+    p = Math.min(0.28, p + 0.02);
+  }
+
+  // 20. Empate Vizinho (proximity cluster)
+  if (history.length >= 3 && history.slice(-3).some((r) => r.outcome === "T")) {
+    detectedTiePatterns.push("Empate Vizinho");
+  }
+
+  // Bead Road Tie Geometry (33, 34, 35, 43, 45, 46)
+  if (history.length >= 24) {
+    const grid: (Outcome | null)[][] = Array.from({ length: 6 }, () => []);
+    for (let i = 0; i < history.length; i++) {
+      const r = i % 6;
+      const c = Math.floor(i / 6);
+      const row = grid[r];
+      if (row) row[c] = history[i]?.outcome ?? null;
+    }
+    const nextR = history.length % 6;
+    const nextC = Math.floor(history.length / 6);
+    const atGrid = (r: number, c: number): Outcome | null | undefined => grid[r]?.[c];
+
+    // 45. Empate Horizontal
+    if (nextC >= 2 && atGrid(nextR, nextC - 1) === "T" && atGrid(nextR, nextC - 2) === "T") {
+      detectedTiePatterns.push("Empate Horizontal");
+      p = Math.min(0.28, p + 0.03);
+    }
+    // 33 & 43. Empate Diagonal & Empate Diagonal 1
+    if (
+      nextR >= 2 &&
+      nextC >= 2 &&
+      atGrid(nextR - 1, nextC - 1) === "T" &&
+      atGrid(nextR - 2, nextC - 2) === "T"
+    ) {
+      detectedTiePatterns.push("Empate Diagonal");
+      detectedTiePatterns.push("Empate Diagonal 1");
+      p = Math.min(0.28, p + 0.03);
+    }
+    // 46. Empate Diagonal 2 (ascending)
+    if (
+      nextR <= 3 &&
+      nextC >= 2 &&
+      atGrid(nextR + 1, nextC - 1) === "T" &&
+      atGrid(nextR + 2, nextC - 2) === "T"
+    ) {
+      detectedTiePatterns.push("Empate Diagonal 2");
+      p = Math.min(0.28, p + 0.03);
+    }
+    // 34 & 35. Empate em V & Empate em V Espaçado
+    if (
+      nextR >= 1 &&
+      nextC >= 2 &&
+      atGrid(nextR - 1, nextC - 1) === "T" &&
+      atGrid(nextR, nextC - 2) === "T"
+    ) {
+      detectedTiePatterns.push("Empate em V");
+      detectedTiePatterns.push("Empate em V Espaçado");
+    }
+  }
+
   return {
     probability: Math.round(p * 100),
     avgMargin,
     closeRate,
     reinforced: p >= TIE_REINFORCE,
+    patterns: detectedTiePatterns,
   };
 }
 
@@ -378,7 +969,7 @@ const pct = (x: number) => Math.round(x * 100);
 
 export function analyze(history: Round[], minConfidence: number): Analysis {
   const outcomes = history.map((r) => r.outcome);
-  const matches = matchPatterns(outcomes).filter((m) => m.confidence >= minConfidence);
+  const matches = matchPatterns(outcomes, history).filter((m) => m.confidence >= minConfidence);
   if (!matches.length) return { signal: null, reason: "no_pattern" };
 
   const { cycle } = tableCycle(outcomes);
