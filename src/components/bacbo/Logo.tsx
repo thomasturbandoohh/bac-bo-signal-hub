@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-/** Wordmark limpo — identidade Bac · Bo Live. */
+/** Wordmark limpo — identidade LORD M.. */
 export function Logo({ className }: { className?: string }) {
   return (
     <motion.div
@@ -11,7 +11,7 @@ export function Logo({ className }: { className?: string }) {
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
       <span className="font-display text-[1.625rem] font-bold leading-none tracking-[0.16em] text-foreground sm:text-[1.75rem]">
-        BAC<span className="mx-0.5 text-player-glow/80">·</span>BO
+        LORD M.
       </span>
       <span className="mt-2 flex items-center gap-2.5 text-[0.625rem] font-semibold uppercase tracking-[0.42em] text-muted-foreground">
         <span className="h-px w-7 bg-gradient-to-r from-transparent to-player" />
