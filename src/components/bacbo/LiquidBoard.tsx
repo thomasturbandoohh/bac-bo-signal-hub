@@ -26,17 +26,14 @@ const Pane = memo(function Pane({
   const isPlayer = tone === "player";
   return (
     <motion.div
-      animate={{ scale: highlight ? 1.02 : 1 }}
+      animate={{ scale: highlight ? 1.025 : 1 }}
       transition={{ type: "spring", stiffness: 260, damping: 20 }}
       className={cn(
-        "relative flex h-full flex-col items-center justify-end overflow-hidden pb-3 sm:pb-3.5 transition-all duration-300",
+        "relative flex h-full flex-col items-center justify-end overflow-hidden pb-3 sm:pb-3.5",
         isPlayer
-          ? "pane-player rounded-l-[1.8rem] rounded-r-lg pr-[16%]"
-          : "pane-banker rounded-r-[1.8rem] rounded-l-lg pl-[16%]",
-        highlight &&
-          (isPlayer
-            ? "ring-2 ring-player-glow/80 shadow-[0_0_30px_rgba(56,189,248,0.4)]"
-            : "ring-2 ring-banker-glow/80 shadow-[0_0_30px_rgba(244,63,94,0.4)]"),
+          ? "pane-player rounded-l-[1.6rem] rounded-r-md pr-[16%]"
+          : "pane-banker rounded-r-[1.6rem] rounded-l-md pl-[16%]",
+        highlight && (isPlayer ? "ring-2 ring-player-glow/70" : "ring-2 ring-banker-glow/70"),
       )}
     >
       <Water level={level} tone={tone} calm={!highlight} />
@@ -44,20 +41,12 @@ const Pane = memo(function Pane({
         <motion.span
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative z-10 font-display text-[1.85rem] font-black leading-none tracking-tight tabular-nums text-foreground text-emboss sm:text-4xl"
+          className="relative z-10 font-display text-[1.7rem] font-extrabold leading-none tracking-tight tabular-nums text-foreground text-emboss sm:text-4xl"
         >
           {value}%
         </motion.span>
       )}
-      <span className="relative z-10 mt-1 inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[0.625rem] font-extrabold uppercase tracking-[0.2em] text-foreground/90 sm:text-[0.6875rem]">
-        <span
-          className={cn(
-            "h-1.5 w-1.5 rounded-full",
-            isPlayer
-              ? "bg-player-glow shadow-[0_0_6px_rgba(56,189,248,0.8)]"
-              : "bg-banker-glow shadow-[0_0_6px_rgba(244,63,94,0.8)]",
-          )}
-        />
+      <span className="relative z-10 mt-1 text-[0.625rem] font-bold uppercase tracking-[0.2em] text-foreground/85 sm:text-[0.6875rem]">
         {label}
       </span>
     </motion.div>
@@ -80,8 +69,8 @@ export const LiquidBoard = memo(function LiquidBoard({
   const level = (side: "player" | "banker") => (winner === side ? HIGH : LOW);
 
   return (
-    <div className="relative h-28 sm:h-34 lg:h-44 select-none">
-      <div className="absolute inset-y-0 left-0 w-[46%]">
+    <div className="relative h-28 sm:h-32 lg:h-44">
+      <div className="absolute inset-y-0 left-0 w-[45%]">
         <Pane
           tone="player"
           label="Jogador"
@@ -90,7 +79,7 @@ export const LiquidBoard = memo(function LiquidBoard({
           highlight={winner === "player"}
         />
       </div>
-      <div className="absolute inset-y-0 right-0 w-[46%]">
+      <div className="absolute inset-y-0 right-0 w-[45%]">
         <Pane
           tone="banker"
           label="Casa"
@@ -101,18 +90,20 @@ export const LiquidBoard = memo(function LiquidBoard({
       </div>
 
       {/* The tie is never an entry: it only shows that the bet must be covered as protection. */}
-      <div className="pane-tie absolute left-1/2 top-1/2 z-10 flex h-[5.8rem] w-[5.8rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full shadow-[0_0_26px_rgba(251,191,36,0.4),0_0_0_5px_#05070d] sm:h-[6.8rem] sm:w-[6.8rem]">
+      <div className="pane-tie absolute left-1/2 top-1/2 z-10 flex h-[5.6rem] w-[5.6rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center overflow-hidden rounded-full sm:h-[6.6rem] sm:w-[6.6rem]">
         <Water level={LOW + 2} tone="tie" calm />
-        <span className="relative z-10 text-[0.625rem] font-black uppercase tracking-[0.2em] text-foreground sm:text-[0.6875rem] drop-shadow-sm">
+        <span className="relative z-10 text-[0.5625rem] font-bold uppercase tracking-[0.18em] text-foreground/90 sm:text-[0.625rem]">
           Empate
         </span>
-        <motion.span
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative z-10 mt-0.5 rounded-full border border-amber-300/40 bg-black/40 px-2 py-0.5 text-[0.5rem] font-black uppercase tracking-[0.16em] text-amber-200 sm:text-[0.5625rem] shadow-sm"
-        >
-          Proteção 8x
-        </motion.span>
+        {winner && (
+          <motion.span
+            initial={{ opacity: 0, y: 3 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative z-10 mt-0.5 text-[0.5rem] font-extrabold uppercase tracking-[0.14em] text-foreground/75 sm:text-[0.5625rem]"
+          >
+            Proteção
+          </motion.span>
+        )}
       </div>
     </div>
   );

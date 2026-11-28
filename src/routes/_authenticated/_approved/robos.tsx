@@ -1,8 +1,7 @@
-import { PwaInstallCard } from "@/components/bacbo/PwaInstallPrompt";
 import { useMemo, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { Moon, WifiOff, Wrench, Sparkles, Activity } from "lucide-react";
+import { Moon, WifiOff, Wrench } from "lucide-react";
 import { Logo } from "@/components/bacbo/Logo";
 import { LiquidBoard } from "@/components/bacbo/LiquidBoard";
 import { LiveTableCard } from "@/components/bacbo/LiveTable";
@@ -42,7 +41,7 @@ function Clock() {
   const now = useNow(1000);
   const timeStr = useMemo(() => clockFmt.format(new Date(now)), [now]);
   return (
-    <span className="font-display text-[0.6875rem] font-extrabold tabular-nums tracking-wider text-muted-foreground">
+    <span className="font-display text-xs font-bold tabular-nums tracking-wider text-muted-foreground">
       {timeStr}
     </span>
   );
@@ -74,38 +73,23 @@ function RobotsPage() {
   const winner = live && phase === "signal" && signal ? signal.side : null;
 
   return (
-    <div className="space-y-3.5 sm:space-y-4 lg:grid lg:grid-cols-12 lg:gap-x-6 lg:gap-y-4 lg:space-y-0">
+    <div className="space-y-3 sm:space-y-3.5 lg:grid lg:grid-cols-12 lg:gap-x-6 lg:gap-y-3.5 lg:space-y-0">
       <header className="pt-0.5 lg:col-span-12">
         <Logo />
-        <div className="mt-2 flex items-center justify-center gap-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1 shadow-[0_4px_16px_rgba(0,0,0,0.5)] backdrop-blur-md">
-            <span className="relative flex h-2 w-2">
-              <span
-                className={cn(
-                  "absolute inset-0 rounded-full opacity-75",
-                  on ? "animate-ping bg-emerald-400" : "bg-muted-foreground",
-                )}
-              />
-              <span
-                className={cn(
-                  "relative h-2 w-2 rounded-full",
-                  on
-                    ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-                    : "bg-muted-foreground",
-                )}
-              />
-            </span>
-            <span className="text-[0.625rem] font-black uppercase tracking-[0.16em] text-foreground/90">
-              {on ? "SISTEMA ONLINE" : "STANDBY"}
-            </span>
-            <span className="h-3 w-px bg-white/15" />
+        <div className="mt-1.5 flex items-center justify-center gap-2.5 text-xs text-muted-foreground">
+          <span className="liquid-glass inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-bold">
+            <span
+              className={cn("h-1.5 w-1.5 rounded-full", on ? "bg-success" : "bg-muted-foreground")}
+            />
+            {on ? "Online" : "Standby"}
+          </span>
+          <span className="font-bold">
             <Clock />
-          </div>
+          </span>
         </div>
       </header>
 
-      <div className="space-y-3.5 sm:space-y-4 lg:col-span-7 lg:flex lg:flex-col lg:gap-4 lg:space-y-0">
-        <PwaInstallCard />
+      <div className="space-y-3 sm:space-y-3.5 lg:col-span-7 lg:flex lg:flex-col lg:gap-3.5 lg:space-y-0">
         <div className="lg:order-1">
           <Scoreboard />
         </div>
@@ -123,14 +107,14 @@ function RobotsPage() {
         <AnimatePresence mode="wait">
           {maintenance ? (
             <Panel key="maint">
-              <div className="glass-icon h-12 w-12 text-tie">
-                <Wrench className="h-6 w-6" strokeWidth={2.2} />
+              <div className="glass-icon h-11 w-11 text-tie">
+                <Wrench className="h-5 w-5" strokeWidth={2.2} />
               </div>
-              <span className="mt-3 text-[0.625rem] font-extrabold uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="mt-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Modo manutenção
               </span>
-              <h2 className="mt-1 font-display text-base font-black sm:text-lg">
-                ROBÔ EM CALIBRAGEM
+              <h2 className="mt-0.5 font-display text-base font-extrabold sm:text-lg">
+                ROBÔ PAUSADO
               </h2>
               <p className="mt-1 text-[0.6875rem] text-muted-foreground sm:text-xs">
                 {isAdmin
@@ -140,10 +124,10 @@ function RobotsPage() {
             </Panel>
           ) : phase === "off" ? (
             <Panel key="off">
-              <div className="glass-icon h-12 w-12 text-tie-glow">
-                <Moon className="h-6 w-6" fill="currentColor" strokeWidth={1.6} />
+              <div className="glass-icon h-11 w-11 text-tie-glow">
+                <Moon className="h-5 w-5" fill="currentColor" strokeWidth={1.6} />
               </div>
-              <h2 className="mt-3 font-display text-base font-black sm:text-lg">STANDBY</h2>
+              <h2 className="mt-2 font-display text-base font-extrabold sm:text-lg">STANDBY</h2>
               <p className="mt-1 text-[0.6875rem] text-muted-foreground sm:text-xs">
                 {isAdmin
                   ? "Acesse o painel Admin para iniciar as operações do robô."
@@ -152,19 +136,19 @@ function RobotsPage() {
             </Panel>
           ) : reason === "no_connection" ? (
             <Panel key="offline">
-              <div className="glass-icon h-12 w-12 text-destructive">
-                <WifiOff className="h-6 w-6" strokeWidth={2.2} />
+              <div className="glass-icon h-11 w-11 text-destructive">
+                <WifiOff className="h-5 w-5" strokeWidth={2.2} />
               </div>
-              <span className="mt-3 text-[0.625rem] font-extrabold uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="mt-2 text-[0.625rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Robô ligado
               </span>
-              <h2 className="mt-1 font-display text-base font-black sm:text-lg">
-                AGUARDANDO MESA AO VIVO
+              <h2 className="mt-0.5 font-display text-base font-extrabold sm:text-lg">
+                SEM CONEXÃO COM A MESA
               </h2>
               <p className="mt-1 text-[0.6875rem] text-muted-foreground sm:text-xs">
                 {isAdmin
                   ? "Nenhuma rodada recente recebida da mesa. Verifique a chave no painel Admin."
-                  : "Sincronizando feed de rodadas da mesa para gerar o próximo sinal."}
+                  : "Aguardando novas rodadas da mesa para gerar o próximo sinal."}
               </p>
             </Panel>
           ) : phase === "analyzing" || !signal ? (
@@ -182,7 +166,7 @@ function RobotsPage() {
         </AnimatePresence>
       </div>
 
-      <p className="px-3 text-center lg:col-span-12 text-[0.625rem] leading-relaxed text-muted-foreground/60">
+      <p className="px-3 text-center lg:col-span-12 text-[0.625rem] leading-relaxed text-muted-foreground/70">
         As rodadas analisadas vêm da mesa Bac Bo Live ao vivo. Os sinais são leituras de padrões e
         não garantem ganhos. Jogue com responsabilidade · +18.
       </p>
@@ -193,11 +177,11 @@ function RobotsPage() {
 function Panel({ children }: { children: ReactNode }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
-      transition={{ duration: 0.24, ease: "easeOut" }}
-      className="glass-premium relative isolate flex flex-col items-center overflow-hidden rounded-2xl px-4 py-6 text-center sm:px-6 sm:py-7 lg:h-full lg:justify-center lg:px-7 lg:py-9 shadow-[0_18px_40px_-16px_rgba(0,0,0,0.85)] border border-white/10"
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      className="glass-premium relative isolate flex flex-col items-center overflow-hidden rounded-xl px-4 py-5 text-center sm:px-5 sm:py-6 lg:h-full lg:justify-center lg:px-6 lg:py-8"
     >
       <div className="relative z-10 flex w-full flex-col items-center">{children}</div>
     </motion.div>
@@ -206,38 +190,34 @@ function Panel({ children }: { children: ReactNode }) {
 
 const WAIT_TEXT: Record<string, string> = {
   collecting: "Coletando as primeiras rodadas da mesa",
-  next_round: "Aguardando o desfecho da rodada",
-  no_pattern: "Mapeando sequências e repetições",
-  weak_pattern: "Avaliando confiabilidade estatística",
-  conflict: "Calculando margem Player vs Banker",
-  cold_table: "Mesa oscilando · aguardando estabilização",
-  choppy_table: "Alternância curta · prevenindo falsos sinais",
-  trending_table: "Forte tendência identificada · validando entrada",
-  result: "Aguardando apuração da rodada",
+  next_round: "Aguardando a próxima rodada",
+  no_pattern: "Lendo os padrões da mesa",
+  weak_pattern: "Confirmando a força do padrão",
+  conflict: "Comparando Player e Banker",
+  cold_table: "Esperando a mesa esquentar",
+  choppy_table: "Mesa picotada · evitando surf",
+  trending_table: "Mesa em tendência · evitando quebra",
+  result: "Aguardando o resultado da entrada",
 };
 
 type Stage = "search" | "result" | "confirm" | "gale";
 
 const STAGE: Record<Stage, { label: string; dot: string; chip: string }> = {
-  search: {
-    label: "Mapeando Padrão",
-    dot: "bg-amber-400",
-    chip: "bg-amber-500/15 text-amber-300 ring-amber-400/35",
-  },
+  search: { label: "Buscando padrão", dot: "bg-tie", chip: "bg-tie/15 text-tie-glow ring-tie/35" },
   result: {
-    label: "Aguardando Mesa",
+    label: "Aguardando a mesa",
     dot: "bg-player-glow",
     chip: "bg-player/15 text-player-glow ring-player-glow/35",
   },
   confirm: {
-    label: "Padrão Identificado",
-    dot: "bg-emerald-400",
-    chip: "bg-emerald-500/15 text-emerald-300 ring-emerald-400/35",
+    label: "Padrão encontrado",
+    dot: "bg-success",
+    chip: "bg-success/15 text-success ring-success/35",
   },
   gale: {
-    label: "Preparando Gale 1",
-    dot: "bg-amber-300",
-    chip: "bg-amber-500/20 text-amber-200 ring-amber-400/45",
+    label: "Preparando o gale",
+    dot: "bg-tie-glow",
+    chip: "bg-tie/20 text-tie-glow ring-tie/45",
   },
 };
 
@@ -254,25 +234,16 @@ function Analyzing() {
 
   return (
     <Panel>
-      {/* Radar scanning circle around the robot icon */}
-      <div className="relative flex items-center justify-center">
-        <span className="absolute h-18 w-18 sm:h-20 sm:w-20 rounded-full border border-player-glow/25 animate-ping opacity-30" />
-        <div className="glass-icon relative h-14 w-14 sm:h-16 sm:w-16 shadow-[0_0_25px_rgba(56,189,248,0.3)]">
-          <Emoji3D src={robotEmoji} size={36} className="animate-bob" />
-        </div>
+      <div className="glass-icon h-12 w-12 sm:h-14 sm:w-14">
+        <Emoji3D src={robotEmoji} size={34} className="animate-bob" />
       </div>
-
-      <div className="mt-3 flex items-center gap-1.5">
-        <Sparkles className="h-3.5 w-3.5 text-player-glow" />
-        <h2 className="font-display text-xs font-black tracking-[0.14em] sm:text-sm">
-          <span className="text-emerald-400">IA ANALISANDO</span>{" "}
-          <span className="text-foreground">{reason === "result" ? "RODADA" : "PADRÕES"}</span>
-        </h2>
-      </div>
-
+      <h2 className="mt-2.5 font-display text-xs font-extrabold tracking-[0.1em] sm:text-sm">
+        <span className="text-success">SISTEMA ONLINE</span>{" "}
+        <span className="text-foreground">{reason === "result" ? "AGUARDANDO" : "ANALISANDO"}</span>
+      </h2>
       <span
         className={cn(
-          "mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[0.625rem] font-black uppercase tracking-[0.18em] ring-1 transition-colors duration-500 shadow-sm",
+          "mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.625rem] font-extrabold uppercase tracking-[0.16em] ring-1 transition-colors duration-500",
           st.chip,
         )}
       >
@@ -282,17 +253,14 @@ function Analyzing() {
         </span>
         {st.label}
       </span>
-
-      <p className="mt-2 text-[0.6875rem] font-bold text-muted-foreground sm:text-xs">
+      <p className="mt-1.5 text-[0.6875rem] font-bold text-muted-foreground">
         {waiting
-          ? (WAIT_TEXT[reason ?? ""] ?? "Mapeando sequências e repetições")
+          ? (WAIT_TEXT[reason ?? ""] ?? "Lendo os padrões da mesa")
           : gale
             ? "Mesmo lado da entrada · última tentativa"
-            : "Padrão confirmado · liberando sinal em instantes"}
+            : "Padrão se formando · liberando a entrada"}
       </p>
-
-      {/* Cybernetic Progress Bar with Shimmer */}
-      <div className="relative mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-white/10 p-[1px] shadow-inner">
+      <div className="relative mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
         {waiting ? <Sweep /> : <SmoothFill key={phaseStart} start={phaseStart} end={phaseEnd} />}
       </div>
     </Panel>
@@ -302,10 +270,10 @@ function Analyzing() {
 function Sweep() {
   return (
     <motion.div
-      className="absolute inset-y-0 w-2/5 rounded-full bg-gradient-to-r from-transparent via-player-glow to-transparent shadow-[0_0_16px_var(--player-glow)]"
+      className="absolute inset-y-0 w-2/5 rounded-full bg-gradient-to-r from-transparent via-player-glow to-transparent shadow-[0_0_12px_-2px_var(--player-glow)]"
       initial={{ left: "-40%" }}
       animate={{ left: ["-40%", "100%"] }}
-      transition={{ duration: 2.8, repeat: Infinity, ease: [0.45, 0, 0.55, 1] }}
+      transition={{ duration: 3.4, repeat: Infinity, ease: [0.45, 0, 0.55, 1] }}
     />
   );
 }
@@ -315,7 +283,7 @@ function SmoothFill({ start, end }: { start: number; end: number }) {
     const now = Date.now();
     const total = Math.max(1, end - start);
     return {
-      from: Math.min(1, Math.max(0, (end - now) / total)),
+      from: Math.min(1, Math.max(0, (now - start) / total)),
       seconds: Math.max(0.3, (end - now) / 1000),
     };
   });
@@ -328,7 +296,7 @@ function SmoothFill({ start, end }: { start: number; end: number }) {
     >
       <span
         aria-hidden="true"
-        className="absolute inset-y-0 left-0 w-1/2 animate-sheen bg-gradient-to-r from-transparent via-white/40 to-transparent motion-reduce:hidden"
+        className="absolute inset-y-0 left-0 w-1/2 animate-sheen bg-gradient-to-r from-transparent via-white/30 to-transparent motion-reduce:hidden"
       />
     </motion.div>
   );
